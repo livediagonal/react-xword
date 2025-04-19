@@ -64,45 +64,61 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
             e.preventDefault();
 
-            // Find the next white cell in the appropriate direction
-            const nextCell = findNextWhiteCell(row, col, e.key === "ArrowLeft" ? "left" : "right");
+            // Check if we need to change orientation
+            if (clueOrientation !== "across") {
+                // If we're not in "across" mode, just change the orientation
+                if (onClueOrientationChange) {
+                    onClueOrientationChange("across");
+                }
+            } else {
+                // If we're already in "across" mode, move to the next cell
+                const nextCell = findNextWhiteCell(row, col, e.key === "ArrowLeft" ? "left" : "right");
 
-            if (nextCell) {
-                // Calculate clue numbers to find the clue number for the next cell
-                const clueNumbers = calculateClueNumbers();
-                const [nextRow, nextCol] = nextCell;
+                if (nextCell) {
+                    // Calculate clue numbers to find the clue number for the next cell
+                    const clueNumbers = calculateClueNumbers();
+                    const [nextRow, nextCol] = nextCell;
 
-                // Find the clue number for the next cell in the "across" orientation
-                const clueNumber = findClueNumberForCell(nextRow, nextCol, "across");
+                    // Find the clue number for the next cell in the "across" orientation
+                    const clueNumber = findClueNumberForCell(nextRow, nextCol, "across");
 
-                if (clueNumber && onNavigateToClue) {
-                    // Use onNavigateToClue to update both orientation and active cell
-                    onNavigateToClue(clueNumber, "across", nextCell);
-                } else if (onCellClick) {
-                    // Fall back to just updating the cell if onNavigateToClue is not available
-                    onCellClick(nextRow, nextCol);
+                    if (clueNumber && onNavigateToClue) {
+                        // Use onNavigateToClue to update both orientation and active cell
+                        onNavigateToClue(clueNumber, "across", nextCell);
+                    } else if (onCellClick) {
+                        // Fall back to just updating the cell if onNavigateToClue is not available
+                        onCellClick(nextRow, nextCol);
+                    }
                 }
             }
         } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
             e.preventDefault();
 
-            // Find the next white cell in the appropriate direction
-            const nextCell = findNextWhiteCell(row, col, e.key === "ArrowUp" ? "up" : "down");
+            // Check if we need to change orientation
+            if (clueOrientation !== "down") {
+                // If we're not in "down" mode, just change the orientation
+                if (onClueOrientationChange) {
+                    onClueOrientationChange("down");
+                }
+            } else {
+                // If we're already in "down" mode, move to the next cell
+                const nextCell = findNextWhiteCell(row, col, e.key === "ArrowUp" ? "up" : "down");
 
-            if (nextCell) {
-                // Calculate clue numbers to find the clue number for the next cell
-                const clueNumbers = calculateClueNumbers();
-                const [nextRow, nextCol] = nextCell;
+                if (nextCell) {
+                    // Calculate clue numbers to find the clue number for the next cell
+                    const clueNumbers = calculateClueNumbers();
+                    const [nextRow, nextCol] = nextCell;
 
-                // Find the clue number for the next cell in the "down" orientation
-                const clueNumber = findClueNumberForCell(nextRow, nextCol, "down");
+                    // Find the clue number for the next cell in the "down" orientation
+                    const clueNumber = findClueNumberForCell(nextRow, nextCol, "down");
 
-                if (clueNumber && onNavigateToClue) {
-                    // Use onNavigateToClue to update both orientation and active cell
-                    onNavigateToClue(clueNumber, "down", nextCell);
-                } else if (onCellClick) {
-                    // Fall back to just updating the cell if onNavigateToClue is not available
-                    onCellClick(nextRow, nextCol);
+                    if (clueNumber && onNavigateToClue) {
+                        // Use onNavigateToClue to update both orientation and active cell
+                        onNavigateToClue(clueNumber, "down", nextCell);
+                    } else if (onCellClick) {
+                        // Fall back to just updating the cell if onNavigateToClue is not available
+                        onCellClick(nextRow, nextCol);
+                    }
                 }
             }
         }
