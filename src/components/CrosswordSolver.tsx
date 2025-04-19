@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import CrosswordGrid from "./CrosswordGrid";
 import { CrosswordState } from "../types";
+import Modal from "./Modal";
 import "./CrosswordSolver.css";
 
 interface CrosswordSolverProps {
@@ -19,6 +20,10 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
   const [solution, setSolution] = useState<string[][] | null>(null);
   const [validatedCells, setValidatedCells] = useState<boolean[][] | null>(null);
   const [revealedCells, setRevealedCells] = useState<boolean[][] | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [hasCompleted, setHasCompleted] = useState(false);
 
   // Use a ref to track if we've already loaded from localStorage
   const hasLoadedFromStorage = useRef(false);
@@ -901,6 +906,50 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     });
   };
 
+  // Function to check if the puzzle is completely filled
+  const isPuzzleFilled = () => {
+    if (!crosswordState) return false;
+
+    for (let row = 0; row < crosswordState.rows; row++) {
+      for (let col = 0; col < crosswordState.columns; col++) {
+        if (!crosswordState.grid[row][col] && !crosswordState.letters[row][col]) {
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
+  // Function to check if all answers are correct
+  const areAllAnswersCorrect = () => {
+    if (!crosswordState || !solution) return false;
+
+    for (let row = 0; row < crosswordState.rows; row++) {
+      for (let col = 0; col < crosswordState.columns; col++) {
+        if (!crosswordState.grid[row][col]) {
+          const currentLetter = crosswordState.letters[row][col].toUpperCase();
+          const solutionLetter = solution[row][col].toUpperCase();
+          if (currentLetter !== solutionLetter) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  };
+
+  // Check for puzzle completion after each letter change
+  useEffect(() => {
+    if (isPuzzleFilled()) {
+      if (areAllAnswersCorrect()) {
+        setShowSuccessModal(true);
+        setShowConfetti(true);
+      } else {
+        setShowErrorModal(true);
+      }
+    }
+  }, [crosswordState?.letters]);
+
   if (loading) {
     return (
       <div className="solver-loading">
@@ -927,6 +976,30 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
 
   return (
     <div className="solver-container">
+      {showConfetti && (
+        <div className="confetti-container">
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+          <div className="confetti"></div>
+        </div>
+      )}
       <div className="solver-content">
         <div className="solver-grid-container">
           <CrosswordGrid
@@ -1037,6 +1110,24 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
           Reveal Puzzle
         </button>
       </div>
+
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={() => {
+          setShowSuccessModal(false);
+        }}
+        title="Congratulations! 🎉"
+        message="You've successfully completed the crossword puzzle! All your answers are correct."
+        type="success"
+      />
+
+      <Modal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        title="Not Quite Right"
+        message="The puzzle is filled, but some answers are incorrect. Keep solving!"
+        type="error"
+      />
     </div>
   );
 };
