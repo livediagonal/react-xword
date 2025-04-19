@@ -1,6 +1,6 @@
 # react-xword
 
-A React component library for solving crossword puzzles.
+A vibe-coded React component library for solving crossword puzzles.
 
 ## Features
 
@@ -37,13 +37,35 @@ function App() {
 export default App;
 ```
 
+### Example App
+
+The package includes a live example app in the `examples` directory that demonstrates the library's features. The example app allows you to:
+
+- Upload and solve IPUZ format crossword puzzles
+- Test keyboard navigation
+- See the component in action with a responsive layout
+
+To run the example app locally:
+
+```bash
+# Clone the repository
+git clone https://github.com/livediagonal/react-xword.git
+cd react-xword
+
+# Install dependencies
+npm install
+
+# Start the example app
+npm run example
+```
+
 ### Keyboard Navigation
 
 The crossword solver supports the following keyboard shortcuts:
 
 - **Tab**: Jump to the next clue in the current orientation (Across or Down) and select the first empty cell
 - **Shift+Tab**: Jump to the previous clue in the current orientation (Across or Down) and select the first empty cell
-- **Letters**: Type letters to fill in cells
+- `Letters`: Type letters to fill in cells
 - **Backspace/Delete**: Clear a cell
 
 The navigation system intelligently selects the first empty cell in each clue, allowing for quick filling of the crossword puzzle.
