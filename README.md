@@ -37,6 +37,17 @@ function App() {
 export default App;
 ```
 
+### Keyboard Navigation
+
+The crossword solver supports the following keyboard shortcuts:
+
+- **Tab**: Jump to the next clue in the current orientation (Across or Down) and select the first empty cell
+- **Shift+Tab**: Jump to the previous clue in the current orientation (Across or Down) and select the first empty cell
+- **Letters**: Type letters to fill in cells
+- **Backspace/Delete**: Clear a cell
+
+The navigation system intelligently selects the first empty cell in each clue, allowing for quick filling of the crossword puzzle.
+
 #### Props
 
 - `ipuzPath`: Path to an IPUZ file to load

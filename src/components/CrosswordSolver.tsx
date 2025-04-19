@@ -141,28 +141,11 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     }
   }, [crosswordState]);
 
-  // Add keyboard event listener for space bar to toggle orientation
+  // Add a useEffect hook to log state changes
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Only handle space bar press
-      if (event.code === "Space" && crosswordState) {
-        // Prevent default behavior (scrolling)
-        event.preventDefault();
-
-        // Toggle between across and down
-        const newOrientation =
-          crosswordState.clueOrientation === "across" ? "down" : "across";
-        handleClueOrientationChange(newOrientation);
-      }
-    };
-
-    // Add event listener
-    window.addEventListener("keydown", handleKeyDown);
-
-    // Clean up event listener on component unmount
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    if (crosswordState) {
+      // State changes are now tracked without console logs
+    }
   }, [crosswordState]);
 
   const handleLetterChange = (row: number, col: number, letter: string) => {
@@ -300,6 +283,42 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     }
   };
 
+  // Function to navigate to a specific clue and cell
+  const navigateToClueAndCell = (
+    clueNumber: number,
+    orientation: "across" | "down",
+    cell: [number, number] | null
+  ) => {
+    if (crosswordState) {
+      // Create a new state with the updated clue number, orientation, and cell
+      const newState: CrosswordState = {
+        ...crosswordState,
+        activeClueNumber: clueNumber,
+        clueOrientation: orientation,
+        activeCell: cell,
+      };
+
+      // Update the state
+      setCrosswordState(newState);
+
+      // Force a re-render by updating the state again with the same values
+      // This ensures the UI updates properly
+      setTimeout(() => {
+        setCrosswordState(prevState => {
+          if (prevState) {
+            return {
+              ...prevState,
+              activeClueNumber: clueNumber,
+              clueOrientation: orientation,
+              activeCell: cell,
+            };
+          }
+          return prevState;
+        });
+      }, 0);
+    }
+  };
+
   // Helper function to find the start of a word
   const findWordStart = (
     grid: boolean[][],
@@ -425,6 +444,50 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     return null;
   };
 
+  // Helper function to find the first empty cell in a clue
+  const findFirstEmptyCellInClue = (
+    clueNumber: number,
+    orientation: "across" | "down",
+  ): [number, number] | null => {
+    if (!crosswordState) return null;
+
+    const { grid, rows, columns, letters } = crosswordState;
+    const clueNumbers = calculateClueNumbers(grid);
+
+    // Find the start cell of the clue
+    const startCell = findClueStartCell(clueNumber, orientation);
+    if (!startCell) return null;
+
+    const [startRow, startCol] = startCell;
+
+    if (orientation === "across") {
+      // For across clues, check cells from left to right
+      for (let col = startCol; col < columns; col++) {
+        // Stop if we hit a black cell
+        if (grid[startRow][col]) break;
+
+        // If this cell is empty, return it
+        if (!letters[startRow][col]) {
+          return [startRow, col];
+        }
+      }
+    } else {
+      // For down clues, check cells from top to bottom
+      for (let row = startRow; row < rows; row++) {
+        // Stop if we hit a black cell
+        if (grid[row][startCol]) break;
+
+        // If this cell is empty, return it
+        if (!letters[row][startCol]) {
+          return [row, startCol];
+        }
+      }
+    }
+
+    // If no empty cell found, return the start cell
+    return startCell;
+  };
+
   if (loading) {
     return (
       <div className="solver-loading">
@@ -478,6 +541,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
             activeClueNumber={crosswordState.activeClueNumber}
             onClueOrientationChange={handleClueOrientationChange}
             onCellClick={handleCellClick}
+            onNavigateToClue={navigateToClueAndCell}
             activeCell={crosswordState.activeCell}
           />
         </div>
@@ -499,12 +563,11 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
                       const cellNumber = parseInt(number);
                       const startCell = findClueStartCell(cellNumber, "across");
 
-                      setCrosswordState({
-                        ...crosswordState,
-                        activeClueNumber: cellNumber,
-                        clueOrientation: "across",
-                        activeCell: startCell,
-                      });
+                      // Find the first empty cell in the clue
+                      const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "across");
+
+                      // Use the first empty cell if available, otherwise use the start cell
+                      navigateToClueAndCell(cellNumber, "across", firstEmptyCell || startCell);
                     }}
                   >
                     <span className="solver-clue-number">{number}.</span> {text}
@@ -529,12 +592,11 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
                     const cellNumber = parseInt(number);
                     const startCell = findClueStartCell(cellNumber, "down");
 
-                    setCrosswordState({
-                      ...crosswordState,
-                      activeClueNumber: cellNumber,
-                      clueOrientation: "down",
-                      activeCell: startCell,
-                    });
+                    // Find the first empty cell in the clue
+                    const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "down");
+
+                    // Use the first empty cell if available, otherwise use the start cell
+                    navigateToClueAndCell(cellNumber, "down", firstEmptyCell || startCell);
                   }}
                 >
                   <span className="solver-clue-number">{number}.</span> {text}

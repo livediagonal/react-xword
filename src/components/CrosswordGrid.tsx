@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { ClueOrientation } from "../types";
 import "./CrosswordGrid.css";
 
@@ -12,6 +12,7 @@ export interface CrosswordGridProps {
     activeClueNumber: number | null;
     onClueOrientationChange: ((orientation: ClueOrientation) => void) | undefined;
     onCellClick: ((row: number, col: number) => void) | undefined;
+    onNavigateToClue: ((clueNumber: number, orientation: ClueOrientation, cell: [number, number] | null) => void) | undefined;
     activeCell: [number, number] | null | undefined;
 }
 
@@ -25,6 +26,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     activeClueNumber,
     onClueOrientationChange,
     onCellClick,
+    onNavigateToClue,
     activeCell,
 }) => {
     const gridRef = useRef<HTMLDivElement>(null);
@@ -34,217 +36,32 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key)) {
             e.preventDefault();
             onLetterChange(row, col, e.key.toUpperCase());
-
-            // Find the next cell in the word
-            const nextCell = findNextCellInWord(row, col);
-            if (nextCell && onCellClick) {
-                onCellClick(nextCell[0], nextCell[1]);
-            }
-        }
-
-        // Handle navigation
-        if (e.key === "ArrowRight" || e.key === "Tab") {
-            e.preventDefault();
-            const nextCell = findNextCellInWord(row, col);
-            if (nextCell && onCellClick) {
-                onCellClick(nextCell[0], nextCell[1]);
-            }
-        } else if (e.key === "ArrowLeft") {
-            e.preventDefault();
-            const prevCell = findPreviousCellInWord(row, col);
-            if (prevCell && onCellClick) {
-                onCellClick(prevCell[0], prevCell[1]);
-            }
-        } else if (e.key === "ArrowDown") {
-            e.preventDefault();
-            if (onClueOrientationChange) {
-                onClueOrientationChange("down");
-            }
-            const nextCell = findNextClue(row, col);
-            if (nextCell && onCellClick) {
-                onCellClick(nextCell[0], nextCell[1]);
-            }
-        } else if (e.key === "ArrowUp") {
-            e.preventDefault();
-            if (onClueOrientationChange) {
-                onClueOrientationChange("across");
-            }
-            const prevCell = findPreviousClue(row, col);
-            if (prevCell && onCellClick) {
-                onCellClick(prevCell[0], prevCell[1]);
-            }
         } else if (e.key === "Backspace" || e.key === "Delete") {
             e.preventDefault();
             onLetterChange(row, col, "");
-
-            // Find the previous cell in the word
-            const prevCell = findPreviousCellInWord(row, col);
-            if (prevCell && onCellClick) {
-                onCellClick(prevCell[0], prevCell[1]);
-            }
-        } else if (e.key === " ") {
+        } else if (e.key === "Tab") {
             e.preventDefault();
-            if (onClueOrientationChange) {
-                onClueOrientationChange(
-                    clueOrientation === "across" ? "down" : "across",
-                );
-            }
-        }
-    };
+            // Find the next or previous clue in the current orientation based on Shift key
+            const nextClueNumber = e.shiftKey
+                ? findPreviousClueNumber(activeClueNumber, clueOrientation)
+                : findNextClueNumber(activeClueNumber, clueOrientation);
 
-    // Helper function to find the next cell in the current word
-    const findNextCellInWord = (
-        row: number,
-        col: number,
-    ): [number, number] | null => {
-        const isHorizontal = clueOrientation === "across";
+            if (nextClueNumber) {
+                // Find the first empty cell in the next clue
+                const firstEmptyCell = findFirstEmptyCellInClue(nextClueNumber, clueOrientation);
 
-        if (isHorizontal) {
-            // Move right until we hit a black cell or the edge
-            let nextCol = col + 1;
-            while (nextCol < columns && !grid[row][nextCol]) {
-                nextCol++;
-            }
-
-            // If we found a white cell, return it
-            if (nextCol < columns && !grid[row][nextCol]) {
-                return [row, nextCol];
-            }
-        } else {
-            // Move down until we hit a black cell or the edge
-            let nextRow = row + 1;
-            while (nextRow < rows && !grid[nextRow][col]) {
-                nextRow++;
-            }
-
-            // If we found a white cell, return it
-            if (nextRow < rows && !grid[nextRow][col]) {
-                return [nextRow, col];
-            }
-        }
-
-        return null;
-    };
-
-    // Helper function to find the previous cell in the current word
-    const findPreviousCellInWord = (
-        row: number,
-        col: number,
-    ): [number, number] | null => {
-        const isHorizontal = clueOrientation === "across";
-
-        if (isHorizontal) {
-            // Move left until we hit a black cell or the edge
-            let prevCol = col - 1;
-            while (prevCol >= 0 && !grid[row][prevCol]) {
-                prevCol--;
-            }
-
-            // If we found a white cell, return it
-            if (prevCol >= 0 && !grid[row][prevCol]) {
-                return [row, prevCol];
-            }
-        } else {
-            // Move up until we hit a black cell or the edge
-            let prevRow = row - 1;
-            while (prevRow >= 0 && !grid[prevRow][col]) {
-                prevRow--;
-            }
-
-            // If we found a white cell, return it
-            if (prevRow >= 0 && !grid[prevRow][col]) {
-                return [prevRow, col];
-            }
-        }
-
-        return null;
-    };
-
-    // Helper function to find the next clue
-    const findNextClue = (row: number, col: number): [number, number] | null => {
-        const isHorizontal = clueOrientation === "across";
-        const clueNumbers = calculateClueNumbers();
-
-        if (isHorizontal) {
-            // Move to the next row
-            let nextRow = row + 1;
-            let nextCol = 0;
-
-            // Find the next white cell with a clue number
-            while (nextRow < rows) {
-                while (nextCol < columns) {
-                    if (!grid[nextRow][nextCol] && clueNumbers[nextRow][nextCol] > 0) {
-                        return [nextRow, nextCol];
+                if (onNavigateToClue) {
+                    // Use the new navigation function
+                    onNavigateToClue(nextClueNumber, clueOrientation, firstEmptyCell);
+                } else if (onCellClick) {
+                    // Fall back to the old method if the new function is not available
+                    const startCell = findClueStartCell(nextClueNumber, clueOrientation);
+                    if (startCell) {
+                        onCellClick(startCell[0], startCell[1]);
                     }
-                    nextCol++;
                 }
-                nextCol = 0;
-                nextRow++;
-            }
-        } else {
-            // Move to the next column
-            let nextRow = 0;
-            let nextCol = col + 1;
-
-            // Find the next white cell with a clue number
-            while (nextCol < columns) {
-                while (nextRow < rows) {
-                    if (!grid[nextRow][nextCol] && clueNumbers[nextRow][nextCol] > 0) {
-                        return [nextRow, nextCol];
-                    }
-                    nextRow++;
-                }
-                nextRow = 0;
-                nextCol++;
             }
         }
-
-        return null;
-    };
-
-    // Helper function to find the previous clue
-    const findPreviousClue = (
-        row: number,
-        col: number,
-    ): [number, number] | null => {
-        const isHorizontal = clueOrientation === "across";
-        const clueNumbers = calculateClueNumbers();
-
-        if (isHorizontal) {
-            // Move to the previous row
-            let prevRow = row - 1;
-            let prevCol = columns - 1;
-
-            // Find the previous white cell with a clue number
-            while (prevRow >= 0) {
-                while (prevCol >= 0) {
-                    if (!grid[prevRow][prevCol] && clueNumbers[prevRow][prevCol] > 0) {
-                        return [prevRow, prevCol];
-                    }
-                    prevCol--;
-                }
-                prevCol = columns - 1;
-                prevRow--;
-            }
-        } else {
-            // Move to the previous column
-            let prevRow = rows - 1;
-            let prevCol = col - 1;
-
-            // Find the previous white cell with a clue number
-            while (prevCol >= 0) {
-                while (prevRow >= 0) {
-                    if (!grid[prevRow][prevCol] && clueNumbers[prevRow][prevCol] > 0) {
-                        return [prevRow, prevCol];
-                    }
-                    prevRow--;
-                }
-                prevRow = rows - 1;
-                prevCol--;
-            }
-        }
-
-        return null;
     };
 
     // Helper function to calculate clue numbers
@@ -351,6 +168,8 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         clueNumber: number,
         orientation: ClueOrientation,
     ): [number, number] | null => {
+        const clueNumbers = calculateClueNumbers();
+
         // Find the cell with the given clue number
         for (let row = 0; row < rows; row++) {
             for (let col = 0; col < columns; col++) {
@@ -362,8 +181,155 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         return null;
     };
 
+    // Function to find the next clue number in the current orientation
+    const findNextClueNumber = (
+        currentClueNumber: number | null,
+        orientation: ClueOrientation
+    ): number | null => {
+        // Get all clue numbers in the current orientation
+        const clueNumberList: number[] = [];
+
+        // Collect all clue numbers from the grid
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < columns; col++) {
+                const number = clueNumbers[row][col];
+                if (number > 0) {
+                    // Check if this cell starts a word in the current orientation
+                    if (orientation === "across") {
+                        if (col === 0 || grid[row][col - 1]) {
+                            clueNumberList.push(number);
+                        }
+                    } else {
+                        if (row === 0 || grid[row - 1][col]) {
+                            clueNumberList.push(number);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Sort the clue numbers
+        clueNumberList.sort((a, b) => a - b);
+
+        // If no current clue number, return the first clue
+        if (!currentClueNumber) {
+            return clueNumberList.length > 0 ? clueNumberList[0] : null;
+        }
+
+        // Find the index of the current clue number
+        const currentIndex = clueNumberList.indexOf(currentClueNumber);
+
+        // If the current clue number is not found, return the first clue
+        if (currentIndex === -1) {
+            return clueNumberList.length > 0 ? clueNumberList[0] : null;
+        }
+
+        // Return the next clue number, or wrap around to the first clue
+        const nextIndex = (currentIndex + 1) % clueNumberList.length;
+        return clueNumberList[nextIndex];
+    };
+
+    // Function to find the previous clue number in the current orientation
+    const findPreviousClueNumber = (
+        currentClueNumber: number | null,
+        orientation: ClueOrientation
+    ): number | null => {
+        // Get all clue numbers in the current orientation
+        const clueNumberList: number[] = [];
+
+        // Collect all clue numbers from the grid
+        for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < columns; col++) {
+                const number = clueNumbers[row][col];
+                if (number > 0) {
+                    // Check if this cell starts a word in the current orientation
+                    if (orientation === "across") {
+                        if (col === 0 || grid[row][col - 1]) {
+                            clueNumberList.push(number);
+                        }
+                    } else {
+                        if (row === 0 || grid[row - 1][col]) {
+                            clueNumberList.push(number);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Sort the clue numbers
+        clueNumberList.sort((a, b) => a - b);
+
+        // If no current clue number, return the last clue
+        if (!currentClueNumber) {
+            return clueNumberList.length > 0 ? clueNumberList[clueNumberList.length - 1] : null;
+        }
+
+        // Find the index of the current clue number
+        const currentIndex = clueNumberList.indexOf(currentClueNumber);
+
+        // If the current clue number is not found, return the last clue
+        if (currentIndex === -1) {
+            return clueNumberList.length > 0 ? clueNumberList[clueNumberList.length - 1] : null;
+        }
+
+        // Return the previous clue number, or wrap around to the last clue
+        const prevIndex = (currentIndex - 1 + clueNumberList.length) % clueNumberList.length;
+        return clueNumberList[prevIndex];
+    };
+
+    // Function to find the first empty cell in a clue
+    const findFirstEmptyCellInClue = (
+        clueNumber: number,
+        orientation: ClueOrientation
+    ): [number, number] | null => {
+        const startCell = findClueStartCell(clueNumber, orientation);
+        if (!startCell) return null;
+
+        const [startRow, startCol] = startCell;
+
+        if (orientation === "across") {
+            // For across clues, check cells from left to right
+            for (let col = startCol; col < columns; col++) {
+                // Stop if we hit a black cell
+                if (grid[startRow][col]) break;
+
+                // If this cell is empty, return it
+                if (!letters[startRow][col]) {
+                    return [startRow, col];
+                }
+            }
+        } else {
+            // For down clues, check cells from top to bottom
+            for (let row = startRow; row < rows; row++) {
+                // Stop if we hit a black cell
+                if (grid[row][startCol]) break;
+
+                // If this cell is empty, return it
+                if (!letters[row][startCol]) {
+                    return [row, startCol];
+                }
+            }
+        }
+
+        // If no empty cell found, return the start cell
+        return startCell;
+    };
+
     // Calculate clue numbers for the grid
     const clueNumbers = calculateClueNumbers();
+
+    // Add a useEffect to focus the active cell when it changes
+    useEffect(() => {
+        if (activeCell && gridRef.current) {
+            const [row, col] = activeCell;
+            const cellElement = gridRef.current.querySelector(`[data-row="${row}"][data-col="${col}"]`) as HTMLElement;
+            if (cellElement) {
+                cellElement.focus();
+                // Scroll the cell into view if needed
+                cellElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+            }
+        }
+    }, [activeCell]);
 
     return (
         <div className="crossword-grid" ref={gridRef}>
@@ -392,6 +358,8 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                                 onClick={() => onCellClick && onCellClick(row, col)}
                                 tabIndex={isBlack ? -1 : 0}
                                 onKeyDown={(e) => handleKeyDown(e, row, col)}
+                                data-row={row}
+                                data-col={col}
                             >
                                 {!isBlack && (
                                     <>
