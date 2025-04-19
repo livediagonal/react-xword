@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import CrosswordGrid from "./CrosswordGrid";
 import { CrosswordState } from "../types";
+import "./CrosswordSolver.css";
 
 interface CrosswordSolverProps {
   ipuzPath: string;
@@ -426,7 +427,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
 
   if (loading) {
     return (
-      <div className="flex h-full w-full items-center justify-center">
+      <div className="solver-loading">
         Loading puzzle...
       </div>
     );
@@ -434,7 +435,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
 
   if (error) {
     return (
-      <div className="flex h-full w-full items-center justify-center text-red-500">
+      <div className="solver-error">
         Error: {error}
       </div>
     );
@@ -442,53 +443,43 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
 
   if (!crosswordState) {
     return (
-      <div className="flex h-full w-full items-center justify-center">
+      <div className="solver-no-data">
         No puzzle data available
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="mb-4 flex space-x-4">
+    <div className="solver-container">
+      <div className="solver-controls">
         <button
           onClick={() => handleClueOrientationChange("across")}
-          className={`rounded px-4 py-2 ${
-            crosswordState.clueOrientation === "across"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-800"
-          }`}
+          className={`solver-button ${crosswordState.clueOrientation === "across" ? "active" : ""}`}
         >
           Across
         </button>
         <button
           onClick={() => handleClueOrientationChange("down")}
-          className={`rounded px-4 py-2 ${
-            crosswordState.clueOrientation === "down"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-800"
-          }`}
+          className={`solver-button ${crosswordState.clueOrientation === "down" ? "active" : ""}`}
         >
           Down
         </button>
       </div>
 
-      <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <h3 className="mb-2 text-lg font-semibold">Across</h3>
-          <div className="max-h-60 overflow-y-auto">
+      <div className="solver-clues-container">
+        <div className="solver-clue-section">
+          <h3>Across</h3>
+          <div className="solver-clue-list">
             {Object.entries(crosswordState.clues.Across).map(
               ([number, text]) => (
                 <div
                   key={`across-${number}`}
-                  className={`mb-1 cursor-pointer hover:bg-gray-100 p-1 rounded ${
-                    crosswordState.activeClueNumber === parseInt(number) &&
+                  className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
                     crosswordState.clueOrientation === "across"
-                      ? "bg-yellow-100 font-medium"
-                      : ""
-                  }`}
+                    ? "active"
+                    : ""
+                    }`}
                   onClick={() => {
-                    // Find the first cell of this clue
                     const cellNumber = parseInt(number);
                     const startCell = findClueStartCell(cellNumber, "across");
 
@@ -500,27 +491,25 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
                     });
                   }}
                 >
-                  <span className="font-bold">{number}.</span> {text}
+                  <span className="solver-clue-number">{number}.</span> {text}
                 </div>
               ),
             )}
           </div>
         </div>
 
-        <div>
-          <h3 className="mb-2 text-lg font-semibold">Down</h3>
-          <div className="max-h-60 overflow-y-auto">
+        <div className="solver-clue-section">
+          <h3>Down</h3>
+          <div className="solver-clue-list">
             {Object.entries(crosswordState.clues.Down).map(([number, text]) => (
               <div
                 key={`down-${number}`}
-                className={`mb-1 cursor-pointer hover:bg-gray-100 p-1 rounded ${
-                  crosswordState.activeClueNumber === parseInt(number) &&
+                className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
                   crosswordState.clueOrientation === "down"
-                    ? "bg-yellow-100 font-medium"
-                    : ""
-                }`}
+                  ? "active"
+                  : ""
+                  }`}
                 onClick={() => {
-                  // Find the first cell of this clue
                   const cellNumber = parseInt(number);
                   const startCell = findClueStartCell(cellNumber, "down");
 
@@ -532,7 +521,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
                   });
                 }}
               >
-                <span className="font-bold">{number}.</span> {text}
+                <span className="solver-clue-number">{number}.</span> {text}
               </div>
             ))}
           </div>
