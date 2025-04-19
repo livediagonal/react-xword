@@ -323,11 +323,27 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
 
         if (clueOrientation === "across") {
             // Check if cell is in the same row as the clue start and to the right of it
-            return row === startRow && col >= startCol;
+            // Stop if we encounter a black cell
+            if (row === startRow && col >= startCol) {
+                // Check all cells from start to current position for black cells
+                for (let c = startCol; c <= col; c++) {
+                    if (grid[row][c]) return false;
+                }
+                return true;
+            }
         } else {
             // Check if cell is in the same column as the clue start and below it
-            return col === startCol && row >= startRow;
+            // Stop if we encounter a black cell
+            if (col === startCol && row >= startRow) {
+                // Check all cells from start to current position for black cells
+                for (let r = startRow; r <= row; r++) {
+                    if (grid[r][col]) return false;
+                }
+                return true;
+            }
         }
+
+        return false;
     };
 
     // Function to find the start cell of a clue

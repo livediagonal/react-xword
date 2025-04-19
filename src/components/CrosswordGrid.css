@@ -54,11 +54,13 @@
 }
 
 .grid-cell.active {
-    background: #e5e7eb;
+    background: #fff9c4;
+    /* Light yellow highlighter */
 }
 
 .grid-cell.in-active-word {
-    background: #f3f4f6;
+    background: #fff59d;
+    /* Slightly darker yellow highlighter */
 }
 
 .cell-number {
