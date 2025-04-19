@@ -299,6 +299,20 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
             navigateToClueAndCell(nextClueNumber, crosswordState.clueOrientation, firstEmptyCell);
           }
         }
+
+        // Check if the puzzle is completely filled after this letter input
+        const isFilled = isPuzzleFilled();
+        if (isFilled) {
+          // If the puzzle is filled, check if all answers are correct
+          const allCorrect = areAllAnswersCorrect();
+          if (allCorrect) {
+            setShowSuccessModal(true);
+            setShowConfetti(true);
+            setHasCompleted(true);
+          } else {
+            setShowErrorModal(true);
+          }
+        }
       }
     }
   };
@@ -938,18 +952,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     return true;
   };
 
-  // Check for puzzle completion after each letter change
-  useEffect(() => {
-    if (isPuzzleFilled()) {
-      if (areAllAnswersCorrect()) {
-        setShowSuccessModal(true);
-        setShowConfetti(true);
-      } else {
-        setShowErrorModal(true);
-      }
-    }
-  }, [crosswordState?.letters]);
-
   if (loading) {
     return (
       <div className="solver-loading">
@@ -1086,26 +1088,28 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
         <button
           className="solver-action-button"
           onClick={checkAnswer}
-          disabled={!crosswordState.activeClueNumber}
+          disabled={!crosswordState.activeClueNumber || hasCompleted}
         >
           Check Answer
         </button>
         <button
           className="solver-action-button"
           onClick={checkPuzzle}
+          disabled={hasCompleted}
         >
           Check Puzzle
         </button>
         <button
           className="solver-action-button"
           onClick={revealAnswer}
-          disabled={!crosswordState.activeClueNumber}
+          disabled={!crosswordState.activeClueNumber || hasCompleted}
         >
           Reveal Answer
         </button>
         <button
           className="solver-action-button"
           onClick={revealPuzzle}
+          disabled={hasCompleted}
         >
           Reveal Puzzle
         </button>
