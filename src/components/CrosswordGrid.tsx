@@ -61,7 +61,87 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                     }
                 }
             }
+        } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+            e.preventDefault();
+
+            // Find the next white cell in the appropriate direction
+            const nextCell = findNextWhiteCell(row, col, e.key === "ArrowLeft" ? "left" : "right");
+
+            if (nextCell) {
+                // Calculate clue numbers to find the clue number for the next cell
+                const clueNumbers = calculateClueNumbers();
+                const [nextRow, nextCol] = nextCell;
+
+                // Find the clue number for the next cell in the "across" orientation
+                const clueNumber = findClueNumberForCell(nextRow, nextCol, "across");
+
+                if (clueNumber && onNavigateToClue) {
+                    // Use onNavigateToClue to update both orientation and active cell
+                    onNavigateToClue(clueNumber, "across", nextCell);
+                } else if (onCellClick) {
+                    // Fall back to just updating the cell if onNavigateToClue is not available
+                    onCellClick(nextRow, nextCol);
+                }
+            }
+        } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+            e.preventDefault();
+
+            // Find the next white cell in the appropriate direction
+            const nextCell = findNextWhiteCell(row, col, e.key === "ArrowUp" ? "up" : "down");
+
+            if (nextCell) {
+                // Calculate clue numbers to find the clue number for the next cell
+                const clueNumbers = calculateClueNumbers();
+                const [nextRow, nextCol] = nextCell;
+
+                // Find the clue number for the next cell in the "down" orientation
+                const clueNumber = findClueNumberForCell(nextRow, nextCol, "down");
+
+                if (clueNumber && onNavigateToClue) {
+                    // Use onNavigateToClue to update both orientation and active cell
+                    onNavigateToClue(clueNumber, "down", nextCell);
+                } else if (onCellClick) {
+                    // Fall back to just updating the cell if onNavigateToClue is not available
+                    onCellClick(nextRow, nextCol);
+                }
+            }
         }
+    };
+
+    // Helper function to find the next white cell in a given direction
+    const findNextWhiteCell = (
+        row: number,
+        col: number,
+        direction: "left" | "right" | "up" | "down"
+    ): [number, number] | null => {
+        let nextRow = row;
+        let nextCol = col;
+
+        switch (direction) {
+            case "left":
+                nextCol = col - 1;
+                break;
+            case "right":
+                nextCol = col + 1;
+                break;
+            case "up":
+                nextRow = row - 1;
+                break;
+            case "down":
+                nextRow = row + 1;
+                break;
+        }
+
+        // Check if the next position is within bounds and is a white cell
+        if (
+            nextRow >= 0 && nextRow < rows &&
+            nextCol >= 0 && nextCol < columns &&
+            !grid[nextRow][nextCol]
+        ) {
+            return [nextRow, nextCol];
+        }
+
+        return null;
     };
 
     // Helper function to calculate clue numbers
@@ -313,6 +393,34 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
 
         // If no empty cell found, return the start cell
         return startCell;
+    };
+
+    // Helper function to find the clue number for a cell in a given orientation
+    const findClueNumberForCell = (
+        row: number,
+        col: number,
+        orientation: ClueOrientation
+    ): number | null => {
+        const clueNumbers = calculateClueNumbers();
+
+        // Find the start of the word in the given orientation
+        let startRow = row;
+        let startCol = col;
+
+        if (orientation === "across") {
+            // For across clues, move left until we hit a black cell or the edge
+            while (startCol > 0 && !grid[startRow][startCol - 1]) {
+                startCol--;
+            }
+        } else {
+            // For down clues, move up until we hit a black cell or the edge
+            while (startRow > 0 && !grid[startRow - 1][startCol]) {
+                startRow--;
+            }
+        }
+
+        // Return the clue number at the start of the word
+        return clueNumbers[startRow][startCol] || null;
     };
 
     // Calculate clue numbers for the grid
