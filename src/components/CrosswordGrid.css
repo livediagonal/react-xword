@@ -35,6 +35,7 @@
     outline: none;
     border-right: 1px solid #000;
     border-bottom: 1px solid #000;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 .crossword-cell:focus {
@@ -68,42 +69,38 @@
 
 .cell-number {
     position: absolute;
-    top: 2px;
+    top: 0px;
     left: 2px;
-    font-size: 0.6em;
+    font-size: 0.5em;
+    font-weight: normal;
 }
 
 .cell-letter {
-    font-size: 1.2em;
-    font-weight: bold;
+    font-size: 1.1em;
+    font-weight: normal;
     width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-top: 4px;
 }
 
 .crossword-cell.validated-cell {
     background-color: #e6f7ff;
-    /* Light blue for validated cells */
     color: #1a73e8;
-    /* Blue text for validated cells */
-    font-weight: bold;
+    font-weight: normal;
 }
 
 .crossword-cell.revealed-cell {
     background-color: #f0f0f0;
-    /* Light gray for revealed cells */
     color: #666666;
-    /* Gray text for revealed cells */
-    font-style: italic;
+    font-style: normal;
 }
 
 /* Styling for cells that are both revealed and validated (correct) */
 .crossword-cell.revealed-cell.validated-cell {
     background-color: #e6f7ff;
-    /* Light blue for correct revealed cells */
     color: #1a73e8;
-    /* Blue text for correct revealed cells */
-    font-weight: bold;
+    font-weight: normal;
 }
