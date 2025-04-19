@@ -20,6 +20,10 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
   // Use a ref to track if we've already loaded from localStorage
   const hasLoadedFromStorage = useRef(false);
 
+  // Refs for clue list containers
+  const acrossClueListRef = useRef<HTMLDivElement>(null);
+  const downClueListRef = useRef<HTMLDivElement>(null);
+
   // Load puzzle data only once when component mounts
   useEffect(() => {
     const loadPuzzle = async () => {
@@ -140,6 +144,30 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
       localStorage.setItem(SOLVER_STORAGE_KEY, JSON.stringify(crosswordState));
     }
   }, [crosswordState]);
+
+  // Scroll to active clue when it changes
+  useEffect(() => {
+    if (!crosswordState || !crosswordState.activeClueNumber) return;
+
+    // Find the active clue element
+    const clueId = `${crosswordState.clueOrientation}-${crosswordState.activeClueNumber}`;
+    const activeClueElement = document.getElementById(clueId);
+
+    if (activeClueElement) {
+      // Get the appropriate clue list container
+      const clueListRef = crosswordState.clueOrientation === 'across'
+        ? acrossClueListRef.current
+        : downClueListRef.current;
+
+      if (clueListRef) {
+        // Scroll the clue into view at the top of the container
+        activeClueElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }
+  }, [crosswordState?.activeClueNumber, crosswordState?.clueOrientation]);
 
   // Add a useEffect hook to log state changes
   useEffect(() => {
@@ -713,11 +741,12 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
         <div className="solver-clues-container">
           <div className="solver-clue-section">
             <h3>Across</h3>
-            <div className="solver-clue-list">
+            <div className="solver-clue-list" ref={acrossClueListRef}>
               {Object.entries(crosswordState.clues.Across).map(
                 ([number, text]) => (
                   <div
                     key={`across-${number}`}
+                    id={`across-${number}`}
                     className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
                       crosswordState.clueOrientation === "across"
                       ? "active"
@@ -743,10 +772,11 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
 
           <div className="solver-clue-section">
             <h3>Down</h3>
-            <div className="solver-clue-list">
+            <div className="solver-clue-list" ref={downClueListRef}>
               {Object.entries(crosswordState.clues.Down).map(([number, text]) => (
                 <div
                   key={`down-${number}`}
+                  id={`down-${number}`}
                   className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
                     crosswordState.clueOrientation === "down"
                     ? "active"
