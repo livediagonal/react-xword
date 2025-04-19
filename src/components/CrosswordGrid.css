@@ -19,7 +19,7 @@
     border: 1px solid #000;
 }
 
-.grid-cell {
+.crossword-cell {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -37,31 +37,31 @@
     border-bottom: 1px solid #000;
 }
 
-.grid-cell:focus {
+.crossword-cell:focus {
     outline: 3px solid #2563eb;
     outline-offset: -3px;
     z-index: 1;
 }
 
-.grid-cell.black {
+.crossword-cell.black-cell {
     background: #000;
     color: #fff;
     pointer-events: none;
 }
 
-.grid-cell.white {
+.crossword-cell:not(.black-cell) {
     background: #fff;
     color: #000;
 }
 
-.grid-cell.active {
+.crossword-cell.active-cell {
     background: #fff9c4;
     /* Light yellow highlighter */
     box-shadow: 0 0 0 2px #2563eb;
     z-index: 1;
 }
 
-.grid-cell.in-active-word {
+.crossword-cell.part-of-active-clue {
     background: #fff59d;
     /* Slightly darker yellow highlighter */
 }
@@ -81,4 +81,29 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.crossword-cell.validated-cell {
+    background-color: #e6f7ff;
+    /* Light blue for validated cells */
+    color: #1a73e8;
+    /* Blue text for validated cells */
+    font-weight: bold;
+}
+
+.crossword-cell.revealed-cell {
+    background-color: #f0f0f0;
+    /* Light gray for revealed cells */
+    color: #666666;
+    /* Gray text for revealed cells */
+    font-style: italic;
+}
+
+/* Styling for cells that are both revealed and validated (correct) */
+.crossword-cell.revealed-cell.validated-cell {
+    background-color: #e6f7ff;
+    /* Light blue for correct revealed cells */
+    color: #1a73e8;
+    /* Blue text for correct revealed cells */
+    font-weight: bold;
 }

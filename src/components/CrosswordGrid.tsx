@@ -14,6 +14,8 @@ export interface CrosswordGridProps {
     onCellClick: ((row: number, col: number) => void) | undefined;
     onNavigateToClue: ((clueNumber: number, orientation: ClueOrientation, cell: [number, number] | null) => void) | undefined;
     activeCell: [number, number] | null | undefined;
+    validatedCells?: boolean[][] | null;
+    revealedCells?: boolean[][] | null;
 }
 
 const CrosswordGrid: React.FC<CrosswordGridProps> = ({
@@ -28,6 +30,8 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     onCellClick,
     onNavigateToClue,
     activeCell,
+    validatedCells,
+    revealedCells,
 }) => {
     const gridRef = useRef<HTMLDivElement>(null);
 
@@ -455,6 +459,39 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         }
     }, [activeCell]);
 
+    // Function to get the cell class based on its state
+    const getCellClass = (row: number, col: number): string => {
+        let cellClass = "crossword-cell";
+
+        // Add black cell class if it's a black cell
+        if (grid[row][col]) {
+            cellClass += " black-cell";
+            return cellClass;
+        }
+
+        // Add active cell class if it's the active cell
+        if (activeCell && activeCell[0] === row && activeCell[1] === col) {
+            cellClass += " active-cell";
+        }
+
+        // Add part of active clue class if it's part of the active clue
+        if (isPartOfActiveClue(row, col)) {
+            cellClass += " part-of-active-clue";
+        }
+
+        // Add validated cell class if it's been validated
+        if (validatedCells && validatedCells[row][col]) {
+            cellClass += " validated-cell";
+        }
+
+        // Add revealed cell class if it's been revealed
+        if (revealedCells && revealedCells[row][col]) {
+            cellClass += " revealed-cell";
+        }
+
+        return cellClass;
+    };
+
     return (
         <div className="crossword-grid" ref={gridRef}>
             <div
@@ -467,25 +504,21 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
             >
                 {Array.from({ length: rows }, (_, row) =>
                     Array.from({ length: columns }, (_, col) => {
-                        const isBlack = grid[row][col];
+                        const cellClass = getCellClass(row, col);
                         const letter = letters[row][col];
                         const number = clueNumbers[row][col];
-                        const isActive =
-                            activeCell && activeCell[0] === row && activeCell[1] === col;
-                        const isInActiveWord = isPartOfActiveClue(row, col);
 
                         return (
                             <div
                                 key={`${row}-${col}`}
-                                className={`grid-cell ${isBlack ? "black" : "white"} ${isActive ? "active" : ""
-                                    } ${isInActiveWord ? "in-active-word" : ""}`}
+                                className={cellClass}
                                 onClick={() => onCellClick && onCellClick(row, col)}
-                                tabIndex={isBlack ? -1 : 0}
+                                tabIndex={0}
                                 onKeyDown={(e) => handleKeyDown(e, row, col)}
                                 data-row={row}
                                 data-col={col}
                             >
-                                {!isBlack && (
+                                {!grid[row][col] && (
                                     <>
                                         {number > 0 && (
                                             <div className="cell-number">{number}</div>

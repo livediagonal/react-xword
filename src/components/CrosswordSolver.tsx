@@ -16,6 +16,9 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [solution, setSolution] = useState<string[][] | null>(null);
+  const [validatedCells, setValidatedCells] = useState<boolean[][] | null>(null);
+  const [revealedCells, setRevealedCells] = useState<boolean[][] | null>(null);
 
   // Use a ref to track if we've already loaded from localStorage
   const hasLoadedFromStorage = useRef(false);
@@ -44,7 +47,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
         }
 
         // Convert ipuz data to our internal format
-        const { dimensions, puzzle: ipuzPuzzle, clues } = ipuzData;
+        const { dimensions, puzzle: ipuzPuzzle, clues, solution: ipuzSolution } = ipuzData;
         const { width, height } = dimensions;
 
         // Create grid and letters arrays
@@ -54,6 +57,36 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
         const letters: string[][] = Array(height)
           .fill(0)
           .map(() => Array(width).fill(""));
+
+        // Initialize solution array if available
+        let solutionArray: string[][] | null = null;
+        if (ipuzSolution) {
+          solutionArray = Array(height)
+            .fill(0)
+            .map(() => Array(width).fill(""));
+
+          // Process the solution data
+          for (let row = 0; row < height; row++) {
+            for (let col = 0; col < width; col++) {
+              const cell = ipuzSolution[row][col];
+              if (cell && cell !== "#" && cell !== null) {
+                solutionArray[row][col] = cell;
+              }
+            }
+          }
+          setSolution(solutionArray);
+        }
+
+        // Initialize validated and revealed cells arrays
+        const validatedCellsArray = Array(height)
+          .fill(0)
+          .map(() => Array(width).fill(false));
+        const revealedCellsArray = Array(height)
+          .fill(0)
+          .map(() => Array(width).fill(false));
+
+        setValidatedCells(validatedCellsArray);
+        setRevealedCells(revealedCellsArray);
 
         // Process the puzzle data
         for (let row = 0; row < height; row++) {
@@ -178,6 +211,14 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
 
   const handleLetterChange = (row: number, col: number, letter: string) => {
     if (crosswordState) {
+      // Don't allow changes to validated or revealed cells
+      if (
+        (validatedCells && validatedCells[row] && validatedCells[row][col]) ||
+        (revealedCells && revealedCells[row] && revealedCells[row][col])
+      ) {
+        return;
+      }
+
       const newLetters = [...crosswordState.letters];
 
       // Check if this is a backspace operation (empty string)
@@ -189,6 +230,13 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
 
           if (prevCell) {
             const [prevRow, prevCol] = prevCell;
+            // Don't allow changes to validated or revealed cells
+            if (
+              (validatedCells && validatedCells[prevRow] && validatedCells[prevRow][prevCol]) ||
+              (revealedCells && revealedCells[prevRow] && revealedCells[prevRow][prevCol])
+            ) {
+              return;
+            }
             // Clear the letter in the previous cell
             newLetters[prevRow][prevCol] = "";
 
@@ -680,6 +728,179 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     return startCell;
   };
 
+  // Function to check a single answer
+  const checkAnswer = () => {
+    if (!crosswordState || !solution) return;
+
+    const newValidatedCells = validatedCells ? validatedCells.map(row => [...row]) : Array(crosswordState.rows).fill(0).map(() => Array(crosswordState.columns).fill(false));
+    const newLetters = [...crosswordState.letters];
+
+    // Check the current word
+    if (crosswordState.activeClueNumber && crosswordState.activeCell) {
+      const [row, col] = crosswordState.activeCell;
+      const orientation = crosswordState.clueOrientation;
+
+      // Find the start of the current word
+      const [startRow, startCol] = findWordStart(
+        crosswordState.grid,
+        row,
+        col,
+        orientation === "across"
+      );
+
+      // Check each cell in the word
+      if (orientation === "across") {
+        for (let c = startCol; c < crosswordState.columns; c++) {
+          if (crosswordState.grid[startRow][c]) break; // Stop at black cell
+
+          const isCorrect = newLetters[startRow][c].toUpperCase() === solution[startRow][c].toUpperCase();
+          if (isCorrect) {
+            newValidatedCells[startRow][c] = true;
+          }
+        }
+      } else {
+        for (let r = startRow; r < crosswordState.rows; r++) {
+          if (crosswordState.grid[r][startCol]) break; // Stop at black cell
+
+          const isCorrect = newLetters[r][startCol].toUpperCase() === solution[r][startCol].toUpperCase();
+          if (isCorrect) {
+            newValidatedCells[r][startCol] = true;
+          }
+        }
+      }
+    }
+
+    setValidatedCells(newValidatedCells);
+  };
+
+  // Function to check the entire puzzle
+  const checkPuzzle = () => {
+    if (!crosswordState || !solution) return;
+
+    const newValidatedCells = validatedCells ? validatedCells.map(row => [...row]) : Array(crosswordState.rows).fill(0).map(() => Array(crosswordState.columns).fill(false));
+    const newLetters = [...crosswordState.letters];
+
+    // Check all cells in the puzzle
+    for (let row = 0; row < crosswordState.rows; row++) {
+      for (let col = 0; col < crosswordState.columns; col++) {
+        if (!crosswordState.grid[row][col] && newLetters[row][col]) {
+          const isCorrect = newLetters[row][col].toUpperCase() === solution[row][col].toUpperCase();
+          if (isCorrect) {
+            newValidatedCells[row][col] = true;
+          }
+        }
+      }
+    }
+
+    setValidatedCells(newValidatedCells);
+  };
+
+  // Function to reveal a single answer
+  const revealAnswer = () => {
+    if (!crosswordState || !solution) return;
+
+    const newRevealedCells = [...revealedCells!];
+    const newValidatedCells = [...validatedCells!];
+    const newLetters = [...crosswordState.letters];
+
+    // Reveal the current word
+    if (crosswordState.activeClueNumber && crosswordState.activeCell) {
+      const [row, col] = crosswordState.activeCell;
+      const orientation = crosswordState.clueOrientation;
+
+      // Find the start of the current word
+      const [startRow, startCol] = findWordStart(
+        crosswordState.grid,
+        row,
+        col,
+        orientation === "across"
+      );
+
+      // Reveal each cell in the word
+      if (orientation === "across") {
+        for (let c = startCol; c < crosswordState.columns; c++) {
+          if (crosswordState.grid[startRow][c]) break; // Stop at black cell
+
+          // Check if the cell already had the correct letter
+          const wasCorrect = crosswordState.letters[startRow][c] &&
+            crosswordState.letters[startRow][c].toUpperCase() === solution[startRow][c].toUpperCase();
+
+          // Always set the letter to the solution letter
+          newLetters[startRow][c] = solution[startRow][c];
+          // Always mark as revealed
+          newRevealedCells[startRow][c] = true;
+
+          // Only mark as validated if it was already correct
+          if (wasCorrect) {
+            newValidatedCells[startRow][c] = true;
+          }
+        }
+      } else {
+        for (let r = startRow; r < crosswordState.rows; r++) {
+          if (crosswordState.grid[r][startCol]) break; // Stop at black cell
+
+          // Check if the cell already had the correct letter
+          const wasCorrect = crosswordState.letters[r][startCol] &&
+            crosswordState.letters[r][startCol].toUpperCase() === solution[r][startCol].toUpperCase();
+
+          // Always set the letter to the solution letter
+          newLetters[r][startCol] = solution[r][startCol];
+          // Always mark as revealed
+          newRevealedCells[r][startCol] = true;
+
+          // Only mark as validated if it was already correct
+          if (wasCorrect) {
+            newValidatedCells[r][startCol] = true;
+          }
+        }
+      }
+    }
+
+    setRevealedCells(newRevealedCells);
+    setValidatedCells(newValidatedCells);
+    setCrosswordState({
+      ...crosswordState,
+      letters: newLetters,
+    });
+  };
+
+  // Function to reveal the entire puzzle
+  const revealPuzzle = () => {
+    if (!crosswordState || !solution) return;
+
+    const newRevealedCells = [...revealedCells!];
+    const newValidatedCells = [...validatedCells!];
+    const newLetters = [...crosswordState.letters];
+
+    // Reveal all cells in the puzzle
+    for (let row = 0; row < crosswordState.rows; row++) {
+      for (let col = 0; col < crosswordState.columns; col++) {
+        if (!crosswordState.grid[row][col]) {
+          // Check if the cell already had the correct letter
+          const wasCorrect = crosswordState.letters[row][col] &&
+            crosswordState.letters[row][col].toUpperCase() === solution[row][col].toUpperCase();
+
+          // Always set the letter to the solution letter
+          newLetters[row][col] = solution[row][col];
+          // Always mark as revealed
+          newRevealedCells[row][col] = true;
+
+          // Only mark as validated if it was already correct
+          if (wasCorrect) {
+            newValidatedCells[row][col] = true;
+          }
+        }
+      }
+    }
+
+    setRevealedCells(newRevealedCells);
+    setValidatedCells(newValidatedCells);
+    setCrosswordState({
+      ...crosswordState,
+      letters: newLetters,
+    });
+  };
+
   if (loading) {
     return (
       <div className="solver-loading">
@@ -706,21 +927,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
 
   return (
     <div className="solver-container">
-      <div className="solver-controls">
-        <button
-          onClick={() => handleClueOrientationChange("across")}
-          className={`solver-button ${crosswordState.clueOrientation === "across" ? "active" : ""}`}
-        >
-          Across
-        </button>
-        <button
-          onClick={() => handleClueOrientationChange("down")}
-          className={`solver-button ${crosswordState.clueOrientation === "down" ? "active" : ""}`}
-        >
-          Down
-        </button>
-      </div>
-
       <div className="solver-content">
         <div className="solver-grid-container">
           <CrosswordGrid
@@ -735,6 +941,8 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
             onCellClick={handleCellClick}
             onNavigateToClue={navigateToClueAndCell}
             activeCell={crosswordState.activeCell}
+            validatedCells={validatedCells}
+            revealedCells={revealedCells}
           />
         </div>
 
@@ -799,6 +1007,35 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="solver-actions">
+        <button
+          className="solver-action-button"
+          onClick={checkAnswer}
+          disabled={!crosswordState.activeClueNumber}
+        >
+          Check Answer
+        </button>
+        <button
+          className="solver-action-button"
+          onClick={checkPuzzle}
+        >
+          Check Puzzle
+        </button>
+        <button
+          className="solver-action-button"
+          onClick={revealAnswer}
+          disabled={!crosswordState.activeClueNumber}
+        >
+          Reveal Answer
+        </button>
+        <button
+          className="solver-action-button"
+          onClick={revealPuzzle}
+        >
+          Reveal Puzzle
+        </button>
       </div>
     </div>
   );

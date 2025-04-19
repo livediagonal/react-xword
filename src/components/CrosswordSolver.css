@@ -20,26 +20,6 @@
     /* text-red-500 */
 }
 
-.solver-controls {
-    margin-bottom: 1rem;
-    display: flex;
-    gap: 1rem;
-}
-
-.solver-button {
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-    background-color: #e5e7eb;
-    color: #1f2937;
-    border: none;
-    cursor: pointer;
-}
-
-.solver-button.active {
-    background-color: #2563eb;
-    color: white;
-}
-
 .solver-content {
     display: flex;
     flex-direction: column;
@@ -118,4 +98,33 @@
     .solver-clues-container {
         grid-template-columns: 1fr 1fr;
     }
+}
+
+.solver-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.solver-action-button {
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    background-color: #f3f4f6;
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.solver-action-button:hover {
+    background-color: #e5e7eb;
+}
+
+.solver-action-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
