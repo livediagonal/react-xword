@@ -24,22 +24,20 @@ const App: React.FC = () => {
 
   return (
     <div style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
-      <h1>Crossword Solver Example</h1>
-
-      <div style={{ marginBottom: "2rem" }}>
-        <input
-          type="file"
-          accept=".ipuz"
-          onChange={handleFileUpload}
-          style={{ marginBottom: "1rem" }}
-        />
-      </div>
-
-      {ipuzData && (
-        <div>
-          <h2>Loaded Puzzle</h2>
-          <CrosswordSolver ipuzPath={ipuzData} />
-        </div>
+      {!ipuzData ? (
+        <>
+          <h1>Crossword Solver Example</h1>
+          <div style={{ marginBottom: "2rem" }}>
+            <input
+              type="file"
+              accept=".ipuz"
+              onChange={handleFileUpload}
+              style={{ marginBottom: "1rem" }}
+            />
+          </div>
+        </>
+      ) : (
+        <CrosswordSolver ipuzPath={ipuzData} />
       )}
     </div>
   );

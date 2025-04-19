@@ -466,80 +466,84 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
         </button>
       </div>
 
-      <div className="solver-clues-container">
-        <div className="solver-clue-section">
-          <h3>Across</h3>
-          <div className="solver-clue-list">
-            {Object.entries(crosswordState.clues.Across).map(
-              ([number, text]) => (
+      <div className="solver-content">
+        <div className="solver-grid-container">
+          <CrosswordGrid
+            rows={crosswordState.rows}
+            columns={crosswordState.columns}
+            grid={crosswordState.grid}
+            letters={crosswordState.letters}
+            onLetterChange={handleLetterChange}
+            clueOrientation={crosswordState.clueOrientation}
+            activeClueNumber={crosswordState.activeClueNumber}
+            onClueOrientationChange={handleClueOrientationChange}
+            onCellClick={handleCellClick}
+            activeCell={crosswordState.activeCell}
+          />
+        </div>
+
+        <div className="solver-clues-container">
+          <div className="solver-clue-section">
+            <h3>Across</h3>
+            <div className="solver-clue-list">
+              {Object.entries(crosswordState.clues.Across).map(
+                ([number, text]) => (
+                  <div
+                    key={`across-${number}`}
+                    className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
+                      crosswordState.clueOrientation === "across"
+                      ? "active"
+                      : ""
+                      }`}
+                    onClick={() => {
+                      const cellNumber = parseInt(number);
+                      const startCell = findClueStartCell(cellNumber, "across");
+
+                      setCrosswordState({
+                        ...crosswordState,
+                        activeClueNumber: cellNumber,
+                        clueOrientation: "across",
+                        activeCell: startCell,
+                      });
+                    }}
+                  >
+                    <span className="solver-clue-number">{number}.</span> {text}
+                  </div>
+                ),
+              )}
+            </div>
+          </div>
+
+          <div className="solver-clue-section">
+            <h3>Down</h3>
+            <div className="solver-clue-list">
+              {Object.entries(crosswordState.clues.Down).map(([number, text]) => (
                 <div
-                  key={`across-${number}`}
+                  key={`down-${number}`}
                   className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
-                    crosswordState.clueOrientation === "across"
+                    crosswordState.clueOrientation === "down"
                     ? "active"
                     : ""
                     }`}
                   onClick={() => {
                     const cellNumber = parseInt(number);
-                    const startCell = findClueStartCell(cellNumber, "across");
+                    const startCell = findClueStartCell(cellNumber, "down");
 
                     setCrosswordState({
                       ...crosswordState,
                       activeClueNumber: cellNumber,
-                      clueOrientation: "across",
+                      clueOrientation: "down",
                       activeCell: startCell,
                     });
                   }}
                 >
                   <span className="solver-clue-number">{number}.</span> {text}
                 </div>
-              ),
-            )}
-          </div>
-        </div>
-
-        <div className="solver-clue-section">
-          <h3>Down</h3>
-          <div className="solver-clue-list">
-            {Object.entries(crosswordState.clues.Down).map(([number, text]) => (
-              <div
-                key={`down-${number}`}
-                className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
-                  crosswordState.clueOrientation === "down"
-                  ? "active"
-                  : ""
-                  }`}
-                onClick={() => {
-                  const cellNumber = parseInt(number);
-                  const startCell = findClueStartCell(cellNumber, "down");
-
-                  setCrosswordState({
-                    ...crosswordState,
-                    activeClueNumber: cellNumber,
-                    clueOrientation: "down",
-                    activeCell: startCell,
-                  });
-                }}
-              >
-                <span className="solver-clue-number">{number}.</span> {text}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
-
-      <CrosswordGrid
-        rows={crosswordState.rows}
-        columns={crosswordState.columns}
-        grid={crosswordState.grid}
-        letters={crosswordState.letters}
-        onLetterChange={handleLetterChange}
-        clueOrientation={crosswordState.clueOrientation}
-        activeClueNumber={crosswordState.activeClueNumber}
-        onClueOrientationChange={handleClueOrientationChange}
-        onCellClick={handleCellClick}
-        activeCell={crosswordState.activeCell}
-      />
     </div>
   );
 };
