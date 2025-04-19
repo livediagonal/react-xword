@@ -151,15 +151,46 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
   const handleLetterChange = (row: number, col: number, letter: string) => {
     if (crosswordState) {
       const newLetters = [...crosswordState.letters];
-      newLetters[row][col] = letter;
 
-      setCrosswordState({
-        ...crosswordState,
-        letters: newLetters,
-      });
+      // Check if this is a backspace operation (empty string)
+      if (letter === "") {
+        // If the current cell is empty, move back one cell and delete that letter
+        if (!newLetters[row][col]) {
+          // Find the previous cell in the current word
+          const prevCell = findPreviousCellInWord(row, col, crosswordState.clueOrientation);
 
-      // After updating the letter, move to the next cell or clue
-      if (letter) {
+          if (prevCell) {
+            const [prevRow, prevCol] = prevCell;
+            // Clear the letter in the previous cell
+            newLetters[prevRow][prevCol] = "";
+
+            // Update the state with the cleared letter
+            setCrosswordState({
+              ...crosswordState,
+              letters: newLetters,
+              activeCell: [prevRow, prevCol],
+            });
+          }
+        } else {
+          // If the current cell has a letter, just clear it and stay in the current cell
+          newLetters[row][col] = "";
+
+          // Update the state with the cleared letter
+          setCrosswordState({
+            ...crosswordState,
+            letters: newLetters,
+          });
+        }
+      } else {
+        // Normal letter input
+        newLetters[row][col] = letter;
+
+        setCrosswordState({
+          ...crosswordState,
+          letters: newLetters,
+        });
+
+        // After updating the letter, move to the next cell or clue
         // Find the next cell in the current word
         const nextCell = findNextCellInWord(row, col, crosswordState.clueOrientation);
 
@@ -214,6 +245,32 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     }
 
     // If we're at the end of the word, return null
+    return null;
+  };
+
+  // Helper function to find the previous cell in the current word
+  const findPreviousCellInWord = (
+    row: number,
+    col: number,
+    orientation: "across" | "down"
+  ): [number, number] | null => {
+    if (!crosswordState) return null;
+
+    const { grid, rows, columns } = crosswordState;
+
+    if (orientation === "across") {
+      // For across clues, move to the left
+      if (col > 0 && !grid[row][col - 1]) {
+        return [row, col - 1];
+      }
+    } else {
+      // For down clues, move up
+      if (row > 0 && !grid[row - 1][col]) {
+        return [row - 1, col];
+      }
+    }
+
+    // If we're at the beginning of the word, return null
     return null;
   };
 
