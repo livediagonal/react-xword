@@ -2,7 +2,10 @@
     width: 100%;
     display: flex;
     justify-content: center;
-    margin: 1rem 0;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 .grid-container {
@@ -11,7 +14,7 @@
     background: #000;
     padding: 0;
     width: 100%;
-    max-width: 600px;
+    max-width: 100%;
     aspect-ratio: var(--grid-aspect-ratio);
     grid-auto-flow: row;
     grid-auto-rows: 1fr;
@@ -27,9 +30,9 @@
     cursor: default;
     user-select: none;
     aspect-ratio: 1;
-    font-size: 1.5rem;
-    min-height: 40px;
-    min-width: 40px;
+    font-size: clamp(0.75rem, 3vw, 1.25rem);
+    min-height: clamp(20px, 6vw, 35px);
+    min-width: clamp(20px, 6vw, 35px);
     box-sizing: border-box;
     overflow: hidden;
     outline: none;

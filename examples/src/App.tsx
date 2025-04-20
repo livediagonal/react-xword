@@ -23,7 +23,13 @@ const App: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
+    <div style={{
+      padding: "clamp(0.5rem, 2vw, 2rem)",
+      maxWidth: "800px",
+      margin: "0 auto",
+      boxSizing: "border-box",
+      width: "100%"
+    }}>
       {!ipuzData ? (
         <>
           <h1>Crossword Solver Example</h1>
