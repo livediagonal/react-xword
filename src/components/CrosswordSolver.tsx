@@ -24,6 +24,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [hasCompleted, setHasCompleted] = useState(false);
+  const [showCondensedView, setShowCondensedView] = useState(false);
 
   // Use a ref to track if we've already loaded from localStorage
   const hasLoadedFromStorage = useRef(false);
@@ -213,6 +214,24 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
       // State changes are now tracked without console logs
     }
   }, [crosswordState]);
+
+  // Add a useEffect to check screen size and update the view mode
+  useEffect(() => {
+    const handleResize = () => {
+      setShowCondensedView(window.innerWidth < 768);
+    };
+
+    // Initial check
+    handleResize();
+
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const handleLetterChange = (row: number, col: number, letter: string) => {
     if (crosswordState) {
@@ -952,6 +971,29 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     return true;
   };
 
+  // Function to get the active clue text
+  const getActiveClueText = (orientation: "across" | "down") => {
+    if (!crosswordState || !crosswordState.activeClueNumber) return null;
+
+    const clueNumber = crosswordState.activeClueNumber;
+    return crosswordState.clues[orientation === "across" ? "Across" : "Down"][clueNumber];
+  };
+
+  // Function to get the first clue from each orientation
+  const getFirstClueFromOrientation = (orientation: "across" | "down") => {
+    if (!crosswordState) return null;
+
+    const clues = orientation === "across" ? crosswordState.clues.Across : crosswordState.clues.Down;
+    const firstClueNumber = Object.keys(clues)[0];
+
+    if (!firstClueNumber) return null;
+
+    return {
+      number: parseInt(firstClueNumber),
+      text: clues[parseInt(firstClueNumber)]
+    };
+  };
+
   if (loading) {
     return (
       <div className="solver-loading">
@@ -1022,65 +1064,120 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
         </div>
 
         <div className="solver-clues-container">
-          <div className="solver-clue-section">
-            <h3>Across</h3>
-            <div className="solver-clue-list" ref={acrossClueListRef}>
-              {Object.entries(crosswordState.clues.Across).map(
-                ([number, text]) => (
-                  <div
-                    key={`across-${number}`}
-                    id={`across-${number}`}
-                    className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
-                      crosswordState.clueOrientation === "across"
-                      ? "active"
-                      : ""
-                      }`}
-                    onClick={() => {
-                      const cellNumber = parseInt(number);
-                      const startCell = findClueStartCell(cellNumber, "across");
+          {showCondensedView ? (
+            // Condensed view for smaller screens
+            <>
+              <div className="solver-clue-section">
+                <div className="solver-clue-list">
+                  {crosswordState.activeClueNumber ? (
+                    // Show active clue if one is selected
+                    <>
+                      {crosswordState.clueOrientation === "across" && (
+                        <div className="solver-clue-item active" data-orientation="across">
+                          <span className="solver-clue-number">{crosswordState.activeClueNumber}.</span>{" "}
+                          {getActiveClueText("across")}
+                        </div>
+                      )}
+                      {crosswordState.clueOrientation === "down" && (
+                        <div className="solver-clue-item active" data-orientation="down">
+                          <span className="solver-clue-number">{crosswordState.activeClueNumber}.</span>{" "}
+                          {getActiveClueText("down")}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    // Show first clue from each orientation if no active clue
+                    <>
+                      {(() => {
+                        const firstAcrossClue = getFirstClueFromOrientation("across");
+                        const firstDownClue = getFirstClueFromOrientation("down");
 
-                      // Find the first empty cell in the clue
-                      const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "across");
-
-                      // Use the first empty cell if available, otherwise use the start cell
-                      navigateToClueAndCell(cellNumber, "across", firstEmptyCell || startCell);
-                    }}
-                  >
-                    <span className="solver-clue-number">{number}.</span> {text}
-                  </div>
-                ),
-              )}
-            </div>
-          </div>
-
-          <div className="solver-clue-section">
-            <h3>Down</h3>
-            <div className="solver-clue-list" ref={downClueListRef}>
-              {Object.entries(crosswordState.clues.Down).map(([number, text]) => (
-                <div
-                  key={`down-${number}`}
-                  id={`down-${number}`}
-                  className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
-                    crosswordState.clueOrientation === "down"
-                    ? "active"
-                    : ""
-                    }`}
-                  onClick={() => {
-                    const cellNumber = parseInt(number);
-                    const startCell = findClueStartCell(cellNumber, "down");
-
-                    // Find the first empty cell in the clue
-                    const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "down");
-
-                    // Use the first empty cell if available, otherwise use the start cell
-                    navigateToClueAndCell(cellNumber, "down", firstEmptyCell || startCell);
-                  }}
-                >
-                  <span className="solver-clue-number">{number}.</span> {text}
+                        return (
+                          <>
+                            {firstAcrossClue && (
+                              <div className="solver-clue-item" data-orientation="across">
+                                <span className="solver-clue-number">{firstAcrossClue.number}.</span>{" "}
+                                {firstAcrossClue.text}
+                              </div>
+                            )}
+                            {firstDownClue && (
+                              <div className="solver-clue-item" data-orientation="down">
+                                <span className="solver-clue-number">{firstDownClue.number}.</span>{" "}
+                                {firstDownClue.text}
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </>
+                  )}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            </>
+          ) : (
+            // Full view for larger screens
+            <>
+              <div className="solver-clue-section">
+                <h3>Across</h3>
+                <div className="solver-clue-list" ref={acrossClueListRef}>
+                  {Object.entries(crosswordState.clues.Across).map(
+                    ([number, text]) => (
+                      <div
+                        key={`across-${number}`}
+                        id={`across-${number}`}
+                        className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
+                          crosswordState.clueOrientation === "across"
+                          ? "active"
+                          : ""
+                          }`}
+                        onClick={() => {
+                          const cellNumber = parseInt(number);
+                          const startCell = findClueStartCell(cellNumber, "across");
+
+                          // Find the first empty cell in the clue
+                          const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "across");
+
+                          // Use the first empty cell if available, otherwise use the start cell
+                          navigateToClueAndCell(cellNumber, "across", firstEmptyCell || startCell);
+                        }}
+                      >
+                        <span className="solver-clue-number">{number}.</span> {text}
+                      </div>
+                    ),
+                  )}
+                </div>
+              </div>
+
+              <div className="solver-clue-section">
+                <h3>Down</h3>
+                <div className="solver-clue-list" ref={downClueListRef}>
+                  {Object.entries(crosswordState.clues.Down).map(([number, text]) => (
+                    <div
+                      key={`down-${number}`}
+                      id={`down-${number}`}
+                      className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
+                        crosswordState.clueOrientation === "down"
+                        ? "active"
+                        : ""
+                        }`}
+                      onClick={() => {
+                        const cellNumber = parseInt(number);
+                        const startCell = findClueStartCell(cellNumber, "down");
+
+                        // Find the first empty cell in the clue
+                        const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "down");
+
+                        // Use the first empty cell if available, otherwise use the start cell
+                        navigateToClueAndCell(cellNumber, "down", firstEmptyCell || startCell);
+                      }}
+                    >
+                      <span className="solver-clue-number">{number}.</span> {text}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
