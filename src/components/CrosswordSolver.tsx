@@ -25,6 +25,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [hasCompleted, setHasCompleted] = useState(false);
   const [showCondensedView, setShowCondensedView] = useState(false);
+  const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
 
   // Use a ref to track if we've already loaded from localStorage
   const hasLoadedFromStorage = useRef(false);
@@ -32,6 +33,26 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
   // Refs for clue list containers
   const acrossClueListRef = useRef<HTMLDivElement>(null);
   const downClueListRef = useRef<HTMLDivElement>(null);
+  const actionsMenuRef = useRef<HTMLDivElement>(null);
+  const actionsToggleRef = useRef<HTMLButtonElement>(null);
+
+  // Add click outside handler
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isActionsMenuOpen &&
+        actionsMenuRef.current &&
+        actionsToggleRef.current &&
+        !actionsMenuRef.current.contains(event.target as Node) &&
+        !actionsToggleRef.current.contains(event.target as Node)) {
+        setIsActionsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isActionsMenuOpen]);
 
   // Load puzzle data only once when component mounts
   useEffect(() => {
@@ -1063,118 +1084,31 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
           />
         </div>
 
-        <div className="solver-clues-container">
-          {showCondensedView ? (
-            // Condensed view for smaller screens
-            <>
-              <div className="solver-clue-section">
-                <div className="solver-clue-list">
-                  {crosswordState.activeClueNumber ? (
-                    // Show active clue if one is selected
-                    <>
-                      {crosswordState.clueOrientation === "across" && (
-                        <div className="solver-clue-item active" data-orientation="across">
-                          <span className="solver-clue-number">{crosswordState.activeClueNumber}.</span>{" "}
-                          {getActiveClueText("across")}
-                        </div>
-                      )}
-                      {crosswordState.clueOrientation === "down" && (
-                        <div className="solver-clue-item active" data-orientation="down">
-                          <span className="solver-clue-number">{crosswordState.activeClueNumber}.</span>{" "}
-                          {getActiveClueText("down")}
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    // Show first clue from each orientation if no active clue
-                    <>
-                      {(() => {
-                        const firstAcrossClue = getFirstClueFromOrientation("across");
-                        const firstDownClue = getFirstClueFromOrientation("down");
-
-                        return (
-                          <>
-                            {firstAcrossClue && (
-                              <div className="solver-clue-item" data-orientation="across">
-                                <span className="solver-clue-number">{firstAcrossClue.number}.</span>{" "}
-                                {firstAcrossClue.text}
-                              </div>
-                            )}
-                            {firstDownClue && (
-                              <div className="solver-clue-item" data-orientation="down">
-                                <span className="solver-clue-number">{firstDownClue.number}.</span>{" "}
-                                {firstDownClue.text}
-                              </div>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </>
-                  )}
-                </div>
-              </div>
-            </>
-          ) : (
-            // Full view for larger screens
-            <>
-              <div className="solver-clue-section">
-                <h3>Across</h3>
-                <div className="solver-clue-list" ref={acrossClueListRef}>
-                  {Object.entries(crosswordState.clues.Across).map(
-                    ([number, text]) => (
-                      <div
-                        key={`across-${number}`}
-                        id={`across-${number}`}
-                        className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
-                          crosswordState.clueOrientation === "across"
-                          ? "active"
-                          : ""
-                          }`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          const cellNumber = parseInt(number);
-                          const startCell = findClueStartCell(cellNumber, "across");
-
-                          // Find the first empty cell in the clue
-                          const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "across");
-
-                          // Use the first empty cell if available, otherwise use the start cell
-                          navigateToClueAndCell(cellNumber, "across", firstEmptyCell || startCell);
-                        }}
-                        onFocus={(e) => {
-                          // Prevent default focus behavior that might cause zooming
-                          e.preventDefault();
-                        }}
-                      >
-                        <span className="solver-clue-number">{number}.</span> {text}
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
-
-              <div className="solver-clue-section">
-                <h3>Down</h3>
-                <div className="solver-clue-list" ref={downClueListRef}>
-                  {Object.entries(crosswordState.clues.Down).map(([number, text]) => (
+        {!showCondensedView && (
+          <div className="solver-clues-container">
+            <div className="solver-clue-section">
+              <h3>Across</h3>
+              <div className="solver-clue-list" ref={acrossClueListRef}>
+                {Object.entries(crosswordState.clues.Across).map(
+                  ([number, text]) => (
                     <div
-                      key={`down-${number}`}
-                      id={`down-${number}`}
+                      key={`across-${number}`}
+                      id={`across-${number}`}
                       className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
-                        crosswordState.clueOrientation === "down"
+                        crosswordState.clueOrientation === "across"
                         ? "active"
                         : ""
                         }`}
                       onClick={(e) => {
                         e.preventDefault();
                         const cellNumber = parseInt(number);
-                        const startCell = findClueStartCell(cellNumber, "down");
+                        const startCell = findClueStartCell(cellNumber, "across");
 
                         // Find the first empty cell in the clue
-                        const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "down");
+                        const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "across");
 
                         // Use the first empty cell if available, otherwise use the start cell
-                        navigateToClueAndCell(cellNumber, "down", firstEmptyCell || startCell);
+                        navigateToClueAndCell(cellNumber, "across", firstEmptyCell || startCell);
                       }}
                       onFocus={(e) => {
                         // Prevent default focus behavior that might cause zooming
@@ -1183,44 +1117,215 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
                     >
                       <span className="solver-clue-number">{number}.</span> {text}
                     </div>
-                  ))}
-                </div>
+                  ),
+                )}
               </div>
-            </>
-          )}
-        </div>
+            </div>
+
+            <div className="solver-clue-section">
+              <h3>Down</h3>
+              <div className="solver-clue-list" ref={downClueListRef}>
+                {Object.entries(crosswordState.clues.Down).map(([number, text]) => (
+                  <div
+                    key={`down-${number}`}
+                    id={`down-${number}`}
+                    className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
+                      crosswordState.clueOrientation === "down"
+                      ? "active"
+                      : ""
+                      }`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const cellNumber = parseInt(number);
+                      const startCell = findClueStartCell(cellNumber, "down");
+
+                      // Find the first empty cell in the clue
+                      const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "down");
+
+                      // Use the first empty cell if available, otherwise use the start cell
+                      navigateToClueAndCell(cellNumber, "down", firstEmptyCell || startCell);
+                    }}
+                    onFocus={(e) => {
+                      // Prevent default focus behavior that might cause zooming
+                      e.preventDefault();
+                    }}
+                  >
+                    <span className="solver-clue-number">{number}.</span> {text}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      <div className="solver-actions">
-        <button
-          className="solver-action-button"
-          onClick={checkAnswer}
-          disabled={!crosswordState.activeClueNumber || hasCompleted}
-        >
-          Check Answer
-        </button>
-        <button
-          className="solver-action-button"
-          onClick={checkPuzzle}
-          disabled={hasCompleted}
-        >
-          Check Puzzle
-        </button>
-        <button
-          className="solver-action-button"
-          onClick={revealAnswer}
-          disabled={!crosswordState.activeClueNumber || hasCompleted}
-        >
-          Reveal Answer
-        </button>
-        <button
-          className="solver-action-button"
-          onClick={revealPuzzle}
-          disabled={hasCompleted}
-        >
-          Reveal Puzzle
-        </button>
-      </div>
+      {showCondensedView && (
+        <div className="solver-footer">
+          <div className="solver-actions">
+            <button
+              ref={actionsToggleRef}
+              className="solver-actions-toggle"
+              onClick={() => setIsActionsMenuOpen(!isActionsMenuOpen)}
+              aria-label="Toggle puzzle actions"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8l-8.2-1.8c-.8-.2-1.6.3-1.8 1.1v0c-.1.4 0 .8.3 1.1l5.3 5.3L3 19.2c-.1.7.4 1.3 1.1 1.4h.2c.3 0 .6-.1.8-.3l5.3-5.3 5.3 5.3c.2.2.5.3.8.3h.2c.7-.1 1.2-.7 1.1-1.4z" />
+              </svg>
+            </button>
+            <div
+              ref={actionsMenuRef}
+              className={`solver-actions-menu ${isActionsMenuOpen ? 'open' : ''}`}
+            >
+              <button
+                className="solver-action-button"
+                onClick={() => {
+                  checkAnswer();
+                  setIsActionsMenuOpen(false);
+                }}
+                disabled={!crosswordState.activeClueNumber || hasCompleted}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Check Answer
+              </button>
+              <button
+                className="solver-action-button"
+                onClick={() => {
+                  checkPuzzle();
+                  setIsActionsMenuOpen(false);
+                }}
+                disabled={hasCompleted}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                  <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+                  <polyline points="21 3 21 8 16 8" />
+                </svg>
+                Check Puzzle
+              </button>
+              <button
+                className="solver-action-button"
+                onClick={() => {
+                  revealAnswer();
+                  setIsActionsMenuOpen(false);
+                }}
+                disabled={!crosswordState.activeClueNumber || hasCompleted}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                Reveal Answer
+              </button>
+              <button
+                className="solver-action-button"
+                onClick={() => {
+                  revealPuzzle();
+                  setIsActionsMenuOpen(false);
+                }}
+                disabled={hasCompleted}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <line x1="9" y1="3" x2="9" y2="21" />
+                  <line x1="15" y1="3" x2="15" y2="21" />
+                  <line x1="3" y1="9" x2="21" y2="9" />
+                  <line x1="3" y1="15" x2="21" y2="15" />
+                </svg>
+                Reveal Puzzle
+              </button>
+            </div>
+          </div>
+          <div className="solver-clues-container">
+            <div className="solver-clue-section">
+              <div className="solver-clue-list">
+                {crosswordState.activeClueNumber ? (
+                  <>
+                    {crosswordState.clueOrientation === "across" && (
+                      <div className="solver-clue-item active" data-orientation="across">
+                        <span className="solver-clue-number">{crosswordState.activeClueNumber}.</span>{" "}
+                        {getActiveClueText("across")}
+                      </div>
+                    )}
+                    {crosswordState.clueOrientation === "down" && (
+                      <div className="solver-clue-item active" data-orientation="down">
+                        <span className="solver-clue-number">{crosswordState.activeClueNumber}.</span>{" "}
+                        {getActiveClueText("down")}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  // Show first clue from each orientation if no active clue
+                  <>
+                    {(() => {
+                      const firstAcrossClue = getFirstClueFromOrientation("across");
+                      const firstDownClue = getFirstClueFromOrientation("down");
+
+                      return (
+                        <>
+                          {firstAcrossClue && (
+                            <div className="solver-clue-item" data-orientation="across">
+                              <span className="solver-clue-number">{firstAcrossClue.number}.</span>{" "}
+                              {firstAcrossClue.text}
+                            </div>
+                          )}
+                          {firstDownClue && (
+                            <div className="solver-clue-item" data-orientation="down">
+                              <span className="solver-clue-number">{firstDownClue.number}.</span>{" "}
+                              {firstDownClue.text}
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!showCondensedView && (
+        <div className="solver-actions">
+          <button
+            className="solver-action-button"
+            onClick={checkAnswer}
+            disabled={!crosswordState.activeClueNumber || hasCompleted}
+          >
+            Check Answer
+          </button>
+          <button
+            className="solver-action-button"
+            onClick={checkPuzzle}
+            disabled={hasCompleted}
+          >
+            Check Puzzle
+          </button>
+          <button
+            className="solver-action-button"
+            onClick={revealAnswer}
+            disabled={!crosswordState.activeClueNumber || hasCompleted}
+          >
+            Reveal Answer
+          </button>
+          <button
+            className="solver-action-button"
+            onClick={revealPuzzle}
+            disabled={hasCompleted}
+          >
+            Reveal Puzzle
+          </button>
+        </div>
+      )}
 
       <Modal
         isOpen={showSuccessModal}
