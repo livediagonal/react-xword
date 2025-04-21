@@ -517,6 +517,10 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                                 onKeyDown={(e) => handleKeyDown(e, row, col)}
                                 data-row={row}
                                 data-col={col}
+                                contentEditable={!grid[row][col]}
+                                inputMode="text"
+                                role="textbox"
+                                aria-label={`Cell ${row},${col}`}
                             >
                                 {!grid[row][col] && (
                                     <>
