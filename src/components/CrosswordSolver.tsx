@@ -524,6 +524,16 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
         return;
       }
 
+      // Check if we're clicking the active cell
+      if (crosswordState.activeCell &&
+        crosswordState.activeCell[0] === row &&
+        crosswordState.activeCell[1] === col) {
+        // Toggle between across and down
+        const newOrientation = crosswordState.clueOrientation === "across" ? "down" : "across";
+        handleClueOrientationChange(newOrientation);
+        return;
+      }
+
       // Find the starting cells for both horizontal and vertical words
       const [horizontalStartRow, horizontalStartCol] = findWordStart(
         crosswordState.grid,
