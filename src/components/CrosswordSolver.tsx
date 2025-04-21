@@ -1045,7 +1045,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
         </div>
       )}
       <div className="solver-content">
-        <div className="solver-grid-container">
+        <div className="solver-grid-container" id="crossword-grid-container">
           <CrosswordGrid
             rows={crosswordState.rows}
             columns={crosswordState.columns}
@@ -1130,7 +1130,8 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
                           ? "active"
                           : ""
                           }`}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
                           const cellNumber = parseInt(number);
                           const startCell = findClueStartCell(cellNumber, "across");
 
@@ -1139,6 +1140,10 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
 
                           // Use the first empty cell if available, otherwise use the start cell
                           navigateToClueAndCell(cellNumber, "across", firstEmptyCell || startCell);
+                        }}
+                        onFocus={(e) => {
+                          // Prevent default focus behavior that might cause zooming
+                          e.preventDefault();
                         }}
                       >
                         <span className="solver-clue-number">{number}.</span> {text}
@@ -1160,7 +1165,8 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
                         ? "active"
                         : ""
                         }`}
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
                         const cellNumber = parseInt(number);
                         const startCell = findClueStartCell(cellNumber, "down");
 
@@ -1169,6 +1175,10 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
 
                         // Use the first empty cell if available, otherwise use the start cell
                         navigateToClueAndCell(cellNumber, "down", firstEmptyCell || startCell);
+                      }}
+                      onFocus={(e) => {
+                        // Prevent default focus behavior that might cause zooming
+                        e.preventDefault();
                       }}
                     >
                       <span className="solver-clue-number">{number}.</span> {text}

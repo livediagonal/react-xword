@@ -39,12 +39,22 @@
     border-right: 1px solid #000;
     border-bottom: 1px solid #000;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    /* Prevent zoom on focus for mobile devices */
+    touch-action: manipulation;
 }
 
 .crossword-cell:focus {
     outline: 3px solid #2563eb;
     outline-offset: -3px;
     z-index: 1;
+}
+
+/* Prevent zoom on focus for mobile devices */
+@media (max-width: 768px) {
+    .crossword-cell {
+        font-size: 16px;
+        /* Minimum font size to prevent zoom on iOS */
+    }
 }
 
 .crossword-cell.black-cell {

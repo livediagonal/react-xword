@@ -459,6 +459,23 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         }
     }, [activeCell]);
 
+    // Add effect to scroll grid to top when active cell changes
+    useEffect(() => {
+        if (activeCell && gridRef.current) {
+            const gridContainer = document.getElementById('crossword-grid-container');
+            if (gridContainer) {
+                const headerOffset = 100; // Adjust this value to control the margin
+                const elementPosition = gridContainer.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        }
+    }, [activeCell]);
+
     // Function to get the cell class based on its state
     const getCellClass = (row: number, col: number): string => {
         let cellClass = "crossword-cell";
@@ -512,7 +529,10 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                             <div
                                 key={`${row}-${col}`}
                                 className={cellClass}
-                                onClick={() => onCellClick && onCellClick(row, col)}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    onCellClick && onCellClick(row, col);
+                                }}
                                 tabIndex={0}
                                 onKeyDown={(e) => handleKeyDown(e, row, col)}
                                 data-row={row}
@@ -521,6 +541,10 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                                 inputMode="text"
                                 role="textbox"
                                 aria-label={`Cell ${row},${col}`}
+                                onFocus={(e) => {
+                                    // Prevent default focus behavior that might cause zooming
+                                    e.preventDefault();
+                                }}
                             >
                                 {!grid[row][col] && (
                                     <>

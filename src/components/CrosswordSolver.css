@@ -4,6 +4,7 @@
     align-items: center;
     width: 100%;
     position: relative;
+    min-height: 100vh;
 }
 
 .solver-loading,
@@ -23,9 +24,42 @@
 
 .solver-content {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 100%;
+    position: relative;
     width: 100%;
-    max-width: 1200px;
+}
+
+.solver-grid-container {
+    width: 100%;
+    max-width: 100%;
+    overflow: visible;
+    /* Allow grid to be fully visible */
+    position: relative;
+    /* For proper positioning */
+    scroll-margin-top: 3rem;
+    /* Increased top margin */
+    padding: 0;
+    /* Remove padding from grid container since parent handles it */
+}
+
+/* Ensure grid maintains resolution on mobile */
+@media (max-width: 767px) {
+    .solver-grid-container {
+        touch-action: manipulation;
+        /* Prevent browser zoom gestures */
+        -webkit-tap-highlight-color: transparent;
+        /* Remove tap highlight on mobile */
+        scroll-margin-top: 2rem;
+        /* Increased mobile margin */
+    }
+
+    .solver-content {
+        flex-direction: column;
+        padding: 1rem;
+    }
 }
 
 .solver-clues-container {
@@ -33,6 +67,7 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: 1rem;
+    position: relative;
 }
 
 .solver-clue-section h3 {
@@ -44,6 +79,7 @@
 .solver-clue-list {
     max-height: 15rem;
     overflow-y: auto;
+    position: relative;
 }
 
 .solver-clue-number {
@@ -72,25 +108,33 @@
         flex-direction: row;
         align-items: flex-start;
         gap: 2rem;
+        height: calc(100vh - 150px);
+        /* Fixed height to prevent jumping */
     }
 
     .solver-grid-container {
         flex: 1;
         max-width: 600px;
+        position: sticky;
+        top: 2rem;
+        align-self: flex-start;
     }
 
     .solver-clues-container {
         flex: 1;
         margin-bottom: 0;
         position: sticky;
-        top: 1rem;
+        top: 2rem;
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1.5rem;
+        align-self: flex-start;
+        max-height: calc(100vh - 150px);
+        overflow-y: auto;
     }
 
     .solver-clue-list {
-        max-height: 70vh;
+        max-height: none;
     }
 }
 
@@ -168,6 +212,8 @@
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
     flex-wrap: wrap;
+    position: relative;
+    z-index: 10;
 }
 
 .solver-action-button {
