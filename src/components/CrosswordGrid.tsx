@@ -446,32 +446,13 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     // Calculate clue numbers for the grid
     const clueNumbers = calculateClueNumbers();
 
-    // Add a useEffect to focus the active cell when it changes
+    // Modify the useEffect to focus the active cell but NOT scroll it into view
     useEffect(() => {
         if (activeCell && gridRef.current) {
             const [row, col] = activeCell;
             const cellElement = gridRef.current.querySelector(`[data-row="${row}"][data-col="${col}"]`) as HTMLElement;
             if (cellElement) {
-                cellElement.focus();
-                // Scroll the cell into view if needed
-                cellElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-            }
-        }
-    }, [activeCell]);
-
-    // Add effect to scroll grid to top when active cell changes
-    useEffect(() => {
-        if (activeCell && gridRef.current) {
-            const gridContainer = document.getElementById('crossword-grid-container');
-            if (gridContainer) {
-                const headerOffset = 100; // Adjust this value to control the margin
-                const elementPosition = gridContainer.getBoundingClientRect().top;
-                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: 'smooth'
-                });
+                cellElement.focus({ preventScroll: true }); // Add preventScroll option
             }
         }
     }, [activeCell]);
@@ -509,6 +490,12 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         return cellClass;
     };
 
+    // Add a handler for touchmove events
+    const handleTouchMove = (e: React.TouchEvent) => {
+        // Prevent default touchmove behavior to stop unwanted scrolling
+        e.preventDefault();
+    };
+
     return (
         <div className="crossword-grid" ref={gridRef}>
             <div
@@ -518,6 +505,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                     gridTemplateRows: `repeat(${rows}, 1fr)`,
                     "--grid-aspect-ratio": `${columns} / ${rows}`,
                 } as React.CSSProperties}
+                onTouchMove={handleTouchMove}
             >
                 {Array.from({ length: rows }, (_, row) =>
                     Array.from({ length: columns }, (_, col) => {
@@ -533,6 +521,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                                     e.preventDefault();
                                     onCellClick && onCellClick(row, col);
                                 }}
+                                onTouchMove={handleTouchMove}
                                 tabIndex={0}
                                 onKeyDown={(e) => handleKeyDown(e, row, col)}
                                 data-row={row}

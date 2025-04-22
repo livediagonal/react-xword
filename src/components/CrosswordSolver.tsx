@@ -37,6 +37,12 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
   const actionsToggleRef = useRef<HTMLButtonElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Function to handle touchmove events
+  const handleTouchMove = (e: React.TouchEvent) => {
+    // Prevent default touchmove behavior to stop unwanted scrolling
+    e.preventDefault();
+  };
+
   // Add click outside handler
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -72,22 +78,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
             containerRef.current.classList.add('keyboard-visible');
             // Set the keyboard height CSS variable
             containerRef.current.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
-
-            // Scroll to the active clue if there is one
-            if (crosswordState?.activeClueNumber) {
-              const clueId = `${crosswordState.clueOrientation}-${crosswordState.activeClueNumber}`;
-              const activeClueElement = document.getElementById(clueId);
-
-              if (activeClueElement) {
-                // Use setTimeout to ensure the DOM has updated
-                setTimeout(() => {
-                  activeClueElement.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                  });
-                }, 100);
-              }
-            }
           } else {
             containerRef.current.classList.remove('keyboard-visible');
             // Reset the keyboard height CSS variable
@@ -120,7 +110,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
         window.visualViewport.removeEventListener('resize', handleResize);
       }
     };
-  }, [crosswordState?.activeClueNumber, crosswordState?.clueOrientation]);
+  }, []);
 
   // Load puzzle data only once when component mounts
   useEffect(() => {
@@ -273,8 +263,11 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     }
   }, [crosswordState]);
 
-  // Scroll to active clue when it changes
+  // Scroll to active clue when it changes, but only for desktop
   useEffect(() => {
+    // Don't scroll on mobile devices to maintain fixed position UI
+    if (window.innerWidth <= 767) return;
+
     if (!crosswordState || !crosswordState.activeClueNumber) return;
 
     // Find the active clue element
@@ -1212,7 +1205,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
           </div>
         </div>
 
-        <div className="solver-grid-container" id="crossword-grid-container">
+        <div className="solver-grid-container" id="crossword-grid-container" onTouchMove={handleTouchMove}>
           <CrosswordGrid
             rows={crosswordState.rows}
             columns={crosswordState.columns}

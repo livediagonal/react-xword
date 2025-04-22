@@ -104,17 +104,20 @@
         left: 0;
         padding-top: env(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
+        touch-action: none;
+        -webkit-overflow-scrolling: none;
     }
 
     .solver-content {
-        flex: 1;
         display: flex;
         flex-direction: column;
         padding: 0;
-        overflow-y: auto;
         position: relative;
         gap: 0;
-        height: calc(100vh - var(--footer-height, 0px) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+        touch-action: none;
     }
 
     .solver-active-clue {
@@ -122,29 +125,49 @@
         top: env(safe-area-inset-top);
         left: 0;
         right: 0;
+        width: 100%;
         padding: 0.5rem 4.5rem 0.5rem 1rem;
         background: #ffffff;
         border-bottom: 1px solid #e5e7eb;
-        z-index: 10;
+        z-index: 100;
         height: 3.5rem;
         min-height: 3.5rem;
         max-height: 3.5rem;
         display: flex;
         align-items: center;
         overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        pointer-events: none;
+        /* Make it non-interactive so it doesn't catch touch events */
+    }
+
+    /* But make the actions menu button interactive */
+    .solver-active-clue .solver-actions {
+        pointer-events: auto;
     }
 
     .solver-grid-container {
+        position: fixed;
+        top: calc(3.5rem + env(safe-area-inset-top));
+        left: 0;
+        right: 0;
+        bottom: env(safe-area-inset-bottom);
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
         width: 100%;
         max-width: 100%;
-        touch-action: manipulation;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        touch-action: none;
+        /* Prevent all touch actions */
         -webkit-tap-highlight-color: transparent;
-        overflow: visible;
-        margin: 3.5rem 0 0 0;
-        /* Add top margin to account for fixed active clue */
-        flex: 1;
-        height: auto;
-        padding-bottom: env(safe-area-inset-bottom);
+        z-index: 10;
+        max-height: calc(100vh - 3.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    }
+
+    /* Adjust grid styles when keyboard is visible */
+    .keyboard-visible .solver-grid-container {
+        max-height: calc(100vh - 3.5rem - var(--keyboard-height, 0px) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     }
 
     .solver-footer {
@@ -338,8 +361,7 @@
 
 /* Add a class for when the keyboard is visible */
 .keyboard-visible .solver-content {
-    /* Adjust height based on keyboard visibility and safe area */
-    height: calc(100vh - var(--keyboard-height, 0px) - var(--footer-height, 0px) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    /* No need for special handling with the new fixed layout */
 }
 
 .keyboard-visible .solver-clues-container {
@@ -362,6 +384,7 @@
 
 /* Ensure the grid is properly sized when keyboard is visible */
 .keyboard-visible .solver-grid-container {
+    padding-top: 0.5rem;
     height: calc(100% - var(--clues-height, 0px) - env(safe-area-inset-bottom));
 }
 
