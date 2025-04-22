@@ -16,6 +16,7 @@ export interface CrosswordGridProps {
     activeCell: [number, number] | null | undefined;
     validatedCells?: boolean[][] | null;
     revealedCells?: boolean[][] | null;
+    isKeyboardVisible?: boolean;
 }
 
 const CrosswordGrid: React.FC<CrosswordGridProps> = ({
@@ -32,6 +33,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     activeCell,
     validatedCells,
     revealedCells,
+    isKeyboardVisible = false,
 }) => {
     const gridRef = useRef<HTMLDivElement>(null);
 
@@ -456,6 +458,17 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
             }
         }
     }, [activeCell]);
+
+    // Add a class to the grid container when the keyboard is visible
+    useEffect(() => {
+        if (gridRef.current) {
+            if (isKeyboardVisible) {
+                gridRef.current.classList.add('keyboard-visible');
+            } else {
+                gridRef.current.classList.remove('keyboard-visible');
+            }
+        }
+    }, [isKeyboardVisible]);
 
     // Function to get the cell class based on its state
     const getCellClass = (row: number, col: number): string => {

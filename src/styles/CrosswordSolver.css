@@ -71,18 +71,30 @@
 }
 
 .solver-grid-container {
-    width: 100%;
-    max-width: 100%;
-    touch-action: manipulation;
+    position: fixed;
+    top: calc(3.5rem + env(safe-area-inset-top));
+    left: 0;
+    right: 0;
+    bottom: env(safe-area-inset-bottom);
+    padding: 0.5rem;
+    width: 90%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: none;
     -webkit-tap-highlight-color: transparent;
-    overflow: visible;
-    margin: 0;
-    flex: 1;
-    height: auto;
-    padding-bottom: env(safe-area-inset-bottom);
-    aspect-ratio: 1;
-    position: relative;
-    z-index: 2;
+    z-index: 10;
+
+    /* Fixed small size for mobile grid */
+    height: min(70vw, 350px);
+    width: min(70vw, 350px);
+
+    /* Center the grid horizontally */
+    margin-left: auto;
+    margin-right: auto;
+    aspect-ratio: 1 / 1;
+
+    /* Add some space at the bottom */
+    margin-bottom: 1rem;
 }
 
 /* Hide clues container by default on mobile */
@@ -162,12 +174,11 @@
         /* Prevent all touch actions */
         -webkit-tap-highlight-color: transparent;
         z-index: 10;
-        max-height: calc(100vh - 3.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-    }
-
-    /* Adjust grid styles when keyboard is visible */
-    .keyboard-visible .solver-grid-container {
-        max-height: calc(100vh - 3.5rem - var(--keyboard-height, 0px) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        /* Always assume keyboard is visible on mobile */
+        max-height: calc(100vh - 3.5rem - var(--keyboard-height, 250px) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        /* Maintain aspect ratio while ensuring max-height is not exceeded */
+        width: min(100%, calc(100vh - 3.5rem - var(--keyboard-height, 250px) - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+        aspect-ratio: 1 / 1;
     }
 
     .solver-footer {
@@ -284,14 +295,19 @@
         max-height: 3.2rem;
     }
 
+    /* Reset mobile fixed sizing for desktop */
     .solver-grid-container {
-        flex: 1;
-        max-width: 600px;
         position: sticky;
         top: 4rem;
+        flex: 1;
+        max-width: 600px;
+        width: auto;
+        height: auto;
+        margin: 4rem 0 0 0;
+        overflow: visible;
         align-self: flex-start;
-        margin-top: 4rem;
         z-index: 1;
+        aspect-ratio: 1 / 1;
     }
 
     .solver-actions {
@@ -359,16 +375,6 @@
     }
 }
 
-/* Add a class for when the keyboard is visible */
-.keyboard-visible .solver-content {
-    /* No need for special handling with the new fixed layout */
-}
-
-.keyboard-visible .solver-clues-container {
-    /* Keep clue height minimal even with keyboard and account for safe area */
-    --clues-height: calc(32px + env(safe-area-inset-bottom));
-}
-
 /* Ensure the clue list is scrollable */
 .solver-clue-list {
     max-height: 15rem;
@@ -377,13 +383,13 @@
     -webkit-overflow-scrolling: touch;
 }
 
-/* Add styles for the condensed view when keyboard is visible */
-.keyboard-visible .solver-footer .solver-clues-container {
-    --clues-height: 32px;
+/* Set minimal footer height and account for safe area */
+.solver-footer .solver-clues-container {
+    --clues-height: calc(32px + env(safe-area-inset-bottom));
 }
 
-/* Ensure the grid is properly sized when keyboard is visible */
-.keyboard-visible .solver-grid-container {
+/* Ensure the grid is properly sized */
+.solver-grid-container {
     padding-top: 0.5rem;
     height: calc(100% - var(--clues-height, 0px) - env(safe-area-inset-bottom));
 }

@@ -62,27 +62,24 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     };
   }, []);
 
-  // Add keyboard visibility detection
+  // Simplified mobile handling - use fixed height instead of detection
   useEffect(() => {
     const handleResize = () => {
       // Check if we're on a mobile device
       if (window.innerWidth <= 767) {
-        // Calculate the keyboard height based on viewport changes
-        const keyboardHeight = window.outerHeight - window.innerHeight;
-        const isKeyboardShown = keyboardHeight > 100; // Consider keyboard shown if height > 100px
-        setIsKeyboardVisible(isKeyboardShown);
+        // Always assume keyboard is visible on mobile
+        setIsKeyboardVisible(true);
 
-        // Apply or remove the keyboard-visible class and set the keyboard height
+        // Apply keyboard-visible class for styling purposes
         if (containerRef.current) {
-          if (isKeyboardShown) {
-            containerRef.current.classList.add('keyboard-visible');
-            // Set the keyboard height CSS variable
-            containerRef.current.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
-          } else {
-            containerRef.current.classList.remove('keyboard-visible');
-            // Reset the keyboard height CSS variable
-            containerRef.current.style.removeProperty('--keyboard-height');
-          }
+          containerRef.current.classList.add('keyboard-visible');
+        }
+      } else {
+        // On desktop/tablet, keyboard is not visible
+        setIsKeyboardVisible(false);
+
+        if (containerRef.current) {
+          containerRef.current.classList.remove('keyboard-visible');
         }
       }
     };
@@ -90,25 +87,12 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     // Initial check
     handleResize();
 
-    // Add event listeners
+    // Add event listener for window resize
     window.addEventListener('resize', handleResize);
-    window.addEventListener('focusin', handleResize);
-    window.addEventListener('focusout', handleResize);
-
-    // Add visual viewport API support for better mobile detection
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
-    }
 
     // Clean up
     return () => {
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('focusin', handleResize);
-      window.removeEventListener('focusout', handleResize);
-
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleResize);
-      }
     };
   }, []);
 
@@ -1220,6 +1204,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
             activeCell={crosswordState.activeCell}
             validatedCells={validatedCells}
             revealedCells={revealedCells}
+            isKeyboardVisible={isKeyboardVisible}
           />
         </div>
 

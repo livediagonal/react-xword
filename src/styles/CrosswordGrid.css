@@ -56,19 +56,46 @@
     .crossword-grid {
         padding: 0.5rem;
         height: auto;
-        max-height: calc(100vh - 3.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        /* Fixed small size for better mobile experience */
+        max-width: min(70vw, 350px);
+        max-height: min(70vw, 350px);
+        margin: 0 auto;
     }
 
     .grid-container {
         width: 100%;
         max-width: 100%;
         height: auto;
+        /* Match size with container */
+        max-height: min(70vw, 350px);
     }
 
     .crossword-cell {
-        font-size: 16px;
+        font-size: 14px;
+        /* Smaller font size */
         min-height: 0;
         min-width: 0;
+    }
+}
+
+/* Desktop and tablet styles */
+@media (min-width: 769px) {
+    .crossword-grid {
+        width: 100%;
+        max-width: 100%;
+        max-height: none;
+    }
+
+    .grid-container {
+        width: 100%;
+        max-width: 600px;
+        height: auto;
+    }
+
+    .crossword-cell {
+        font-size: clamp(0.875rem, 2vw, 1.25rem);
+        min-height: clamp(32px, 5vw, 40px);
+        min-width: clamp(32px, 5vw, 40px);
     }
 }
 
