@@ -5,6 +5,7 @@
     width: 100%;
     position: relative;
     min-height: 100vh;
+    z-index: 0;
 }
 
 .solver-loading,
@@ -31,10 +32,11 @@
     position: relative;
     gap: 1rem;
     height: calc(100vh - var(--footer-height, 0px) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    z-index: 1;
 }
 
 .solver-active-clue {
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 4.5rem 0.5rem 1rem;
     background: #ffffff;
     border-bottom: 1px solid #e5e7eb;
     position: sticky;
@@ -78,8 +80,9 @@
     flex: 1;
     height: auto;
     padding-bottom: env(safe-area-inset-bottom);
-    /* Ensure grid maintains its aspect ratio regardless of clue height */
     aspect-ratio: 1;
+    position: relative;
+    z-index: 2;
 }
 
 /* Hide clues container by default on mobile */
@@ -142,16 +145,16 @@
     }
 
     .solver-actions {
-        position: relative;
+        position: absolute;
+        top: 0.5rem;
+        right: 0.75rem;
+        z-index: 20;
         padding: 0;
         margin: 0;
         background: transparent;
     }
 
     .solver-actions-toggle {
-        position: absolute;
-        right: 0.75rem;
-        bottom: calc(100% + 0.25rem);
         width: 2.5rem;
         height: 2.5rem;
         border-radius: 50%;
@@ -163,6 +166,49 @@
         justify-content: center;
         cursor: pointer;
         z-index: 21;
+    }
+
+    .solver-actions-menu {
+        position: absolute;
+        top: calc(100% + 0.5rem);
+        right: 0;
+        background: #ffffff;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 0.5rem;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-width: 150px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .solver-actions-menu.open {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .solver-actions-menu .solver-action-button {
+        width: 100%;
+        text-align: left;
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.375rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: transparent;
+        border: none;
+        color: #4b5563;
+    }
+
+    .solver-actions-menu .solver-action-button:hover {
+        background: #f3f4f6;
     }
 }
 
@@ -204,6 +250,54 @@
         top: 4rem;
         align-self: flex-start;
         margin-top: 4rem;
+        z-index: 1;
+    }
+
+    .solver-actions {
+        position: fixed;
+        top: 0.75rem;
+        right: 1rem;
+        z-index: 9999;
+        padding: 0;
+        margin: 0;
+        background: transparent;
+    }
+
+    .solver-actions-toggle {
+        position: relative;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 9999;
+        padding: 0;
+        margin: 0;
+    }
+
+    .solver-actions-menu {
+        position: fixed;
+        top: 3.5rem;
+        right: 0.75rem;
+        background: #ffffff;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 0.5rem;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-width: 150px;
+        border: 1px solid #e5e7eb;
+        z-index: 9999;
     }
 }
 
@@ -295,28 +389,25 @@
 
 /* Base styles for solver-actions */
 .solver-actions {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-    position: relative;
-    z-index: 10;
-    width: 100%;
+    position: fixed;
+    top: 0.75rem;
+    right: 1rem;
+    z-index: 9999;
+    padding: 0;
+    margin: 0;
+    background: transparent;
 }
 
 /* Add margins only for non-mobile screens */
 @media (min-width: 768px) {
     .solver-actions {
         position: fixed;
-        bottom: 2rem;
-        left: 50%;
-        transform: translateX(-50%);
-        width: auto;
-        background: white;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        border: 1px solid #e5e7eb;
+        top: 0.75rem;
+        right: 1rem;
+        z-index: 9999;
+        padding: 0;
+        margin: 0;
+        background: transparent;
     }
 }
 
@@ -585,33 +676,6 @@
     }
 }
 
-.solver-actions-toggle {
-    position: absolute;
-    right: 1rem;
-    bottom: calc(100% + 0.5rem);
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
-    background: white;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 21;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.solver-actions-toggle:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.solver-actions-toggle:active {
-    transform: scale(0.95);
-}
-
 .solver-actions-toggle svg {
     width: 1.25rem;
     height: 1.25rem;
@@ -619,8 +683,8 @@
 }
 
 .solver-actions-menu {
-    position: absolute;
-    bottom: calc(100% + 3.5rem);
+    position: fixed;
+    top: 3.5rem;
     right: 0.75rem;
     background: #ffffff;
     border-radius: 0.5rem;
@@ -628,12 +692,14 @@
     padding: 0.5rem;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(10px);
+    transform: translateY(-10px);
     transition: all 0.2s ease;
+    display: flex;
     flex-direction: column;
     gap: 0.5rem;
     min-width: 150px;
     border: 1px solid #e5e7eb;
+    z-index: 9999;
 }
 
 .solver-actions-menu.open {

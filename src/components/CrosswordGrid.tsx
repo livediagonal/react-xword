@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import { ClueOrientation } from "../types";
-import "./CrosswordGrid.css";
+import "../styles/CrosswordGrid.css";
 
 export interface CrosswordGridProps {
     rows: number;

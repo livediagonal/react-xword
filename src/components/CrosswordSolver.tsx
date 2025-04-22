@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import CrosswordGrid from "./CrosswordGrid";
 import { CrosswordState } from "../types";
 import Modal from "./Modal";
-import "./CrosswordSolver.css";
+import "../styles/CrosswordSolver.css";
 
 interface CrosswordSolverProps {
   ipuzPath: string;
@@ -40,11 +40,12 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
   // Add click outside handler
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (isActionsMenuOpen &&
+      if (
         actionsMenuRef.current &&
         actionsToggleRef.current &&
         !actionsMenuRef.current.contains(event.target as Node) &&
-        !actionsToggleRef.current.contains(event.target as Node)) {
+        !actionsToggleRef.current.contains(event.target as Node)
+      ) {
         setIsActionsMenuOpen(false);
       }
     };
@@ -53,7 +54,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isActionsMenuOpen]);
+  }, []);
 
   // Add keyboard visibility detection
   useEffect(() => {
@@ -1167,6 +1168,48 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
               })()}
             </>
           )}
+          <div className="solver-actions">
+            <button
+              ref={actionsToggleRef}
+              className="solver-actions-toggle"
+              onClick={() => setIsActionsMenuOpen(!isActionsMenuOpen)}
+              aria-label="Toggle actions menu"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+              </svg>
+            </button>
+            <div ref={actionsMenuRef} className={`solver-actions-menu ${isActionsMenuOpen ? 'open' : ''}`}>
+              <button
+                className="solver-action-button"
+                onClick={checkAnswer}
+                disabled={!crosswordState.activeClueNumber || hasCompleted}
+              >
+                Check Answer
+              </button>
+              <button
+                className="solver-action-button"
+                onClick={checkPuzzle}
+                disabled={hasCompleted}
+              >
+                Check Puzzle
+              </button>
+              <button
+                className="solver-action-button"
+                onClick={revealAnswer}
+                disabled={!crosswordState.activeClueNumber || hasCompleted}
+              >
+                Reveal Answer
+              </button>
+              <button
+                className="solver-action-button"
+                onClick={revealPuzzle}
+                disabled={hasCompleted}
+              >
+                Reveal Puzzle
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="solver-grid-container" id="crossword-grid-container">
@@ -1258,37 +1301,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="solver-actions">
-        <button
-          className="solver-action-button"
-          onClick={checkAnswer}
-          disabled={!crosswordState.activeClueNumber || hasCompleted}
-        >
-          Check Answer
-        </button>
-        <button
-          className="solver-action-button"
-          onClick={checkPuzzle}
-          disabled={hasCompleted}
-        >
-          Check Puzzle
-        </button>
-        <button
-          className="solver-action-button"
-          onClick={revealAnswer}
-          disabled={!crosswordState.activeClueNumber || hasCompleted}
-        >
-          Reveal Answer
-        </button>
-        <button
-          className="solver-action-button"
-          onClick={revealPuzzle}
-          disabled={hasCompleted}
-        >
-          Reveal Puzzle
-        </button>
       </div>
 
       <Modal
