@@ -473,7 +473,14 @@
     }
 }
 
-/* Base styles for solver-actions */
+/* Hide active clue on desktop */
+@media (min-width: 768px) {
+    .solver-active-clue {
+        display: none;
+    }
+}
+
+/* Base styles for solver-actions - will now work independently of clue visibility */
 .solver-actions {
     position: fixed;
     top: 0.75rem;
@@ -819,11 +826,4 @@
 .solver-clue-list {
     margin: 0;
     padding: 0;
-}
-
-/* Hide active clue on desktop */
-@media (min-width: 768px) {
-    .solver-active-clue {
-        display: none;
-    }
 }
