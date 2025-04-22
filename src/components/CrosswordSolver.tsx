@@ -61,15 +61,17 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     const handleResize = () => {
       // Check if we're on a mobile device
       if (window.innerWidth <= 767) {
-        // On iOS, when the keyboard appears, the window.innerHeight decreases
-        // We can use this to detect keyboard visibility
-        const isKeyboardShown = window.innerHeight < window.outerHeight * 0.8;
+        // Calculate the keyboard height based on viewport changes
+        const keyboardHeight = window.outerHeight - window.innerHeight;
+        const isKeyboardShown = keyboardHeight > 100; // Consider keyboard shown if height > 100px
         setIsKeyboardVisible(isKeyboardShown);
 
-        // Apply or remove the keyboard-visible class
+        // Apply or remove the keyboard-visible class and set the keyboard height
         if (containerRef.current) {
           if (isKeyboardShown) {
             containerRef.current.classList.add('keyboard-visible');
+            // Set the keyboard height CSS variable
+            containerRef.current.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
 
             // Scroll to the active clue if there is one
             if (crosswordState?.activeClueNumber) {
@@ -88,6 +90,8 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
             }
           } else {
             containerRef.current.classList.remove('keyboard-visible');
+            // Reset the keyboard height CSS variable
+            containerRef.current.style.removeProperty('--keyboard-height');
           }
         }
       }
