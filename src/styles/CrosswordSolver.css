@@ -301,8 +301,10 @@
         top: 4rem;
         flex: 1;
         max-width: 600px;
-        width: auto;
-        height: auto;
+        width: 600px;
+        /* Fixed width to match clue list height */
+        height: 600px;
+        /* Fixed height to maintain aspect ratio */
         margin: 4rem 0 0 0;
         overflow: visible;
         align-self: flex-start;
@@ -369,15 +371,51 @@
         grid-template-columns: 1fr 1fr;
         gap: 1.5rem;
         align-self: flex-start;
-        max-height: calc(100vh - 200px);
-        overflow-y: auto;
+        overflow: visible;
+        /* Allow individual clue lists to scroll */
         margin-top: 4rem;
+        height: min-content;
+    }
+
+    .solver-clue-section {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+        /* Ensure overflow is managed by the list */
+    }
+
+    .solver-clue-list {
+        max-height: none;
+        height: 600px;
+        /* Match grid's max-width which is 600px with 1:1 aspect ratio */
+        overflow-y: auto;
+        scrollbar-width: none;
+        /* For Firefox */
+    }
+
+    /* Style the scrollbars for WebKit browsers */
+    .solver-clue-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .solver-clue-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .solver-clue-list::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+    }
+
+    .solver-clue-list::-webkit-scrollbar-thumb:hover {
+        background: #555;
     }
 }
 
 /* Ensure the clue list is scrollable */
 .solver-clue-list {
-    max-height: 15rem;
     overflow-y: auto;
     position: relative;
     -webkit-overflow-scrolling: touch;
@@ -398,6 +436,7 @@
     margin-bottom: 0.5rem;
     font-size: 1.125rem;
     font-weight: 600;
+    display: block;
 }
 
 .solver-clue-number {
@@ -780,4 +819,11 @@
 .solver-clue-list {
     margin: 0;
     padding: 0;
+}
+
+/* Hide active clue on desktop */
+@media (min-width: 768px) {
+    .solver-active-clue {
+        display: none;
+    }
 }
