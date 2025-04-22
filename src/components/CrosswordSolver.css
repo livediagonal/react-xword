@@ -53,6 +53,11 @@
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        position: fixed;
+        /* Fix the container to prevent scrolling issues */
+        width: 100%;
+        top: 0;
+        left: 0;
     }
 
     .solver-content {
@@ -65,6 +70,8 @@
         gap: 0;
         /* Remove fixed padding-bottom since we'll handle it in the footer */
         padding-bottom: 0;
+        /* Add padding to account for the footer */
+        padding-bottom: 60px;
     }
 
     .solver-grid-container {
@@ -78,7 +85,10 @@
 
     /* Change from fixed to relative positioning for the footer */
     .solver-footer {
-        position: relative;
+        position: fixed;
+        /* Change to fixed to keep it at the bottom */
+        bottom: 0;
+        left: 0;
         width: 100%;
         z-index: 20;
         background: #ffffff;
@@ -117,6 +127,10 @@
         background: transparent;
         padding: 0.5rem 0.75rem;
         margin: 0;
+        max-height: 40vh;
+        /* Limit height to prevent overflow */
+        overflow-y: auto;
+        /* Make it scrollable */
     }
 
     .solver-clue-section {
@@ -158,6 +172,55 @@
     }
 }
 
+/* Add a class for when the keyboard is visible */
+.keyboard-visible .solver-content {
+    padding-bottom: 120px;
+    /* Increase padding when keyboard is visible */
+    height: auto;
+    /* Allow content to expand */
+    max-height: calc(100vh - 200px);
+    /* Limit height to prevent overflow */
+}
+
+.keyboard-visible .solver-footer {
+    bottom: 0;
+    /* Keep footer at the bottom */
+    position: fixed;
+    /* Ensure it stays fixed */
+}
+
+.keyboard-visible .solver-clues-container {
+    max-height: 30vh;
+    /* Reduce max height when keyboard is visible */
+    overflow-y: auto;
+    /* Ensure it's scrollable */
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scrolling on iOS */
+}
+
+/* Ensure the clue list is scrollable */
+.solver-clue-list {
+    max-height: 15rem;
+    overflow-y: auto;
+    position: relative;
+    -webkit-overflow-scrolling: touch;
+    /* Smooth scrolling on iOS */
+}
+
+/* Add styles for the condensed view when keyboard is visible */
+.keyboard-visible .solver-footer .solver-clues-container {
+    max-height: 25vh;
+    /* Further reduce height in condensed view */
+    overflow-y: auto;
+}
+
+/* Ensure the grid is properly sized when keyboard is visible */
+.keyboard-visible .solver-grid-container {
+    max-height: 50vh;
+    /* Limit grid height when keyboard is visible */
+    overflow: visible;
+}
+
 .solver-clues-container {
     margin-bottom: 1rem;
     display: grid;
@@ -170,12 +233,6 @@
     margin-bottom: 0.5rem;
     font-size: 1.125rem;
     font-weight: 600;
-}
-
-.solver-clue-list {
-    max-height: 15rem;
-    overflow-y: auto;
-    position: relative;
 }
 
 .solver-clue-number {

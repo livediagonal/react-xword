@@ -26,6 +26,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
   const [hasCompleted, setHasCompleted] = useState(false);
   const [showCondensedView, setShowCondensedView] = useState(false);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   // Use a ref to track if we've already loaded from localStorage
   const hasLoadedFromStorage = useRef(false);
@@ -35,6 +36,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
   const downClueListRef = useRef<HTMLDivElement>(null);
   const actionsMenuRef = useRef<HTMLDivElement>(null);
   const actionsToggleRef = useRef<HTMLButtonElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Add click outside handler
   useEffect(() => {
@@ -53,6 +55,68 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isActionsMenuOpen]);
+
+  // Add keyboard visibility detection
+  useEffect(() => {
+    const handleResize = () => {
+      // Check if we're on a mobile device
+      if (window.innerWidth <= 767) {
+        // On iOS, when the keyboard appears, the window.innerHeight decreases
+        // We can use this to detect keyboard visibility
+        const isKeyboardShown = window.innerHeight < window.outerHeight * 0.8;
+        setIsKeyboardVisible(isKeyboardShown);
+
+        // Apply or remove the keyboard-visible class
+        if (containerRef.current) {
+          if (isKeyboardShown) {
+            containerRef.current.classList.add('keyboard-visible');
+
+            // Scroll to the active clue if there is one
+            if (crosswordState?.activeClueNumber) {
+              const clueId = `${crosswordState.clueOrientation}-${crosswordState.activeClueNumber}`;
+              const activeClueElement = document.getElementById(clueId);
+
+              if (activeClueElement) {
+                // Use setTimeout to ensure the DOM has updated
+                setTimeout(() => {
+                  activeClueElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                  });
+                }, 100);
+              }
+            }
+          } else {
+            containerRef.current.classList.remove('keyboard-visible');
+          }
+        }
+      }
+    };
+
+    // Initial check
+    handleResize();
+
+    // Add event listeners
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('focusin', handleResize);
+    window.addEventListener('focusout', handleResize);
+
+    // Add visual viewport API support for better mobile detection
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+    }
+
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('focusin', handleResize);
+      window.removeEventListener('focusout', handleResize);
+
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize);
+      }
+    };
+  }, [crosswordState?.activeClueNumber, crosswordState?.clueOrientation]);
 
   // Load puzzle data only once when component mounts
   useEffect(() => {
@@ -1050,7 +1114,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
   }
 
   return (
-    <div className="solver-container">
+    <div className="solver-container" ref={containerRef}>
       {showConfetti && (
         <div className="confetti-container">
           <div className="confetti"></div>
