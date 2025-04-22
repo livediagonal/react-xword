@@ -57,6 +57,9 @@
         width: 100%;
         top: 0;
         left: 0;
+        /* Add safe area insets for iOS */
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
     }
 
     .solver-content {
@@ -67,8 +70,8 @@
         overflow-y: auto;
         position: relative;
         gap: 0;
-        /* Use viewport height minus the footer height */
-        height: calc(100vh - var(--footer-height, 0px));
+        /* Use viewport height minus the footer height and safe area insets */
+        height: calc(100vh - var(--footer-height, 0px) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     }
 
     .solver-grid-container {
@@ -79,11 +82,11 @@
         overflow: visible;
         margin: 0;
         flex: 1;
-        /* Remove fixed height calculation */
         height: auto;
+        /* Add padding to account for safe area */
+        padding-bottom: env(safe-area-inset-bottom);
     }
 
-    /* Change footer positioning */
     .solver-footer {
         position: absolute;
         bottom: 0;
@@ -94,8 +97,9 @@
         box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
         margin: 0;
         padding: 0;
-        /* Set minimal footer height */
-        --footer-height: 32px;
+        /* Set minimal footer height and account for safe area */
+        --footer-height: calc(32px + env(safe-area-inset-bottom));
+        padding-bottom: env(safe-area-inset-bottom);
     }
 
     .solver-actions {
@@ -127,10 +131,12 @@
         background: transparent;
         padding: 0.25rem 0.5rem;
         margin: 0;
-        /* Adjust height to match new clue height */
-        --clues-height: 40px;
+        /* Adjust height to match new clue height and account for safe area */
+        --clues-height: calc(40px + env(safe-area-inset-bottom));
         height: var(--clues-height);
         overflow-y: auto;
+        /* Add padding to account for safe area */
+        padding-bottom: env(safe-area-inset-bottom);
     }
 
     .solver-clue-section {
@@ -174,13 +180,13 @@
 
 /* Add a class for when the keyboard is visible */
 .keyboard-visible .solver-content {
-    /* Adjust height based on keyboard visibility */
-    height: calc(100vh - var(--keyboard-height, 0px) - var(--footer-height, 0px));
+    /* Adjust height based on keyboard visibility and safe area */
+    height: calc(100vh - var(--keyboard-height, 0px) - var(--footer-height, 0px) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
 }
 
 .keyboard-visible .solver-clues-container {
-    /* Keep clue height minimal even with keyboard */
-    --clues-height: 32px;
+    /* Keep clue height minimal even with keyboard and account for safe area */
+    --clues-height: calc(32px + env(safe-area-inset-bottom));
 }
 
 /* Ensure the clue list is scrollable */
@@ -198,7 +204,7 @@
 
 /* Ensure the grid is properly sized when keyboard is visible */
 .keyboard-visible .solver-grid-container {
-    height: calc(100% - var(--clues-height, 0px));
+    height: calc(100% - var(--clues-height, 0px) - env(safe-area-inset-bottom));
 }
 
 .solver-clues-container {
