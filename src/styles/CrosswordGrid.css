@@ -83,7 +83,9 @@
     .crossword-grid {
         width: 100%;
         /* Use full width of viewport */
-        height: 100vw;
+        height: auto;
+        /* Don't set a fixed height */
+        aspect-ratio: 1/1;
         /* Keep it square */
         margin: 0 auto;
         padding-bottom: 0;
@@ -95,6 +97,20 @@
 
     .crossword-cell {
         font-size: min(5vw, 1.75rem);
+        /* Ensure consistent height regardless of content */
+        box-sizing: border-box;
+        aspect-ratio: 1/1;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+
+    .crossword-cell-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
     }
 
     .cell-number {
