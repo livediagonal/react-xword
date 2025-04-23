@@ -225,6 +225,11 @@
         right: 10px;
         z-index: 40;
     }
+
+    /* Remove left border from active clues on mobile */
+    .solver-clue-item.active {
+        border-left: none;
+    }
 }
 
 /* Adjust the layout when using mobile keyboard */
@@ -242,6 +247,13 @@
 .solver-clue-item.active {
     background-color: #f0f7ff;
     border-left: 3px solid #4a90e2;
+}
+
+/* Remove left border from active clues on mobile */
+@media (max-width: 767px) {
+    .solver-clue-item.active {
+        border-left: none;
+    }
 }
 
 .clue-changed {
