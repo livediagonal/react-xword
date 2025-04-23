@@ -17,6 +17,7 @@ export interface CrosswordGridProps {
     validatedCells?: boolean[][] | null;
     revealedCells?: boolean[][] | null;
     isKeyboardVisible?: boolean;
+    useMobileKeyboard?: boolean;
 }
 
 const CrosswordGrid: React.FC<CrosswordGridProps> = ({
@@ -34,10 +35,14 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     validatedCells,
     revealedCells,
     isKeyboardVisible = false,
+    useMobileKeyboard = false,
 }) => {
     const gridRef = useRef<HTMLDivElement>(null);
 
     const handleKeyDown = (e: React.KeyboardEvent, row: number, col: number) => {
+        // Only process keyboard events if we're not using the mobile keyboard
+        if (useMobileKeyboard) return;
+
         // Handle letter input
         if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key)) {
             e.preventDefault();
@@ -130,6 +135,95 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         }
     };
 
+    // Calculate clue numbers only once
+    const clueNumbers = calculateClueNumbers();
+
+    // Handle touch events for mobile
+    const startTouchRef = useRef<{ x: number; y: number } | null>(null);
+    const lastTouchRef = useRef<{ x: number; y: number } | null>(null);
+    const touchMoveCountRef = useRef<number>(0);
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        startTouchRef.current = { x: touch.clientX, y: touch.clientY };
+        lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
+        touchMoveCountRef.current = 0;
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        e.preventDefault();
+        if (!startTouchRef.current) return;
+
+        const touch = e.touches[0];
+        lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
+        touchMoveCountRef.current++;
+    };
+
+    const handleTouchEnd = (
+        e: React.TouchEvent,
+        row: number,
+        col: number
+    ) => {
+        e.preventDefault();
+        if (!startTouchRef.current || !lastTouchRef.current) return;
+
+        // Reset touch refs
+        const startTouch = startTouchRef.current;
+        const lastTouch = lastTouchRef.current;
+        startTouchRef.current = null;
+        lastTouchRef.current = null;
+
+        // If the touch was essentially a tap (not much movement), treat as click
+        const touchMoved =
+            Math.abs(startTouch.x - lastTouch.x) > 10 ||
+            Math.abs(startTouch.y - lastTouch.y) > 10;
+
+        if (!touchMoved && touchMoveCountRef.current < 5) {
+            if (onCellClick) {
+                onCellClick(row, col);
+            }
+        }
+    };
+
+    // Function to determine cell class
+    const getCellClass = (row: number, col: number): string => {
+        let className = "crossword-cell";
+
+        // Add black cell class if the cell is black
+        if (grid[row][col]) {
+            return className + " black-cell";
+        }
+
+        // Add active cell class if this is the active cell
+        if (
+            activeCell &&
+            activeCell[0] === row &&
+            activeCell[1] === col
+        ) {
+            className += " active-cell";
+        }
+        // Add part of active clue class if this cell is part of the active clue
+        else if (
+            activeClueNumber &&
+            isPartOfActiveClue(row, col)
+        ) {
+            className += " part-of-active-clue";
+        }
+
+        // Add validated class if this cell has been validated
+        if (validatedCells && validatedCells[row] && validatedCells[row][col]) {
+            className += " validated-cell";
+        }
+
+        // Add revealed class if this cell has been revealed
+        if (revealedCells && revealedCells[row] && revealedCells[row][col]) {
+            className += " revealed-cell";
+        }
+
+        return className;
+    };
+
     // Helper function to find the next white cell in a given direction
     const findNextWhiteCell = (
         row: number,
@@ -167,7 +261,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     };
 
     // Helper function to calculate clue numbers
-    const calculateClueNumbers = (): number[][] => {
+    function calculateClueNumbers(): number[][] {
         const clueNumbers: number[][] = Array(rows)
             .fill(0)
             .map(() => Array(columns).fill(0));
@@ -270,8 +364,6 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         clueNumber: number,
         orientation: ClueOrientation,
     ): [number, number] | null => {
-        const clueNumbers = calculateClueNumbers();
-
         // Find the cell with the given clue number
         for (let row = 0; row < rows; row++) {
             for (let col = 0; col < columns; col++) {
@@ -445,9 +537,6 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         return clueNumbers[startRow][startCol] || null;
     };
 
-    // Calculate clue numbers for the grid
-    const clueNumbers = calculateClueNumbers();
-
     // Modify the useEffect to focus the active cell but NOT scroll it into view
     useEffect(() => {
         if (activeCell && gridRef.current) {
@@ -470,54 +559,31 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         }
     }, [isKeyboardVisible]);
 
-    // Function to get the cell class based on its state
-    const getCellClass = (row: number, col: number): string => {
-        let cellClass = "crossword-cell";
+    // Add effect to prevent viewport scaling on input
+    useEffect(() => {
+        // Add meta viewport tag to prevent scaling when focusing on inputs
+        const metaViewport = document.querySelector('meta[name="viewport"]');
+        const originalContent = metaViewport?.getAttribute('content') || '';
 
-        // Add black cell class if it's a black cell
-        if (grid[row][col]) {
-            cellClass += " black-cell";
-            return cellClass;
-        }
+        // Update the viewport to disable scaling
+        metaViewport?.setAttribute('content',
+            originalContent + ', maximum-scale=1.0, user-scalable=0');
 
-        // Add active cell class if it's the active cell
-        if (activeCell && activeCell[0] === row && activeCell[1] === col) {
-            cellClass += " active-cell";
-        }
-
-        // Add part of active clue class if it's part of the active clue
-        if (isPartOfActiveClue(row, col)) {
-            cellClass += " part-of-active-clue";
-        }
-
-        // Add validated cell class if it's been validated
-        if (validatedCells && validatedCells[row][col]) {
-            cellClass += " validated-cell";
-        }
-
-        // Add revealed cell class if it's been revealed
-        if (revealedCells && revealedCells[row][col]) {
-            cellClass += " revealed-cell";
-        }
-
-        return cellClass;
-    };
-
-    // Add a handler for touchmove events
-    const handleTouchMove = (e: React.TouchEvent) => {
-        // Prevent default touchmove behavior to stop unwanted scrolling
-        e.preventDefault();
-    };
+        return () => {
+            // Restore original viewport settings when component unmounts
+            metaViewport?.setAttribute('content', originalContent);
+        };
+    }, []);
 
     return (
-        <div className="crossword-grid" ref={gridRef}>
+        <div className={`crossword-grid ${useMobileKeyboard ? 'use-mobile-keyboard' : ''}`} ref={gridRef}>
             <div
                 className="grid-container"
                 style={{
                     gridTemplateColumns: `repeat(${columns}, 1fr)`,
                     gridTemplateRows: `repeat(${rows}, 1fr)`,
-                    "--grid-aspect-ratio": `${columns} / ${rows}`,
-                } as React.CSSProperties}
+                }}
+                onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
             >
                 {Array.from({ length: rows }, (_, row) =>
@@ -534,31 +600,23 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                                     e.preventDefault();
                                     onCellClick && onCellClick(row, col);
                                 }}
+                                onTouchStart={handleTouchStart}
                                 onTouchMove={handleTouchMove}
-                                tabIndex={0}
+                                onTouchEnd={(e) => handleTouchEnd(e, row, col)}
+                                tabIndex={useMobileKeyboard ? -1 : 0}
                                 onKeyDown={(e) => handleKeyDown(e, row, col)}
                                 data-row={row}
                                 data-col={col}
-                                contentEditable={!grid[row][col]}
-                                inputMode="text"
-                                role="textbox"
-                                aria-label={`Cell ${row},${col}`}
-                                onFocus={(e) => {
-                                    // Prevent default focus behavior that might cause zooming
-                                    e.preventDefault();
-                                }}
+                                aria-readonly={useMobileKeyboard}
+                                aria-label={`crossword cell ${row},${col}`}
                             >
-                                {!grid[row][col] && (
-                                    <>
-                                        {number > 0 && (
-                                            <div className="cell-number">{number}</div>
-                                        )}
-                                        <div className="cell-letter">{letter}</div>
-                                    </>
+                                {!grid[row][col] && number > 0 && (
+                                    <span className="cell-number">{number}</span>
                                 )}
+                                {letter}
                             </div>
                         );
-                    }),
+                    })
                 )}
             </div>
         </div>

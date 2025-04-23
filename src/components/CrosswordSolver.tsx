@@ -3,6 +3,7 @@ import CrosswordGrid from "./CrosswordGrid";
 import { CrosswordState } from "../types";
 import Modal from "./Modal";
 import "../styles/CrosswordSolver.css";
+import VirtualKeyboard from "./VirtualKeyboard";
 
 interface CrosswordSolverProps {
   ipuzPath: string;
@@ -26,6 +27,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
   const [hasCompleted, setHasCompleted] = useState(false);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [useMobileKeyboard, setUseMobileKeyboard] = useState(false);
 
   // Use a ref to track if we've already loaded from localStorage
   const hasLoadedFromStorage = useRef(false);
@@ -62,63 +64,30 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     };
   }, []);
 
-  // Simplified mobile handling - use fixed height instead of detection
+  // Simplified mobile handling - more reliable keyboard detection
   useEffect(() => {
-    let visualViewportHandler: ((event: Event) => void) | null = null;
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const isMobile = window.innerWidth <= 767;
 
     const handleKeyboardVisibility = () => {
-      // Default keyboard height (used if we can't detect)
-      let keyboardHeight = 250;
+      if (!window.visualViewport) return;
 
-      if (window.visualViewport) {
-        // Calculate the difference between window height and visual viewport height
-        // This is often the keyboard height on mobile devices
-        const windowHeight = window.innerHeight;
-        const viewportHeight = window.visualViewport.height;
-        const diff = windowHeight - viewportHeight - (isSafari ? 58 : 0); // Safari has additional offset
+      const windowHeight = window.innerHeight;
+      const viewportHeight = window.visualViewport.height;
+      const heightDifference = windowHeight - viewportHeight;
 
-        if (diff > 100) { // Only consider it a keyboard if difference is significant
-          keyboardHeight = diff;
-          setIsKeyboardVisible(true);
+      // More reliable keyboard detection with higher threshold for Safari
+      const keyboardThreshold = isSafari ? 100 : 150;
+      const isKeyboardVisible = heightDifference > keyboardThreshold;
 
-          // Apply CSS variable for keyboard height
-          document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
-
-          if (containerRef.current) {
-            containerRef.current.classList.add('keyboard-visible');
-          }
-        } else {
-          setIsKeyboardVisible(false);
-          document.documentElement.style.setProperty('--keyboard-height', '0px');
-
-          if (containerRef.current) {
-            containerRef.current.classList.remove('keyboard-visible');
-          }
-        }
-      } else if (window.innerWidth <= 767) {
-        // Fallback for browsers without visualViewport API
+      if (isKeyboardVisible) {
         setIsKeyboardVisible(true);
-        document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+        document.documentElement.style.setProperty('--keyboard-height', `${heightDifference}px`);
 
         if (containerRef.current) {
           containerRef.current.classList.add('keyboard-visible');
         }
-      }
-    };
-
-    const handleResize = () => {
-      // Check if we're on a mobile device
-      if (window.innerWidth <= 767) {
-        handleKeyboardVisibility();
-
-        // For devices with visualViewport API, add specific event listener
-        if (window.visualViewport && !visualViewportHandler) {
-          visualViewportHandler = () => handleKeyboardVisibility();
-          window.visualViewport.addEventListener('resize', visualViewportHandler);
-        }
       } else {
-        // On desktop/tablet, keyboard is not visible
         setIsKeyboardVisible(false);
         document.documentElement.style.setProperty('--keyboard-height', '0px');
 
@@ -128,20 +97,42 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
       }
     };
 
-    // Initial check
-    handleResize();
+    // Only add visualViewport listeners on mobile
+    if (isMobile && window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleKeyboardVisibility);
+      window.visualViewport.addEventListener('scroll', handleKeyboardVisibility);
 
-    // Add event listener for window resize
-    window.addEventListener('resize', handleResize);
+      // Initial check
+      handleKeyboardVisibility();
+    }
 
     // Clean up
     return () => {
-      window.removeEventListener('resize', handleResize);
-
-      if (window.visualViewport && visualViewportHandler) {
-        window.visualViewport.removeEventListener('resize', visualViewportHandler);
+      if (isMobile && window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleKeyboardVisibility);
+        window.visualViewport.removeEventListener('scroll', handleKeyboardVisibility);
       }
     };
+  }, []);
+
+  // Detect mobile devices on mount and set keyboard mode
+  useEffect(() => {
+    const isMobile = window.innerWidth <= 767;
+    setUseMobileKeyboard(isMobile);
+
+    // Disable the native keyboard by preventing focus on mobile
+    if (isMobile) {
+      // Add meta viewport tag to prevent zooming
+      const existingViewport = document.querySelector('meta[name="viewport"]');
+      if (existingViewport) {
+        existingViewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+      } else {
+        const viewportMeta = document.createElement('meta');
+        viewportMeta.name = 'viewport';
+        viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+        document.getElementsByTagName('head')[0].appendChild(viewportMeta);
+      }
+    }
   }, []);
 
   // Load puzzle data only once when component mounts
@@ -1118,6 +1109,14 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     };
   };
 
+  // Updated function to handle key presses from virtual keyboard
+  const handleVirtualKeyPress = (key: string) => {
+    if (crosswordState && crosswordState.activeCell) {
+      const [row, col] = crosswordState.activeCell;
+      handleLetterChange(row, col, key);
+    }
+  };
+
   if (loading) {
     return (
       <div className="solver-loading">
@@ -1143,7 +1142,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
   }
 
   return (
-    <div className="solver-container" ref={containerRef}>
+    <div className={`solver-container ${isKeyboardVisible ? 'keyboard-visible' : ''} ${useMobileKeyboard ? 'use-mobile-keyboard' : ''}`} ref={containerRef}>
       {showConfetti && (
         <div className="confetti-container">
           <div className="confetti"></div>
@@ -1169,6 +1168,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
         </div>
       )}
       <div className="solver-content">
+        {/* Fixed active clue bar */}
         <div className="solver-active-clue">
           {crosswordState.activeClueNumber ? (
             <>
@@ -1186,7 +1186,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
               )}
             </>
           ) : (
-            // Show first clue from each orientation if no active clue
             <>
               {(() => {
                 const firstAcrossClue = getFirstClueFromOrientation("across");
@@ -1200,12 +1199,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
                         {firstAcrossClue.text}
                       </div>
                     )}
-                    {firstDownClue && (
-                      <div className="solver-clue-item" data-orientation="down">
-                        <span className="solver-clue-number">{firstDownClue.number}.</span>{" "}
-                        {firstDownClue.text}
-                      </div>
-                    )}
                   </>
                 );
               })()}
@@ -1213,7 +1206,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
           )}
         </div>
 
-        {/* Actions menu moved outside of active clue container */}
+        {/* Fixed position actions menu */}
         <div className="solver-actions">
           <button
             ref={actionsToggleRef}
@@ -1257,7 +1250,8 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
           </div>
         </div>
 
-        <div className="solver-grid-container" id="crossword-grid-container" onTouchMove={handleTouchMove}>
+        {/* Grid with better touch handling */}
+        <div className="solver-grid-container" id="crossword-grid-container">
           <CrosswordGrid
             rows={crosswordState.rows}
             columns={crosswordState.columns}
@@ -1273,9 +1267,11 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
             validatedCells={validatedCells}
             revealedCells={revealedCells}
             isKeyboardVisible={isKeyboardVisible}
+            useMobileKeyboard={useMobileKeyboard}
           />
         </div>
 
+        {/* Only shown on desktop */}
         <div className="solver-clues-container">
           <div className="solver-clue-section">
             <h3>Across</h3>
@@ -1294,16 +1290,8 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
                       e.preventDefault();
                       const cellNumber = parseInt(number);
                       const startCell = findClueStartCell(cellNumber, "across");
-
-                      // Find the first empty cell in the clue
                       const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "across");
-
-                      // Use the first empty cell if available, otherwise use the start cell
                       navigateToClueAndCell(cellNumber, "across", firstEmptyCell || startCell);
-                    }}
-                    onFocus={(e) => {
-                      // Prevent default focus behavior that might cause zooming
-                      e.preventDefault();
                     }}
                   >
                     <span className="solver-clue-number">{number}.</span> {text}
@@ -1329,16 +1317,8 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
                     e.preventDefault();
                     const cellNumber = parseInt(number);
                     const startCell = findClueStartCell(cellNumber, "down");
-
-                    // Find the first empty cell in the clue
                     const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "down");
-
-                    // Use the first empty cell if available, otherwise use the start cell
                     navigateToClueAndCell(cellNumber, "down", firstEmptyCell || startCell);
-                  }}
-                  onFocus={(e) => {
-                    // Prevent default focus behavior that might cause zooming
-                    e.preventDefault();
                   }}
                 >
                   <span className="solver-clue-number">{number}.</span> {text}
@@ -1348,6 +1328,11 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
           </div>
         </div>
       </div>
+
+      {/* Virtual keyboard for mobile */}
+      {useMobileKeyboard && (
+        <VirtualKeyboard onKeyPress={handleVirtualKeyPress} />
+      )}
 
       <Modal
         isOpen={showSuccessModal}

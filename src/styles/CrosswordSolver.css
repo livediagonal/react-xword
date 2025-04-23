@@ -1,11 +1,11 @@
 .solver-container {
+    position: relative;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    height: 100dvh;
+    /* dynamic viewport height unit */
     width: 100%;
-    position: relative;
-    min-height: 100vh;
-    z-index: 0;
+    overflow: hidden;
 }
 
 .solver-loading,
@@ -24,31 +24,28 @@
 }
 
 .solver-content {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 0;
-    overflow-y: auto;
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
     position: relative;
-    gap: 1rem;
-    height: calc(100vh - var(--footer-height, 0px) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-    z-index: 1;
 }
 
+/* Fixed positioned active clue bar */
 .solver-active-clue {
-    padding: 0.5rem 4.5rem 0.5rem 1rem;
-    background: #ffffff;
-    border-bottom: 1px solid #e5e7eb;
-    position: sticky;
+    position: fixed;
     top: 0;
-    z-index: 10;
-    height: 3.5rem;
-    min-height: 3.5rem;
-    max-height: 3.5rem;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    background-color: #fff;
+    padding: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    min-height: 60px;
     display: flex;
     align-items: center;
-    overflow: hidden;
-    transition: top 0.3s ease, bottom 0.3s ease, height 0.3s ease, width 0.3s ease, transform 0.3s ease;
 }
 
 .solver-active-clue .solver-clue-item {
@@ -71,237 +68,208 @@
     font-weight: 500;
 }
 
-.solver-grid-container {
+/* Fixed positioned actions button */
+.solver-actions {
     position: fixed;
-    top: calc(3.5rem + env(safe-area-inset-top));
-    left: 0;
+    top: 10px;
+    right: 10px;
+    z-index: 40;
+}
+
+.solver-actions-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.solver-actions-menu {
+    position: absolute;
+    top: 50px;
     right: 0;
-    bottom: env(safe-area-inset-bottom);
-    padding: 0.5rem;
-    width: 90%;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    touch-action: none;
-    -webkit-tap-highlight-color: transparent;
-    z-index: 10;
-
-    /* Fixed small size for mobile grid */
-    height: min(70vw, 350px);
-    width: min(70vw, 350px);
-
-    /* Center the grid horizontally */
-    margin-left: auto;
-    margin-right: auto;
-    aspect-ratio: 1 / 1;
-
-    /* Add some space at the bottom */
-    margin-bottom: 1rem;
-    transition: top 0.3s ease, bottom 0.3s ease, height 0.3s ease, width 0.3s ease, transform 0.3s ease;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    width: 150px;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
 }
 
-/* Hide clues container by default on mobile */
+.solver-actions-menu.open {
+    display: flex;
+}
+
+.solver-action-button {
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    text-align: left;
+    font-size: 14px;
+}
+
+/* Grid container with padding to account for fixed elements */
+.solver-grid-container {
+    padding-top: 70px;
+    /* space for the fixed clue bar */
+    flex: 1;
+    overflow: hidden;
+    touch-action: manipulation;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+}
+
+/* Mobile keyboard adjustments */
+.solver-container.keyboard-visible .solver-grid-container {
+    height: calc(100dvh - var(--keyboard-height, 300px));
+}
+
+/* Clues container for below the grid */
 .solver-clues-container {
-    display: none !important;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: #f9f9f9;
 }
 
-/* Mobile-specific styles */
+/* Mobile specific styles */
 @media (max-width: 767px) {
     .solver-container {
-        min-height: 100vh;
-        height: 100%;
+        --keyboard-offset: 0px;
         display: flex;
         flex-direction: column;
-        overflow: hidden;
-        position: fixed;
         width: 100%;
-        top: 0;
-        left: 0;
-        padding-top: env(safe-area-inset-top);
-        padding-bottom: env(safe-area-inset-bottom);
-        touch-action: none;
-        -webkit-overflow-scrolling: none;
-        overscroll-behavior: none;
-        /* Prevent scroll bouncing */
+        overflow-x: hidden;
+        /* Prevent horizontal overflow */
     }
 
     .solver-content {
         display: flex;
         flex-direction: column;
-        padding: 0;
-        position: relative;
-        gap: 0;
-        width: 100%;
-        height: 100vh;
-        overflow: hidden;
-        touch-action: none;
-        overscroll-behavior: none;
-        /* Prevent scroll bouncing */
-    }
-
-    .solver-active-clue {
-        position: fixed;
-        bottom: var(--keyboard-height, 250px);
-        left: 0;
-        right: 0;
-        width: 100%;
-        padding: 0.5rem 4.5rem 0.5rem 1rem;
-        background: #ffffff;
-        border-top: 1px solid #e5e7eb;
-        border-bottom: 1px solid #e5e7eb;
-        z-index: 100;
-        height: 3.5rem;
-        min-height: 3.5rem;
-        max-height: 3.5rem;
-        display: flex;
+        /* Adjust height to leave space for keyboard - 180px is keyboard height + some spacing */
+        height: calc(100dvh - 180px);
+        /* Add these for proper centering */
+        justify-content: center;
         align-items: center;
-        overflow: hidden;
-        box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.1);
-        pointer-events: none;
-        /* Make it non-interactive so it doesn't catch touch events */
-        transition: bottom 0.2s ease;
     }
 
-    /* But make the actions menu button interactive */
-    .solver-active-clue .solver-actions {
-        pointer-events: auto;
+    .solver-clues-container {
+        display: none;
+        /* Hide clues on mobile - we'll show active clue in the bar */
     }
 
     .solver-grid-container {
-        position: fixed;
-        top: env(safe-area-inset-top);
-        left: 0;
-        right: 0;
-        padding-top: 0.5rem;
-        padding-bottom: 0.5rem;
-        width: 100%;
-        max-width: 100%;
-        overflow-y: scroll;
-        -webkit-overflow-scrolling: touch;
-        touch-action: none;
-        /* Prevent all touch actions */
-        -webkit-tap-highlight-color: transparent;
-        z-index: 10;
-        /* Always assume keyboard is visible on mobile */
-        max-height: calc(100vh - 3.5rem - var(--keyboard-height, 250px) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-        /* Maintain aspect ratio while ensuring max-height is not exceeded */
-        width: min(100%, calc(100vh - 3.5rem - var(--keyboard-height, 250px) - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
-        aspect-ratio: 1 / 1;
-        /* Center the grid vertically in the available space */
-        bottom: calc(3.5rem + var(--keyboard-height, 250px));
-        margin: auto;
-    }
-
-    .solver-footer {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        z-index: 20;
-        background: #ffffff;
-        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-        margin: 0;
-        padding: 0;
-        /* Set minimal footer height and account for safe area */
-        --footer-height: calc(32px + env(safe-area-inset-bottom));
-        padding-bottom: env(safe-area-inset-bottom);
-    }
-
-    .solver-actions {
-        position: absolute;
-        top: 0.5rem;
-        right: 0.75rem;
-        z-index: 20;
-        padding: 0;
-        margin: 0;
-        background: transparent;
-    }
-
-    .solver-actions-toggle {
-        width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 50%;
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        flex: 1;
         display: flex;
-        align-items: center;
         justify-content: center;
-        cursor: pointer;
-        z-index: 21;
-    }
-
-    .solver-actions-menu {
-        position: absolute;
-        top: calc(100% + 0.5rem);
-        right: 0;
-        background: #ffffff;
-        border-radius: 0.5rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        padding: 0.5rem;
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(-10px);
-        transition: all 0.2s ease;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        min-width: 150px;
-        border: 1px solid #e5e7eb;
-    }
-
-    .solver-actions-menu.open {
-        opacity: 1;
-        visibility: visible;
-        transform: translateY(0);
-    }
-
-    .solver-actions-menu .solver-action-button {
-        width: 100%;
-        text-align: left;
-        font-size: 0.875rem;
-        padding: 0.5rem 0.75rem;
-        border-radius: 0.375rem;
-        display: flex;
         align-items: center;
-        gap: 0.5rem;
-        background: transparent;
-        border: none;
-        color: #4b5563;
+        padding-top: 60px;
+        /* Reduced space for active clue bar */
+        padding-bottom: 10px;
+        /* Reduced space above keyboard */
+        overflow: visible;
+        width: 100%;
+        /* Use full width */
+        margin-top: 10px;
+        /* Add some space from the top */
     }
 
-    .solver-actions-menu .solver-action-button:hover {
-        background: #f3f4f6;
-    }
-
-    /* Add active clue animation for better visibility when it changes */
+    /* Make active clue bar more compact */
     .solver-active-clue {
-        transition: bottom 0.3s ease, background-color 0.2s ease;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        min-height: 40px;
+        /* Reduced height */
+        max-height: 60px;
+        /* Reduced max height */
+        z-index: 30;
+        background-color: #fff;
+        padding: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
-    /* Highlight effect when active clue changes */
-    .solver-active-clue.clue-changed {
-        background-color: #fef3c7;
-        animation: highlight-clue 1s ease;
+    /* Adjust clue text size for smaller bar */
+    .solver-active-clue .solver-clue-item {
+        font-size: 0.9rem;
+        -webkit-line-clamp: 2;
+        max-height: 2.5rem;
     }
 
-    @keyframes highlight-clue {
-        0% {
-            background-color: #fef3c7;
-        }
+    /* Move action menu to safer position */
+    .solver-actions {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        z-index: 40;
+    }
+}
 
-        100% {
-            background-color: #ffffff;
-        }
+/* Adjust the layout when using mobile keyboard */
+.solver-container.use-mobile-keyboard .solver-grid-container {
+    height: auto;
+    padding-bottom: 20px;
+}
+
+/* If native keyboard is shown, adjust layout */
+.solver-container.keyboard-visible .solver-grid-container {
+    height: calc(100dvh - var(--keyboard-height, 300px));
+}
+
+/* Additional classes and animations */
+.solver-clue-item.active {
+    background-color: #f0f7ff;
+    border-left: 3px solid #4a90e2;
+}
+
+.clue-changed {
+    animation: highlight-clue 1s ease;
+}
+
+@keyframes highlight-clue {
+
+    0%,
+    100% {
+        background-color: #f0f7ff;
     }
 
-    /* Add shadow to active clue for better visibility */
-    .solver-active-clue {
-        box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
+    50% {
+        background-color: #d0e7ff;
+    }
+}
+
+/* Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+    .solver-container {
+        /* Safari viewport height fix */
+        height: -webkit-fill-available;
+        /* Add padding to account for Safari UI elements at edges */
+        padding-left: env(safe-area-inset-left, 0);
+        padding-right: env(safe-area-inset-right, 0);
     }
 
-    /* Create space for active clue when keyboard is visible */
-    .keyboard-visible .solver-grid-container {
-        margin-bottom: calc(3.5rem + 10px);
+    /* Fix any potential right cutoff issues specific to Safari */
+    .virtual-keyboard {
+        margin-right: env(safe-area-inset-right, 0);
+        width: calc(100% - env(safe-area-inset-right, 0px));
+    }
+
+    .solver-container.keyboard-visible {
+        /* When keyboard is visible on Safari */
+        height: 100%;
     }
 }
 
@@ -495,11 +463,6 @@
     background-color: #f3f4f6;
 }
 
-.solver-clue-item.active {
-    background-color: #fef3c7;
-    font-weight: 500;
-}
-
 /* Only show clues container on larger screens */
 @media (min-width: 768px) {
     .solver-clues-container {
@@ -519,50 +482,6 @@
     .solver-active-clue {
         display: none;
     }
-}
-
-/* Base styles for solver-actions - will now work independently of clue visibility */
-.solver-actions {
-    position: fixed;
-    top: 0.75rem;
-    right: 1rem;
-    z-index: 9999;
-    padding: 0;
-    margin: 0;
-    background: transparent;
-}
-
-/* Add margins only for non-mobile screens */
-@media (min-width: 768px) {
-    .solver-actions {
-        position: fixed;
-        top: 0.75rem;
-        right: 1rem;
-        z-index: 9999;
-        padding: 0;
-        margin: 0;
-        background: transparent;
-    }
-}
-
-.solver-action-button {
-    padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
-    background-color: #f3f4f6;
-    color: #1f2937;
-    border: 1px solid #d1d5db;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.solver-action-button:hover {
-    background-color: #e5e7eb;
-}
-
-.solver-action-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
 }
 
 .confetti-container {
@@ -814,50 +733,6 @@
     width: 1.25rem;
     height: 1.25rem;
     color: #4b5563;
-}
-
-.solver-actions-menu {
-    position: fixed;
-    top: 3.5rem;
-    right: 0.75rem;
-    background: #ffffff;
-    border-radius: 0.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    padding: 0.5rem;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    min-width: 150px;
-    border: 1px solid #e5e7eb;
-    z-index: 9999;
-}
-
-.solver-actions-menu.open {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.solver-actions-menu .solver-action-button {
-    width: 100%;
-    text-align: left;
-    font-size: 0.875rem;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.375rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: transparent;
-    border: none;
-    color: #4b5563;
-}
-
-.solver-actions-menu .solver-action-button:hover {
-    background: #f3f4f6;
 }
 
 .solver-clue-section h3 {
