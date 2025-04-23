@@ -121,13 +121,16 @@
     padding-top: 70px;
     /* space for the fixed clue bar */
     flex: 1;
-    overflow: hidden;
+    overflow: visible;
     touch-action: manipulation;
     position: relative;
     display: flex;
     justify-content: center;
     align-items: flex-start;
     width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+    box-sizing: border-box;
 }
 
 /* Mobile keyboard adjustments */
@@ -179,11 +182,14 @@
         /* Reduced space for active clue bar */
         padding-bottom: 10px;
         /* Reduced space above keyboard */
+        padding-left: 0;
+        padding-right: 0;
         overflow: visible;
         width: 100%;
         /* Use full width */
         margin-top: 10px;
         /* Add some space from the top */
+        box-sizing: border-box;
     }
 
     /* Make active clue bar more compact */
@@ -314,11 +320,13 @@
         /* Fixed width to match clue list height */
         height: 600px;
         /* Fixed height to maintain aspect ratio */
-        margin: 4rem 0 0 0;
+        margin: 4rem auto 0 auto;
+        /* Changed from 4rem 0 0 0 to center the grid */
         overflow: visible;
         align-self: flex-start;
         z-index: 1;
         aspect-ratio: 1 / 1;
+        box-sizing: border-box;
     }
 
     .solver-actions {

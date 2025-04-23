@@ -24,8 +24,8 @@ const App: React.FC = () => {
 
   return (
     <div style={{
-      padding: "clamp(0.5rem, 2vw, 2rem)",
-      maxWidth: "800px",
+      padding: "clamp(0.5rem, 2vw, 2rem) 0",
+      maxWidth: "100%",
       margin: "0 auto",
       boxSizing: "border-box",
       width: "100%"

@@ -1,10 +1,12 @@
 .crossword-grid {
     position: relative;
     width: 100%;
-    max-width: 500px;
+    max-width: 100%;
     margin: 0 auto;
     aspect-ratio: 1/1;
     touch-action: none;
+    /* Ensure grid is contained within the viewport */
+    box-sizing: border-box;
 }
 
 .grid-container {
@@ -18,6 +20,8 @@
     -webkit-user-select: none;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+    /* Ensure container doesn't overflow */
+    box-sizing: border-box;
 }
 
 .crossword-cell {
@@ -77,14 +81,16 @@
 /* Better touch handling for mobile */
 @media (max-width: 767px) {
     .crossword-grid {
-        width: 95vw;
-        /* Use almost full width of viewport */
-        height: 95vw;
+        width: 100%;
+        /* Use full width of viewport */
+        height: 100vw;
         /* Keep it square */
         margin: 0 auto;
         padding-bottom: 0;
-        max-width: 95vh;
+        max-width: 100vh;
         /* Don't let it get too large */
+        /* Ensure grid fits inside viewport with borders visible */
+        box-sizing: border-box;
     }
 
     .crossword-cell {
