@@ -304,11 +304,22 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
         : downClueListRef.current;
 
       if (clueListRef) {
-        // Scroll the clue into view at the top of the container
-        activeClueElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
+        // Instead of using scrollIntoView which might scroll the whole page,
+        // manually scroll only the clue list container
+        const containerRect = clueListRef.getBoundingClientRect();
+        const elementRect = activeClueElement.getBoundingClientRect();
+
+        // Calculate the scroll position to bring the element into view within its container
+        const relativeTop = elementRect.top - containerRect.top;
+        const relativeBottom = elementRect.bottom - containerRect.top;
+
+        if (relativeTop < 0) {
+          // Element is above the visible area of the container
+          clueListRef.scrollBy({ top: relativeTop, behavior: 'smooth' });
+        } else if (relativeBottom > containerRect.height) {
+          // Element is below the visible area of the container
+          clueListRef.scrollBy({ top: relativeBottom - containerRect.height, behavior: 'smooth' });
+        }
       }
     }
   }, [crosswordState?.activeClueNumber, crosswordState?.clueOrientation]);

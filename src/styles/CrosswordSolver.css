@@ -1,11 +1,14 @@
 .solver-container {
-    position: relative;
     display: flex;
     flex-direction: column;
-    height: 100dvh;
-    /* dynamic viewport height unit */
+    height: 100vh;
     width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0.5rem;
+    position: relative;
     overflow: hidden;
+    /* Prevent scrolling */
 }
 
 .solver-loading,
@@ -279,21 +282,47 @@
     }
 }
 
-/* Tablet and desktop styles */
+/* Desktop styles */
 @media (min-width: 768px) {
-    .solver-clues-container {
-        display: grid !important;
-        margin-bottom: 1rem;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        position: relative;
+    .solver-container {
+        overflow: hidden;
+        /* Ensure no scrolling on desktop */
+        padding-top: 4.5rem;
+        /* Add padding to account for the fixed header/clue bar */
+        box-sizing: border-box;
     }
 
     .solver-content {
         flex-direction: row;
         align-items: flex-start;
         gap: 2rem;
-        height: calc(100vh - 150px);
+        height: calc(100vh - 5rem);
+        /* Account for top padding */
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-gap: 1rem;
+        overflow: hidden;
+        /* Prevent content scrolling */
+        padding-top: 0.5rem;
+        /* Small padding to separate from the top */
+        box-sizing: border-box;
+    }
+
+    .solver-clues-container {
+        display: grid !important;
+        margin: 0;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        position: relative;
+        grid-column: 2;
+        grid-template-rows: 1fr 1fr;
+        overflow: hidden;
+        /* Prevent container overflow */
+        align-self: flex-start;
+        /* Align to top */
+        height: auto;
+        padding: 0;
+        box-sizing: border-box;
     }
 
     .solver-active-clue {
@@ -303,30 +332,47 @@
         right: 0;
         padding: 0.75rem 2rem;
         height: 4rem;
-    }
-
-    .solver-active-clue .solver-clue-item {
-        font-size: 1.1rem;
-        max-height: 3.2rem;
+        z-index: 40;
+        /* Ensure it stays above other elements */
     }
 
     /* Reset mobile fixed sizing for desktop */
     .solver-grid-container {
-        position: sticky;
-        top: 4rem;
-        flex: 1;
+        position: relative;
+        /* Change from sticky to relative */
         max-width: 600px;
-        width: 600px;
-        height: 600px;
-        margin: 0 auto;
-        /* Changed from 4rem auto 0 auto to just auto horizontal centering */
+        width: 100%;
+        height: auto;
+        margin: 0;
         overflow: visible;
         align-self: flex-start;
+        /* Align to top */
+        justify-self: center;
         z-index: 1;
         aspect-ratio: 1 / 1;
         box-sizing: border-box;
-        padding-top: 0;
-        /* Remove extra padding from the top */
+        padding: 0;
+        /* Remove all padding */
+    }
+
+    .solver-clue-section {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+        /* Prevent section overflow */
+    }
+
+    .solver-clue-list {
+        flex-grow: 1;
+        overflow-y: auto;
+        /* Allow scrolling within clue lists only */
+        scrollbar-width: thin;
+        padding-right: 0.5rem;
+        height: auto;
+        /* Let it take available space */
+        max-height: none;
+        /* Remove fixed height */
     }
 
     .solver-actions {
@@ -381,17 +427,18 @@
 @media (min-width: 1024px) {
     .solver-clues-container {
         flex: 1;
-        margin-bottom: 0;
-        position: sticky;
-        top: 4rem;
+        margin: 0;
+        position: relative;
+        /* Change from sticky to relative */
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1.5rem;
-        align-self: flex-start;
+        align-self: start;
         overflow: visible;
-        /* Allow individual clue lists to scroll */
-        margin-top: 4rem;
-        height: min-content;
+        height: auto;
+        /* Let height be determined by content */
+        padding: 0;
+        /* Remove any padding */
     }
 
     .solver-clue-section {
