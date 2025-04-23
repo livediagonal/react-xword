@@ -48,6 +48,7 @@
     display: flex;
     align-items: center;
     overflow: hidden;
+    transition: top 0.3s ease, bottom 0.3s ease, height 0.3s ease, width 0.3s ease, transform 0.3s ease;
 }
 
 .solver-active-clue .solver-clue-item {
@@ -95,6 +96,7 @@
 
     /* Add some space at the bottom */
     margin-bottom: 1rem;
+    transition: top 0.3s ease, bottom 0.3s ease, height 0.3s ease, width 0.3s ease, transform 0.3s ease;
 }
 
 /* Hide clues container by default on mobile */
@@ -118,6 +120,8 @@
         padding-bottom: env(safe-area-inset-bottom);
         touch-action: none;
         -webkit-overflow-scrolling: none;
+        overscroll-behavior: none;
+        /* Prevent scroll bouncing */
     }
 
     .solver-content {
@@ -130,16 +134,19 @@
         height: 100vh;
         overflow: hidden;
         touch-action: none;
+        overscroll-behavior: none;
+        /* Prevent scroll bouncing */
     }
 
     .solver-active-clue {
         position: fixed;
-        top: env(safe-area-inset-top);
+        bottom: var(--keyboard-height, 250px);
         left: 0;
         right: 0;
         width: 100%;
         padding: 0.5rem 4.5rem 0.5rem 1rem;
         background: #ffffff;
+        border-top: 1px solid #e5e7eb;
         border-bottom: 1px solid #e5e7eb;
         z-index: 100;
         height: 3.5rem;
@@ -148,9 +155,10 @@
         display: flex;
         align-items: center;
         overflow: hidden;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.1);
         pointer-events: none;
         /* Make it non-interactive so it doesn't catch touch events */
+        transition: bottom 0.2s ease;
     }
 
     /* But make the actions menu button interactive */
@@ -160,15 +168,14 @@
 
     .solver-grid-container {
         position: fixed;
-        top: calc(3.5rem + env(safe-area-inset-top));
+        top: env(safe-area-inset-top);
         left: 0;
         right: 0;
-        bottom: env(safe-area-inset-bottom);
         padding-top: 0.5rem;
         padding-bottom: 0.5rem;
         width: 100%;
         max-width: 100%;
-        overflow-y: auto;
+        overflow-y: scroll;
         -webkit-overflow-scrolling: touch;
         touch-action: none;
         /* Prevent all touch actions */
@@ -179,6 +186,9 @@
         /* Maintain aspect ratio while ensuring max-height is not exceeded */
         width: min(100%, calc(100vh - 3.5rem - var(--keyboard-height, 250px) - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
         aspect-ratio: 1 / 1;
+        /* Center the grid vertically in the available space */
+        bottom: calc(3.5rem + var(--keyboard-height, 250px));
+        margin: auto;
     }
 
     .solver-footer {
@@ -261,6 +271,37 @@
 
     .solver-actions-menu .solver-action-button:hover {
         background: #f3f4f6;
+    }
+
+    /* Add active clue animation for better visibility when it changes */
+    .solver-active-clue {
+        transition: bottom 0.3s ease, background-color 0.2s ease;
+    }
+
+    /* Highlight effect when active clue changes */
+    .solver-active-clue.clue-changed {
+        background-color: #fef3c7;
+        animation: highlight-clue 1s ease;
+    }
+
+    @keyframes highlight-clue {
+        0% {
+            background-color: #fef3c7;
+        }
+
+        100% {
+            background-color: #ffffff;
+        }
+    }
+
+    /* Add shadow to active clue for better visibility */
+    .solver-active-clue {
+        box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Create space for active clue when keyboard is visible */
+    .keyboard-visible .solver-grid-container {
+        margin-bottom: calc(3.5rem + 10px);
     }
 }
 

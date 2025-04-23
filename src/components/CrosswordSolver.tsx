@@ -64,19 +64,63 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
 
   // Simplified mobile handling - use fixed height instead of detection
   useEffect(() => {
+    let visualViewportHandler: ((event: Event) => void) | null = null;
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+    const handleKeyboardVisibility = () => {
+      // Default keyboard height (used if we can't detect)
+      let keyboardHeight = 250;
+
+      if (window.visualViewport) {
+        // Calculate the difference between window height and visual viewport height
+        // This is often the keyboard height on mobile devices
+        const windowHeight = window.innerHeight;
+        const viewportHeight = window.visualViewport.height;
+        const diff = windowHeight - viewportHeight - (isSafari ? 58 : 0); // Safari has additional offset
+
+        if (diff > 100) { // Only consider it a keyboard if difference is significant
+          keyboardHeight = diff;
+          setIsKeyboardVisible(true);
+
+          // Apply CSS variable for keyboard height
+          document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+
+          if (containerRef.current) {
+            containerRef.current.classList.add('keyboard-visible');
+          }
+        } else {
+          setIsKeyboardVisible(false);
+          document.documentElement.style.setProperty('--keyboard-height', '0px');
+
+          if (containerRef.current) {
+            containerRef.current.classList.remove('keyboard-visible');
+          }
+        }
+      } else if (window.innerWidth <= 767) {
+        // Fallback for browsers without visualViewport API
+        setIsKeyboardVisible(true);
+        document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+
+        if (containerRef.current) {
+          containerRef.current.classList.add('keyboard-visible');
+        }
+      }
+    };
+
     const handleResize = () => {
       // Check if we're on a mobile device
       if (window.innerWidth <= 767) {
-        // Always assume keyboard is visible on mobile
-        setIsKeyboardVisible(true);
+        handleKeyboardVisibility();
 
-        // Apply keyboard-visible class for styling purposes
-        if (containerRef.current) {
-          containerRef.current.classList.add('keyboard-visible');
+        // For devices with visualViewport API, add specific event listener
+        if (window.visualViewport && !visualViewportHandler) {
+          visualViewportHandler = () => handleKeyboardVisibility();
+          window.visualViewport.addEventListener('resize', visualViewportHandler);
         }
       } else {
         // On desktop/tablet, keyboard is not visible
         setIsKeyboardVisible(false);
+        document.documentElement.style.setProperty('--keyboard-height', '0px');
 
         if (containerRef.current) {
           containerRef.current.classList.remove('keyboard-visible');
@@ -93,6 +137,10 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     // Clean up
     return () => {
       window.removeEventListener('resize', handleResize);
+
+      if (window.visualViewport && visualViewportHandler) {
+        window.visualViewport.removeEventListener('resize', visualViewportHandler);
+      }
     };
   }, []);
 
@@ -280,6 +328,24 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
       // State changes are now tracked without console logs
     }
   }, [crosswordState]);
+
+  // Add effect to handle clue highlighting when active clue changes
+  useEffect(() => {
+    if (!crosswordState) return;
+
+    const activeClueEl = document.querySelector('.solver-active-clue');
+    if (!activeClueEl) return;
+
+    // Add clue-changed class
+    activeClueEl.classList.add('clue-changed');
+
+    // Remove the class after animation completes
+    const timeout = setTimeout(() => {
+      activeClueEl.classList.remove('clue-changed');
+    }, 1000);
+
+    return () => clearTimeout(timeout);
+  }, [crosswordState?.activeClueNumber, crosswordState?.clueOrientation]);
 
   const handleLetterChange = (row: number, col: number, letter: string) => {
     if (crosswordState) {
