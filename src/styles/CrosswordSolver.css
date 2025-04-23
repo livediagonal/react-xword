@@ -118,8 +118,8 @@
 
 /* Grid container with padding to account for fixed elements */
 .solver-grid-container {
-    padding-top: 70px;
-    /* space for the fixed clue bar */
+    padding-top: 60px;
+    /* space for the fixed clue bar - reduced from 70px */
     flex: 1;
     overflow: visible;
     touch-action: manipulation;
@@ -177,9 +177,10 @@
         flex: 1;
         display: flex;
         justify-content: center;
-        align-items: center;
+        align-items: flex-start;
+        /* Changed from center to flex-start to stop vertical centering */
         padding-top: 60px;
-        /* Reduced space for active clue bar */
+        /* Offset by the height of the clue bar */
         padding-bottom: 10px;
         /* Reduced space above keyboard */
         padding-left: 0;
@@ -187,8 +188,7 @@
         overflow: visible;
         width: 100%;
         /* Use full width */
-        margin-top: 10px;
-        /* Add some space from the top */
+        margin-top: 3.5rem;
         box-sizing: border-box;
     }
 
@@ -317,16 +317,16 @@
         flex: 1;
         max-width: 600px;
         width: 600px;
-        /* Fixed width to match clue list height */
         height: 600px;
-        /* Fixed height to maintain aspect ratio */
-        margin: 4rem auto 0 auto;
-        /* Changed from 4rem 0 0 0 to center the grid */
+        margin: 0 auto;
+        /* Changed from 4rem auto 0 auto to just auto horizontal centering */
         overflow: visible;
         align-self: flex-start;
         z-index: 1;
         aspect-ratio: 1 / 1;
         box-sizing: border-box;
+        padding-top: 0;
+        /* Remove extra padding from the top */
     }
 
     .solver-actions {
@@ -445,7 +445,8 @@
 
 /* Ensure the grid is properly sized */
 .solver-grid-container {
-    padding-top: 0.5rem;
+    padding-top: 0;
+    /* Removed extra padding */
     height: calc(100% - var(--clues-height, 0px) - env(safe-area-inset-bottom));
 }
 
