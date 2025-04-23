@@ -554,6 +554,56 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     return clueNumberList[nextIndex];
   };
 
+  // Helper function to find the previous clue number in the current orientation
+  const findPreviousClueNumber = (
+    currentClueNumber: number | null,
+    orientation: "across" | "down"
+  ): number | null => {
+    if (!crosswordState) return null;
+
+    const clueNumbers = calculateClueNumbers(crosswordState.grid);
+    const clueNumberList: number[] = [];
+
+    // Collect all clue numbers from the grid
+    for (let row = 0; row < crosswordState.rows; row++) {
+      for (let col = 0; col < crosswordState.columns; col++) {
+        const number = clueNumbers[row][col];
+        if (number > 0) {
+          // Check if this cell starts a word in the current orientation
+          if (orientation === "across") {
+            if (col === 0 || crosswordState.grid[row][col - 1]) {
+              clueNumberList.push(number);
+            }
+          } else {
+            if (row === 0 || crosswordState.grid[row - 1][col]) {
+              clueNumberList.push(number);
+            }
+          }
+        }
+      }
+    }
+
+    // Sort the clue numbers
+    clueNumberList.sort((a, b) => a - b);
+
+    // If no current clue number, return the last clue
+    if (!currentClueNumber) {
+      return clueNumberList.length > 0 ? clueNumberList[clueNumberList.length - 1] : null;
+    }
+
+    // Find the index of the current clue number
+    const currentIndex = clueNumberList.indexOf(currentClueNumber);
+
+    // If the current clue number is not found, return the last clue
+    if (currentIndex === -1) {
+      return clueNumberList.length > 0 ? clueNumberList[clueNumberList.length - 1] : null;
+    }
+
+    // Return the previous clue number, or wrap around to the last clue
+    const prevIndex = (currentIndex - 1 + clueNumberList.length) % clueNumberList.length;
+    return clueNumberList[prevIndex];
+  };
+
   const handleClueOrientationChange = (orientation: "across" | "down") => {
     if (crosswordState) {
       // Create a new state with the updated orientation
@@ -1128,6 +1178,78 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     }
   };
 
+  // Function to handle navigating to the next clue
+  const handleNextClue = () => {
+    if (!crosswordState || !crosswordState.activeClueNumber) {
+      // If no active clue, find the first clue
+      const firstClueNumber = findNextClueNumber(null, crosswordState?.clueOrientation || "across");
+      if (firstClueNumber) {
+        const startCell = findClueStartCell(firstClueNumber, crosswordState?.clueOrientation || "across");
+        navigateToClueAndCell(firstClueNumber, crosswordState?.clueOrientation || "across", startCell);
+      }
+      return;
+    }
+
+    // Find the next clue
+    const nextClueNumber = findNextClueNumber(
+      crosswordState.activeClueNumber,
+      crosswordState.clueOrientation
+    );
+
+    if (nextClueNumber) {
+      // Find the start cell for the next clue
+      const startCell = findClueStartCell(nextClueNumber, crosswordState.clueOrientation);
+      // Find the first empty cell in the next clue
+      const firstEmptyCell = findFirstEmptyCellInClue(nextClueNumber, crosswordState.clueOrientation);
+      // Navigate to the next clue
+      navigateToClueAndCell(
+        nextClueNumber,
+        crosswordState.clueOrientation,
+        firstEmptyCell || startCell
+      );
+    }
+  };
+
+  // Function to handle navigating to the previous clue
+  const handlePrevClue = () => {
+    if (!crosswordState || !crosswordState.activeClueNumber) {
+      // If no active clue, find the last clue
+      const lastClueNumber = findPreviousClueNumber(null, crosswordState?.clueOrientation || "across");
+      if (lastClueNumber) {
+        const startCell = findClueStartCell(lastClueNumber, crosswordState?.clueOrientation || "across");
+        navigateToClueAndCell(lastClueNumber, crosswordState?.clueOrientation || "across", startCell);
+      }
+      return;
+    }
+
+    // Find the previous clue
+    const prevClueNumber = findPreviousClueNumber(
+      crosswordState.activeClueNumber,
+      crosswordState.clueOrientation
+    );
+
+    if (prevClueNumber) {
+      // Find the start cell for the previous clue
+      const startCell = findClueStartCell(prevClueNumber, crosswordState.clueOrientation);
+      // Find the first empty cell in the previous clue
+      const firstEmptyCell = findFirstEmptyCellInClue(prevClueNumber, crosswordState.clueOrientation);
+      // Navigate to the previous clue
+      navigateToClueAndCell(
+        prevClueNumber,
+        crosswordState.clueOrientation,
+        firstEmptyCell || startCell
+      );
+    }
+  };
+
+  // Function to handle toggling the direction
+  const handleToggleDirection = () => {
+    if (crosswordState) {
+      const newOrientation = crosswordState.clueOrientation === "across" ? "down" : "across";
+      handleClueOrientationChange(newOrientation);
+    }
+  };
+
   if (loading) {
     return (
       <div className="solver-loading">
@@ -1342,7 +1464,13 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
 
       {/* Virtual keyboard for mobile */}
       {useMobileKeyboard && (
-        <VirtualKeyboard onKeyPress={handleVirtualKeyPress} />
+        <VirtualKeyboard
+          onKeyPress={handleVirtualKeyPress}
+          onToggleDirection={handleToggleDirection}
+          onNextClue={handleNextClue}
+          onPrevClue={handlePrevClue}
+          currentDirection={crosswordState?.clueOrientation}
+        />
       )}
 
       <Modal
