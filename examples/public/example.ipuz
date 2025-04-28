@@ -1,0 +1,148 @@
+{
+  "version": "http://ipuz.org/v2",
+  "kind": [
+    "http://ipuz.org/crossword#1"
+  ],
+  "dimensions": {
+    "width": 5,
+    "height": 5
+  },
+  "puzzle": [
+    [
+      {
+        "cell": 1
+      },
+      {
+        "cell": 2
+      },
+      {
+        "cell": 3
+      },
+      "#",
+      "#"
+    ],
+    [
+      {
+        "cell": 4
+      },
+      0,
+      0,
+      {
+        "cell": 5
+      },
+      "#"
+    ],
+    [
+      {
+        "cell": 6
+      },
+      0,
+      0,
+      0,
+      {
+        "cell": 7
+      }
+    ],
+    [
+      "#",
+      {
+        "cell": 8
+      },
+      0,
+      0,
+      0
+    ],
+    [
+      "#",
+      "#",
+      {
+        "cell": 9
+      },
+      0,
+      0
+    ]
+  ],
+  "solution": [
+    [
+      "E",
+      "L",
+      "I",
+      null,
+      null
+    ],
+    [
+      "M",
+      "I",
+      "N",
+      "I",
+      null
+    ],
+    [
+      "F",
+      "R",
+      "A",
+      "M",
+      "E"
+    ],
+    [
+      null,
+      "A",
+      "P",
+      "P",
+      "S"
+    ],
+    [
+      null,
+      null,
+      "T",
+      "S",
+      "P"
+    ]
+  ],
+  "clues": {
+    "Across": [
+      [
+        1,
+        "Nickname created by removing -jah"
+      ],
+      [
+        4,
+        "Car brand marketed heavily in The Italian Job"
+      ],
+      [
+        6,
+        "Set up"
+      ],
+      [
+        8,
+        "Wings, nachos, etc."
+      ],
+      [
+        9,
+        "Recipe amt."
+      ]
+    ],
+    "Down": [
+      [
+        1,
+        "Effect harnessed by an MRI"
+      ],
+      [
+        2,
+        "Turkish currency"
+      ],
+      [
+        3,
+        "Unbefitting"
+      ],
+      [
+        5,
+        "Little devils"
+      ],
+      [
+        7,
+        "Sixth sense, in short"
+      ]
+    ]
+  }
+}

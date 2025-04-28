@@ -72,6 +72,10 @@
     color: #4caf50;
 }
 
+.validated-cell.incorrect {
+    color: #f44336;
+}
+
 .revealed-cell {
     color: #f44336;
 }

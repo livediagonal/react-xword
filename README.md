@@ -1,97 +1,160 @@
-# react-xword
+# React Crossword Solver
 
-A vibe-coded React component library for solving crossword puzzles.
+A React component for solving crossword puzzles, supporting the iPuz format.
 
 ## Features
 
-- Solve crossword puzzles
-- Import puzzles in IPUZ format
-- Keyboard navigation
+- Interactive crossword grid
+- Support for iPuz format puzzles
+- Mobile-friendly with virtual keyboard
+- Save progress automatically
+- Check answers and reveal solutions
 - Responsive design
 
 ## Installation
 
 ```bash
 npm install react-xword
-# or
-yarn add react-xword
 ```
 
 ## Usage
 
-### Basic Usage
+```tsx
+import React from 'react';
+import CrosswordSolver from 'react-xword';
+import { IPuzPuzzle } from 'react-xword/types';
 
-```jsx
-import React from "react";
-import { CrosswordSolver } from "react-xword";
+const puzzle: IPuzPuzzle = {
+  version: "http://ipuz.org/v1",
+  kind: ["http://ipuz.org/crossword#1"],
+  dimensions: {
+    width: 5,
+    height: 5
+  },
+  puzzle: [
+    [{ cell: 1 }, { cell: 2 }, { cell: 3 }, { cell: 4 }, { cell: 5 }],
+    [{ cell: 6 }, null, null, null, { cell: 7 }],
+    [{ cell: 8 }, null, null, null, { cell: 9 }],
+    [{ cell: 10 }, null, null, null, { cell: 11 }],
+    [{ cell: 12 }, { cell: 13 }, { cell: 14 }, { cell: 15 }, { cell: 16 }]
+  ],
+  clues: {
+    Across: [
+      { number: 1, clue: "First across clue" },
+      { number: 6, clue: "Second across clue" },
+      { number: 8, clue: "Third across clue" },
+      { number: 10, clue: "Fourth across clue" },
+      { number: 12, clue: "Fifth across clue" }
+    ],
+    Down: [
+      { number: 1, clue: "First down clue" },
+      { number: 2, clue: "Second down clue" },
+      { number: 3, clue: "Third down clue" },
+      { number: 4, clue: "Fourth down clue" },
+      { number: 5, clue: "Fifth down clue" }
+    ]
+  },
+  solution: {
+    grid: [
+      ["H", "E", "L", "L", "O"],
+      ["W", "", "", "", "O"],
+      ["R", "", "", "", "R"],
+      ["L", "", "", "", "L"],
+      ["D", "W", "O", "R", "D"]
+    ]
+  },
+  metadata: {
+    title: "Example Crossword",
+    author: "Crossword Creator",
+    date: "2024-03-20"
+  }
+};
 
-function App() {
-  return (
-    <div>
-      <h1>My Crossword Puzzle</h1>
-      <CrosswordSolver ipuzPath="/path/to/puzzle.ipuz" />
-    </div>
-  );
-}
+const App: React.FC = () => {
+  return <CrosswordSolver ipuzData={puzzle} />;
+};
 
 export default App;
 ```
 
-### Example App
+## iPuz Format
 
-The package includes a live example app in the `examples` directory that demonstrates the library's features. The example app allows you to:
+The component accepts puzzles in the iPuz format. The `IPuzPuzzle` type is defined as follows:
 
-- Upload and solve IPUZ format crossword puzzles
-- Test keyboard navigation
-- See the component in action with a responsive layout
+```typescript
+interface IPuzDimensions {
+  width: number;
+  height: number;
+}
 
-To run the example app locally:
+interface IPuzCell {
+  cell?: number;
+  style?: {
+    shapebg?: string;
+  };
+  value?: string;
+}
 
-```bash
-# Clone the repository
-git clone https://github.com/livediagonal/react-xword.git
-cd react-xword
+type IPuzGrid = (IPuzCell | string | null)[][];
 
-# Install dependencies
-npm install
+interface IPuzClue {
+  number: number;
+  clue: string;
+  answer?: string;
+  format?: string;
+}
 
-# Start the example app
-npm run example
+interface IPuzClues {
+  Across: IPuzClue[];
+  Down: IPuzClue[];
+}
+
+interface IPuzSolution {
+  grid: string[][];
+}
+
+interface IPuzMetadata {
+  title?: string;
+  author?: string;
+  editor?: string;
+  copyright?: string;
+  publisher?: string;
+  date?: string;
+  notes?: string;
+}
+
+interface IPuzPuzzle {
+  version: string;
+  kind: string[];
+  dimensions: IPuzDimensions;
+  puzzle: IPuzGrid;
+  clues: IPuzClues;
+  solution?: IPuzSolution;
+  metadata?: IPuzMetadata;
+}
 ```
 
-### Keyboard Navigation
+## Props
 
-The crossword solver supports the following keyboard shortcuts:
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| ipuzData | IPuzPuzzle | Yes | The crossword puzzle data in iPuz format |
 
-- **Tab**: Jump to the next clue in the current orientation (Across or Down) and select the first empty cell
-- **Shift+Tab**: Jump to the previous clue in the current orientation (Across or Down) and select the first empty cell
-- `Letters`: Type letters to fill in cells
-- **Backspace/Delete**: Clear a cell
+## Styling
 
-The navigation system intelligently selects the first empty cell in each clue, allowing for quick filling of the crossword puzzle.
+The component uses CSS modules for styling. You can override the default styles by importing the CSS file and modifying the classes:
 
-#### Props
+```css
+.solver-container {
+  /* Your custom styles */
+}
 
-- `ipuzPath`: Path to an IPUZ file to load
+.solver-grid {
+  /* Your custom styles */
+}
 
-### CrosswordGrid
-
-Component for displaying and interacting with a crossword grid.
-
-#### Props
-
-- `rows`: Number of rows in the grid
-- `columns`: Number of columns in the grid
-- `grid`: 2D array of booleans representing black cells
-- `letters`: 2D array of strings representing letters in cells
-- `onCellToggle`: Function to call when a cell is toggled (for editor mode)
-- `onLetterChange`: Function to call when a letter is changed
-- `clueOrientation`: "across" or "down"
-- `activeClueNumber`: Currently active clue number
-- `onClueOrientationChange`: Function to call when clue orientation changes
-- `onCellClick`: Function to call when a cell is clicked
-- `activeCell`: Currently active cell [row, col]
-- `storageKey`: Optional key for localStorage persistence
+/* ... other classes ... */
+```
 
 ## License
 

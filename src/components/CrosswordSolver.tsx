@@ -1,26 +1,40 @@
 import React, { useState, useEffect, useRef } from "react";
 import CrosswordGrid from "./CrosswordGrid";
-import { CrosswordState } from "../types";
+import { CrosswordState } from "../types/crossword";
+import { IPuzPuzzle } from "../types/ipuz";
 import Modal from "./Modal";
 import "../styles/CrosswordSolver.css";
 import VirtualKeyboard from "./VirtualKeyboard";
 
 interface CrosswordSolverProps {
-  ipuzPath: string;
+  ipuzData: IPuzPuzzle;
 }
 
 // Storage key for the solver state
 const SOLVER_STORAGE_KEY = "xword_solver_state";
 
-const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
-  const [crosswordState, setCrosswordState] = useState<CrosswordState | null>(
-    null,
-  );
+interface CrosswordState {
+  letters: string[][];
+  validatedCells: (boolean | undefined)[][];
+  revealedCells: boolean[][];
+  clueNumbers: number[][];
+  rows: number;
+  columns: number;
+  clues: CrosswordClues;
+}
+
+const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
+  const [grid, setGrid] = useState<boolean[][]>([]);
+  const [letters, setLetters] = useState<string[][]>([]);
+  const [solution, setSolution] = useState<string[][] | null>(null);
+  const [validatedCells, setValidatedCells] = useState<(boolean | undefined)[][]>([]);
+  const [revealedCells, setRevealedCells] = useState<boolean[][]>([]);
+  const [clueNumbers, setClueNumbers] = useState<number[][]>([]);
+  const [activeCell, setActiveCell] = useState<[number, number] | null>(null);
+  const [activeClueNumber, setActiveClueNumber] = useState<number | null>(null);
+  const [activeOrientation, setActiveOrientation] = useState<"across" | "down">("across");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [solution, setSolution] = useState<string[][] | null>(null);
-  const [validatedCells, setValidatedCells] = useState<boolean[][] | null>(null);
-  const [revealedCells, setRevealedCells] = useState<boolean[][] | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -28,6 +42,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [useMobileKeyboard, setUseMobileKeyboard] = useState(false);
+  const [crosswordState, setCrosswordState] = useState<CrosswordState | null>(null);
 
   // Use a ref to track if we've already loaded from localStorage
   const hasLoadedFromStorage = useRef(false);
@@ -152,33 +167,22 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     const loadPuzzle = async () => {
       try {
         setLoading(true);
-        let ipuzData;
-
-        try {
-          // First try to parse as JSON in case it's raw data
-          ipuzData = JSON.parse(ipuzPath);
-        } catch (e) {
-          // If parsing fails, try to fetch as URL
-          const response = await fetch(ipuzPath);
-          if (!response.ok) {
-            throw new Error(`Failed to load puzzle: ${response.statusText}`);
-          }
-          ipuzData = await response.json();
-        }
-
-        // Convert ipuz data to our internal format
-        const { dimensions, puzzle: ipuzPuzzle, clues, solution: ipuzSolution } = ipuzData;
+        const { dimensions, puzzle, solution: ipuzSolution, clues } = ipuzData;
         const { width, height } = dimensions;
 
-        // Create grid and letters arrays
-        const grid: boolean[][] = Array(height)
-          .fill(0)
-          .map(() => Array(width).fill(false));
-        const letters: string[][] = Array(height)
-          .fill(0)
-          .map(() => Array(width).fill(""));
+        // Convert puzzle grid to boolean array
+        const grid = puzzle.map(row =>
+          row.map(cell => {
+            // Black squares are represented by '#'
+            if (cell === '#') {
+              return true;
+            }
+            // Everything else (including 0, null, and cells with numbers) is a white square
+            return false;
+          })
+        );
 
-        // Initialize solution array if available
+        // Process the solution data
         let solutionArray: string[][] | null = null;
         if (ipuzSolution) {
           solutionArray = Array(height)
@@ -188,42 +192,60 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
           // Process the solution data
           for (let row = 0; row < height; row++) {
             for (let col = 0; col < width; col++) {
-              const cell = ipuzSolution[row][col];
+              const cell = Array.isArray(ipuzSolution) ? ipuzSolution[row][col] : ipuzSolution.grid[row][col];
               if (cell && cell !== "#" && cell !== null) {
                 solutionArray[row][col] = cell;
               }
             }
           }
-          setSolution(solutionArray);
+        } else {
+          // If no solution is provided, create an empty solution array
+          solutionArray = Array(height)
+            .fill(0)
+            .map(() => Array(width).fill(""));
         }
+
+        // Set the solution
+        setSolution(solutionArray);
 
         // Initialize validated and revealed cells arrays
         const validatedCellsArray = Array(height)
           .fill(0)
-          .map(() => Array(width).fill(false));
+          .map(() => Array(width).fill(undefined));
+        setValidatedCells(validatedCellsArray);
+
         const revealedCellsArray = Array(height)
           .fill(0)
           .map(() => Array(width).fill(false));
-
-        setValidatedCells(validatedCellsArray);
         setRevealedCells(revealedCellsArray);
 
-        // Process the puzzle data
-        for (let row = 0; row < height; row++) {
-          for (let col = 0; col < width; col++) {
-            const cell = ipuzPuzzle[row][col];
+        // Calculate clue numbers
+        const clueNumbers = calculateClueNumbers(grid);
+        setClueNumbers(clueNumbers);
 
-            // If cell is "#" or null, it's a black cell
-            if (cell === "#" || cell === null) {
-              grid[row][col] = true;
-            } else if (typeof cell === "object" && cell.cell !== undefined) {
-              // This is a white cell with a number
-              grid[row][col] = false;
-            } else if (typeof cell === "number") {
-              // This is a white cell with a number
-              grid[row][col] = false;
-            }
-          }
+        // Set the grid
+        setGrid(grid);
+
+        // Initialize letters array
+        setLetters(Array(height)
+          .fill(0)
+          .map(() => Array(width).fill("")));
+
+        // Find the first valid cell and set it as active
+        const firstCell = findFirstValidCell(grid);
+        if (firstCell) {
+          setActiveCell(firstCell);
+        }
+
+        // Set the first clue as active
+        const firstAcrossClue = clues.Across[0]?.[0] ?? null;
+        const firstDownClue = clues.Down[0]?.[0] ?? null;
+        if (firstAcrossClue) {
+          setActiveClueNumber(firstAcrossClue);
+          setActiveOrientation("across");
+        } else if (firstDownClue) {
+          setActiveClueNumber(firstDownClue);
+          setActiveOrientation("down");
         }
 
         // Process clues
@@ -233,14 +255,14 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
         };
 
         if (clues && clues.Across) {
-          clues.Across.forEach(([number, text]: [number, string]) => {
-            processedClues.Across[number] = text;
+          clues.Across.forEach(([number, clue]) => {
+            processedClues.Across[number] = clue;
           });
         }
 
         if (clues && clues.Down) {
-          clues.Down.forEach(([number, text]: [number, string]) => {
-            processedClues.Down[number] = text;
+          clues.Down.forEach(([number, clue]) => {
+            processedClues.Down[number] = clue;
           });
         }
 
@@ -249,10 +271,12 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
           rows: height,
           columns: width,
           grid,
-          letters,
+          letters: Array(height)
+            .fill(0)
+            .map(() => Array(width).fill("")),
           clueOrientation: "across",
-          activeClueNumber: 1,
-          activeCell: findClueStartCell(1, "across") || findFirstValidCell(grid),
+          activeClueNumber: clues.Across[0]?.[0] ?? 1,
+          activeCell: firstCell,
           clues: processedClues,
           clueText: "",
           isAutomaticNavigation: true,
@@ -296,15 +320,15 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
             }, 0);
           }
         });
-      } catch (err) {
-        console.error("Error loading puzzle:", err);
-        setError(err instanceof Error ? err.message : "Unknown error");
+      } catch (error) {
+        console.error("Error loading puzzle:", error);
+        setError(error instanceof Error ? error.message : "Unknown error");
         setLoading(false);
       }
     };
 
     loadPuzzle();
-  }, [ipuzPath]);
+  }, [ipuzData]);
 
   // Save state to localStorage when it changes, but only if we've already loaded from storage
   useEffect(() => {
@@ -371,103 +395,38 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
 
   const handleLetterChange = (row: number, col: number, letter: string) => {
     if (crosswordState) {
-      // Don't allow changes to validated or revealed cells
+      // Don't allow changes to revealed cells or cells that were validated as correct
       if (
-        (validatedCells && validatedCells[row] && validatedCells[row][col]) ||
-        (revealedCells && revealedCells[row] && revealedCells[row][col])
+        (revealedCells && revealedCells[row] && revealedCells[row][col]) ||
+        (validatedCells && validatedCells[row] && validatedCells[row][col] === true)
       ) {
         return;
       }
 
       const newLetters = [...crosswordState.letters];
+      newLetters[row][col] = letter;
 
-      // Check if this is a backspace operation (empty string)
-      if (letter === "") {
-        // If the current cell is empty, move back one cell and delete that letter
-        if (!newLetters[row][col]) {
-          // Find the previous cell in the current word
-          const prevCell = findPreviousCellInWord(row, col, crosswordState.clueOrientation);
+      // Clear validation state for this cell
+      const newValidatedCells = validatedCells.map(row => [...row]);
+      newValidatedCells[row][col] = undefined;
 
-          if (prevCell) {
-            const [prevRow, prevCol] = prevCell;
-            // Don't allow changes to validated or revealed cells
-            if (
-              (validatedCells && validatedCells[prevRow] && validatedCells[prevRow][prevCol]) ||
-              (revealedCells && revealedCells[prevRow] && revealedCells[prevRow][prevCol])
-            ) {
-              return;
-            }
-            // Clear the letter in the previous cell
-            newLetters[prevRow][prevCol] = "";
-
-            // Update the state with the cleared letter
-            setCrosswordState({
-              ...crosswordState,
-              letters: newLetters,
-              activeCell: [prevRow, prevCol],
-            });
-          }
-        } else {
-          // If the current cell has a letter, just clear it and stay in the current cell
-          newLetters[row][col] = "";
-
-          // Update the state with the cleared letter
-          setCrosswordState({
-            ...crosswordState,
-            letters: newLetters,
-          });
-        }
-      } else {
-        // Normal letter input
-        newLetters[row][col] = letter;
+      if (letter) {
+        // If a letter was entered, check if we're at the end of the word
+        const nextCell = findNextCellInWord(row, col, crosswordState.clueOrientation);
+        const isEndOfWord = !nextCell;
 
         setCrosswordState({
           ...crosswordState,
           letters: newLetters,
+          activeCell: nextCell || [row, col],
+          isAutomaticNavigation: !!nextCell
         });
+        setValidatedCells(newValidatedCells);
 
-        // After updating the letter, move to the next cell or clue
-        // Find the next cell in the current word
-        const nextCell = findNextCellInWord(row, col, crosswordState.clueOrientation);
-
-        if (nextCell) {
-          // If there's a next cell in the current word, move to it
-          const [nextRow, nextCol] = nextCell;
-
-          // Update the active cell
-          setCrosswordState(prevState => {
-            if (!prevState) return prevState;
-            return {
-              ...prevState,
-              activeCell: [nextRow, nextCol],
-            };
-          });
-        } else {
-          // If there's no next cell (we're at the end of the word), move to the next clue
-          const nextClueNumber = findNextClueNumber(crosswordState.activeClueNumber, crosswordState.clueOrientation);
-
-          if (nextClueNumber) {
-            // Find the first empty cell in the next clue
-            const firstEmptyCell = findFirstEmptyCellInClue(nextClueNumber, crosswordState.clueOrientation);
-
-            // Navigate to the next clue and cell
-            navigateToClueAndCell(nextClueNumber, crosswordState.clueOrientation, firstEmptyCell);
-          } else {
-            // If we've reached the end of the current orientation's clues, switch to the other orientation
-            const newOrientation = crosswordState.clueOrientation === "across" ? "down" : "across";
-            const firstClueNumber = findNextClueNumber(null, newOrientation);
-
-            if (firstClueNumber) {
-              const firstEmptyCell = findFirstEmptyCellInClue(firstClueNumber, newOrientation);
-              navigateToClueAndCell(firstClueNumber, newOrientation, firstEmptyCell);
-            }
-          }
-        }
-
-        // Check if the puzzle is completely filled after this letter input
-        const isFilled = isPuzzleFilled();
-        if (isFilled) {
-          // If the puzzle is filled, check if all answers are correct
+        // Check if the puzzle is complete
+        const isComplete = isPuzzleFilled();
+        if (isComplete) {
+          // If the puzzle is complete, check if all answers are correct
           const allCorrect = areAllAnswersCorrect();
           if (allCorrect) {
             setShowSuccessModal(true);
@@ -476,6 +435,60 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
           } else {
             setShowErrorModal(true);
           }
+        }
+
+        if (isEndOfWord) {
+          // If we're at the end of the word, advance to the next clue
+          handleNextClue();
+        } else if (nextCell) {
+          const clueNumbers = calculateClueNumbers(crosswordState.grid);
+          const [nextRow, nextCol] = nextCell;
+          const clueNumber = clueNumbers[nextRow][nextCol];
+
+          if (clueNumber) {
+            navigateToClueAndCell(
+              crosswordState.activeClueNumber || clueNumber,
+              crosswordState.clueOrientation,
+              nextCell
+            );
+          }
+        }
+      } else {
+        // If deleting (letter is empty)
+        const currentCellIsEmpty = !crosswordState.letters[row][col];
+
+        if (currentCellIsEmpty) {
+          // If the current cell was already empty, move to previous cell
+          const prevCell = findPreviousCellInWord(row, col, crosswordState.clueOrientation);
+
+          setCrosswordState({
+            ...crosswordState,
+            letters: newLetters,
+            activeCell: prevCell || [row, col],
+            isAutomaticNavigation: !!prevCell
+          });
+          setValidatedCells(newValidatedCells);
+
+          if (prevCell) {
+            const clueNumbers = calculateClueNumbers(crosswordState.grid);
+            const [prevRow, prevCol] = prevCell;
+            const clueNumber = clueNumbers[prevRow][prevCol];
+
+            if (clueNumber) {
+              navigateToClueAndCell(
+                crosswordState.activeClueNumber || clueNumber,
+                crosswordState.clueOrientation,
+                prevCell
+              );
+            }
+          }
+        } else {
+          // If the current cell had a letter, just clear it and stay in the current cell
+          setCrosswordState({
+            ...crosswordState,
+            letters: newLetters
+          });
+          setValidatedCells(newValidatedCells);
         }
       }
     }
@@ -982,15 +995,20 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
 
   // Function to check a single answer
   const checkAnswer = () => {
-    if (!crosswordState || !solution) return;
+    console.log('checkAnswer called');
+    if (!crosswordState || !solution) {
+      console.log('Missing state or solution:', { crosswordState, solution });
+      return;
+    }
 
-    const newValidatedCells = validatedCells ? validatedCells.map(row => [...row]) : Array(crosswordState.rows).fill(0).map(() => Array(crosswordState.columns).fill(false));
+    const newValidatedCells = validatedCells ? validatedCells.map(row => [...row]) : Array(crosswordState.rows).fill(0).map(() => Array(crosswordState.columns).fill(undefined));
     const newLetters = [...crosswordState.letters];
 
     // Check the current word
     if (crosswordState.activeClueNumber && crosswordState.activeCell) {
       const [row, col] = crosswordState.activeCell;
       const orientation = crosswordState.clueOrientation;
+      console.log('Checking word:', { row, col, orientation });
 
       // Find the start of the current word
       const [startRow, startCol] = findWordStart(
@@ -999,6 +1017,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
         col,
         orientation === "across"
       );
+      console.log('Word start:', { startRow, startCol });
 
       // Check each cell in the word
       if (orientation === "across") {
@@ -1006,30 +1025,32 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
           if (crosswordState.grid[startRow][c]) break; // Stop at black cell
 
           const isCorrect = newLetters[startRow][c].toUpperCase() === solution[startRow][c].toUpperCase();
-          if (isCorrect) {
-            newValidatedCells[startRow][c] = true;
-          }
+          console.log('Checking cell:', { row: startRow, col: c, letter: newLetters[startRow][c], solution: solution[startRow][c], isCorrect });
+          // Mark the cell as validated (true if correct, false if incorrect)
+          newValidatedCells[startRow][c] = isCorrect;
         }
       } else {
         for (let r = startRow; r < crosswordState.rows; r++) {
           if (crosswordState.grid[r][startCol]) break; // Stop at black cell
 
           const isCorrect = newLetters[r][startCol].toUpperCase() === solution[r][startCol].toUpperCase();
-          if (isCorrect) {
-            newValidatedCells[r][startCol] = true;
-          }
+          console.log('Checking cell:', { row: r, col: startCol, letter: newLetters[r][startCol], solution: solution[r][startCol], isCorrect });
+          // Mark the cell as validated (true if correct, false if incorrect)
+          newValidatedCells[r][startCol] = isCorrect;
         }
       }
     }
 
+    console.log('Setting validated cells:', newValidatedCells);
     setValidatedCells(newValidatedCells);
+    setIsActionsMenuOpen(false); // Close the actions menu
   };
 
   // Function to check the entire puzzle
   const checkPuzzle = () => {
     if (!crosswordState || !solution) return;
 
-    const newValidatedCells = validatedCells ? validatedCells.map(row => [...row]) : Array(crosswordState.rows).fill(0).map(() => Array(crosswordState.columns).fill(false));
+    const newValidatedCells = validatedCells ? validatedCells.map(row => [...row]) : Array(crosswordState.rows).fill(0).map(() => Array(crosswordState.columns).fill(undefined));
     const newLetters = [...crosswordState.letters];
 
     // Check all cells in the puzzle
@@ -1037,28 +1058,33 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
       for (let col = 0; col < crosswordState.columns; col++) {
         if (!crosswordState.grid[row][col] && newLetters[row][col]) {
           const isCorrect = newLetters[row][col].toUpperCase() === solution[row][col].toUpperCase();
-          if (isCorrect) {
-            newValidatedCells[row][col] = true;
-          }
+          // Mark the cell as validated (true if correct, false if incorrect)
+          newValidatedCells[row][col] = isCorrect;
         }
       }
     }
 
     setValidatedCells(newValidatedCells);
+    setIsActionsMenuOpen(false); // Close the actions menu
   };
 
   // Function to reveal a single answer
   const revealAnswer = () => {
-    if (!crosswordState || !solution) return;
+    console.log('revealAnswer called');
+    if (!crosswordState || !solution) {
+      console.log('Missing state or solution:', { crosswordState, solution });
+      return;
+    }
 
-    const newRevealedCells = [...revealedCells!];
-    const newValidatedCells = [...validatedCells!];
-    const newLetters = [...crosswordState.letters];
+    const newRevealedCells = revealedCells.map(row => [...row]);
+    const newValidatedCells = validatedCells.map(row => [...row]);
+    const newLetters = crosswordState.letters.map(row => [...row]);
 
     // Reveal the current word
     if (crosswordState.activeClueNumber && crosswordState.activeCell) {
       const [row, col] = crosswordState.activeCell;
       const orientation = crosswordState.clueOrientation;
+      console.log('Revealing word:', { row, col, orientation });
 
       // Find the start of the current word
       const [startRow, startCol] = findWordStart(
@@ -1067,6 +1093,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
         col,
         orientation === "across"
       );
+      console.log('Word start:', { startRow, startCol });
 
       // Reveal each cell in the word
       if (orientation === "across") {
@@ -1086,6 +1113,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
           if (wasCorrect) {
             newValidatedCells[startRow][c] = true;
           }
+          console.log('Revealing cell:', { row: startRow, col: c, letter: newLetters[startRow][c], wasCorrect });
         }
       } else {
         for (let r = startRow; r < crosswordState.rows; r++) {
@@ -1104,10 +1132,14 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
           if (wasCorrect) {
             newValidatedCells[r][startCol] = true;
           }
+          console.log('Revealing cell:', { row: r, col: startCol, letter: newLetters[r][startCol], wasCorrect });
         }
       }
     }
 
+    console.log('Setting revealed cells:', newRevealedCells);
+    console.log('Setting validated cells:', newValidatedCells);
+    console.log('Setting letters:', newLetters);
     setRevealedCells(newRevealedCells);
     setValidatedCells(newValidatedCells);
     setCrosswordState({
@@ -1120,9 +1152,9 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
   const revealPuzzle = () => {
     if (!crosswordState || !solution) return;
 
-    const newRevealedCells = [...revealedCells!];
-    const newValidatedCells = [...validatedCells!];
-    const newLetters = [...crosswordState.letters];
+    const newRevealedCells = revealedCells.map(row => [...row]);
+    const newValidatedCells = validatedCells.map(row => [...row]);
+    const newLetters = crosswordState.letters.map(row => [...row]);
 
     // Reveal all cells in the puzzle
     for (let row = 0; row < crosswordState.rows; row++) {

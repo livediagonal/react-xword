@@ -237,8 +237,11 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         }
 
         // Add validated class if this cell has been validated
-        if (validatedCells && validatedCells[row] && validatedCells[row][col]) {
+        if (validatedCells && validatedCells[row] && validatedCells[row][col] !== undefined) {
             className += " validated-cell";
+            if (!validatedCells[row][col]) {
+                className += " incorrect";
+            }
         }
 
         // Add revealed class if this cell has been revealed
