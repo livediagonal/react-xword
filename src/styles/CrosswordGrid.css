@@ -59,11 +59,13 @@
 }
 
 .active-cell {
-    background-color: #ffeb3b;
+    background-color: #ffe066;
+    /* Bright yellow highlight for active cell */
 }
 
 .part-of-active-clue {
-    background-color: #fff9c4;
+    background-color: #b3d6f7;
+    /* Lighter blue highlight for rest of clue, matches clue bar */
 }
 
 .validated-cell {

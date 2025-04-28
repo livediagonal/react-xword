@@ -1301,44 +1301,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
         </div>
       )}
       <div className="solver-content">
-        {/* Fixed active clue bar */}
-        <div className="solver-active-clue">
-          {crosswordState.activeClueNumber ? (
-            <>
-              {crosswordState.clueOrientation === "across" && (
-                <div className="solver-clue-item active" data-orientation="across">
-                  <span className="solver-clue-number">{crosswordState.activeClueNumber}.</span>{" "}
-                  {getActiveClueText("across")}
-                </div>
-              )}
-              {crosswordState.clueOrientation === "down" && (
-                <div className="solver-clue-item active" data-orientation="down">
-                  <span className="solver-clue-number">{crosswordState.activeClueNumber}.</span>{" "}
-                  {getActiveClueText("down")}
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              {(() => {
-                const firstAcrossClue = getFirstClueFromOrientation("across");
-                const firstDownClue = getFirstClueFromOrientation("down");
-
-                return (
-                  <>
-                    {firstAcrossClue && (
-                      <div className="solver-clue-item" data-orientation="across">
-                        <span className="solver-clue-number">{firstAcrossClue.number}.</span>{" "}
-                        {firstAcrossClue.text}
-                      </div>
-                    )}
-                  </>
-                );
-              })()}
-            </>
-          )}
-        </div>
-
         {/* Fixed position actions menu */}
         <div className="solver-actions">
           <button
@@ -1355,7 +1317,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
             <button
               className="solver-action-button"
               onClick={checkAnswer}
-              disabled={!crosswordState.activeClueNumber || hasCompleted}
+              disabled={!crosswordState?.activeClueNumber || hasCompleted}
             >
               Check Answer
             </button>
@@ -1369,7 +1331,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
             <button
               className="solver-action-button"
               onClick={revealAnswer}
-              disabled={!crosswordState.activeClueNumber || hasCompleted}
+              disabled={!crosswordState?.activeClueNumber || hasCompleted}
             >
               Reveal Answer
             </button>
@@ -1470,6 +1432,8 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
           onNextClue={handleNextClue}
           onPrevClue={handlePrevClue}
           currentDirection={crosswordState?.clueOrientation}
+          activeClueNumber={crosswordState?.activeClueNumber}
+          activeClueText={crosswordState?.activeClueNumber ? getActiveClueText(crosswordState.clueOrientation) : null}
         />
       )}
 

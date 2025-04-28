@@ -7,6 +7,8 @@ interface VirtualKeyboardProps {
     onNextClue?: () => void;
     onPrevClue?: () => void;
     currentDirection?: 'across' | 'down';
+    activeClueNumber?: number | null;
+    activeClueText?: string | null;
 }
 
 const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
@@ -14,7 +16,9 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
     onToggleDirection,
     onNextClue,
     onPrevClue,
-    currentDirection = 'across'
+    currentDirection = 'across',
+    activeClueNumber,
+    activeClueText
 }) => {
     // Adjusted rows for better layout
     const rows = [
@@ -73,23 +77,33 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
                     aria-label="Previous clue"
                     title="Previous clue"
                 >
-                    ◀
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#222" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="18 6 10 14 18 22" />
+                    </svg>
                 </button>
-                <button
-                    className="control-button direction"
+                <div
+                    className="control-button active-clue"
                     onClick={onToggleDirection}
                     aria-label="Toggle direction"
                     title={`Switch to ${currentDirection === 'across' ? 'down' : 'across'}`}
                 >
-                    ↻
-                </button>
+                    {activeClueNumber && activeClueText ? (
+                        <>
+                            <span className="clue-text">{activeClueText}</span>
+                        </>
+                    ) : (
+                        <span className="no-clue">No active clue</span>
+                    )}
+                </div>
                 <button
                     className="control-button next-clue"
                     onClick={onNextClue}
                     aria-label="Next clue"
                     title="Next clue"
                 >
-                    ▶
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="#222" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="10 6 18 14 10 22" />
+                    </svg>
                 </button>
             </div>
 

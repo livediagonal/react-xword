@@ -40,37 +40,7 @@
 
 /* Fixed positioned active clue bar */
 .solver-active-clue {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 30;
-    background-color: #fff;
-    padding: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    min-height: 60px;
-    display: flex;
-    align-items: center;
-}
-
-.solver-active-clue .solver-clue-item {
-    margin: 0;
-    padding: 0;
-    font-size: 1rem;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-height: 2.8rem;
-    width: 100%;
-}
-
-.solver-active-clue .solver-clue-item.active {
-    background-color: transparent;
-    color: #1f2937;
-    font-weight: 500;
+    display: none;
 }
 
 /* Fixed positioned actions button */
@@ -123,8 +93,7 @@
 
 /* Grid container with padding to account for fixed elements */
 .solver-grid-container {
-    padding-top: 60px;
-    /* space for the fixed clue bar - reduced from 70px */
+    padding-top: 20px;
     flex: 1;
     overflow: visible;
     touch-action: manipulation;
