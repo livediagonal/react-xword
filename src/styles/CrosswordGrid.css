@@ -1,4 +1,5 @@
 .crossword-grid {
+    font-family: "Franklin Gothic Medium", "ITC Franklin Gothic", Arial, sans-serif;
     position: relative;
     width: 100%;
     max-width: 100%;

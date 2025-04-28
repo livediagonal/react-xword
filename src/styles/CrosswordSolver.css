@@ -1,4 +1,6 @@
+/* Add Franklin Gothic font family */
 .solver-container {
+    font-family: "Franklin Gothic Medium", "ITC Franklin Gothic", Arial, sans-serif;
     display: flex;
     flex-direction: column;
     height: 100vh;
