@@ -320,117 +320,73 @@
 @media (min-width: 768px) {
     .solver-container {
         overflow: hidden;
-        /* Ensure no scrolling on desktop */
-        padding-top: 2rem;
-        /* Add padding to account for the fixed header/clue bar */
+        padding: 2rem;
         box-sizing: border-box;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
     }
 
     .solver-content {
-        flex-direction: row;
-        align-items: flex-start;
-        gap: 2rem;
-        height: calc(100vh - 5rem);
-        /* Account for top padding */
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        grid-gap: 1rem;
-        overflow: hidden;
-        /* Prevent content scrolling */
-        padding-top: 0.5rem;
-        /* Small padding to separate from the top */
-        box-sizing: border-box;
+        gap: 2rem;
+        align-items: start;
+        height: calc(100vh - 4rem);
+        overflow: visible;
+        padding: 0;
+    }
+
+    .solver-grid-container {
+        width: 100%;
+        max-width: 600px;
+        aspect-ratio: 1 / 1;
+        margin: 0;
+        padding: 0;
+        justify-self: end;
+        align-self: start;
+        display: block;
+        z-index: 1;
     }
 
     .solver-clues-container {
         display: grid !important;
-        margin: 0;
         grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        position: relative;
-        grid-column: 2;
-        grid-template-rows: 1fr 1fr;
-        overflow: hidden;
-        /* Prevent container overflow */
-        align-self: flex-start;
-        /* Align to top */
-        height: auto;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    .solver-active-clue {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        padding: 0.75rem 2rem;
-        height: 4rem;
-        z-index: 40;
-        /* Ensure it stays above other elements */
-    }
-
-    /* Reset mobile fixed sizing for desktop */
-    .solver-grid-container {
-        position: relative;
-        max-width: 600px;
-        width: 100%;
-        height: auto;
-        margin: 0 auto;
+        gap: 1.5rem;
+        height: 100%;
         overflow: visible;
-        align-self: center;
-        justify-self: center;
-        z-index: 1;
-        aspect-ratio: 1 / 1;
-        box-sizing: border-box;
-        padding: 0;
+        padding: 0 1rem 2rem 0;
+        margin: 0;
+        align-self: start;
     }
 
     .solver-clue-section {
         display: flex;
         flex-direction: column;
-        height: 100%;
-        overflow: hidden;
-        /* Prevent section overflow */
+        height: auto;
+        overflow: visible;
     }
 
     .solver-clue-list {
-        flex-grow: 1;
+        flex: 1;
         overflow-y: auto;
-        /* Allow scrolling within clue lists only */
-        scrollbar-width: thin;
-        padding-right: 0.5rem;
         height: auto;
-        /* Let it take available space */
-        max-height: none;
-        /* Remove fixed height */
+        padding-right: 0.5rem;
+        position: relative;
+    }
+
+    .solver-active-clue {
+        display: none;
     }
 
     .solver-actions {
         position: fixed;
-        top: 0.75rem;
+        top: 1rem;
         right: 1rem;
         z-index: 9999;
         padding: 0;
         margin: 0;
         background: transparent;
-    }
-
-    .solver-actions-toggle {
-        position: relative;
-        width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 50%;
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        z-index: 9999;
-        padding: 0;
-        margin: 0;
     }
 }
 
