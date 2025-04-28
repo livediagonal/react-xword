@@ -65,30 +65,66 @@
 }
 
 .solver-actions-menu {
-    position: absolute;
-    top: 50px;
-    right: 0;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-    padding: 10px;
-    width: 150px;
-    display: none;
+    position: fixed;
+    top: 3.5rem;
+    right: 0.75rem;
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+    padding: 1rem 0.75rem;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.95) translateY(-10px);
+    transition: opacity 0.25s cubic-bezier(.4, 2, .6, 1), transform 0.25s cubic-bezier(.4, 2, .6, 1), visibility 0.25s;
+    display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0.5rem;
+    min-width: 180px;
+    border: 1px solid rgba(200, 200, 255, 0.18);
+    z-index: 9999;
 }
 
 .solver-actions-menu.open {
-    display: flex;
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1) translateY(0);
 }
 
 .solver-action-button {
-    background: #f5f5f5;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 8px;
+    background: #fff;
+    border: none;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
     text-align: left;
-    font-size: 14px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #222;
+    box-shadow: 0 1px 4px rgba(60, 60, 120, 0.04);
+    transition: background 0.15s, color 0.15s, transform 0.12s;
+    cursor: pointer;
+    outline: none;
+}
+
+.solver-action-button:hover,
+.solver-action-button:focus {
+    background: linear-gradient(90deg, #e0e7ff 0%, #f0f7ff 100%);
+    color: #2563eb;
+    transform: scale(1.04);
+    box-shadow: 0 2px 8px rgba(60, 60, 120, 0.10);
+}
+
+.solver-action-button:active {
+    background: #dbeafe;
+    color: #1d4ed8;
+    transform: scale(0.98);
+}
+
+.solver-actions-divider {
+    height: 1px;
+    background: linear-gradient(90deg, #e0e7ff 0%, #c7d2fe 100%);
+    margin: 0.5rem 0;
+    border: none;
+    opacity: 0.7;
 }
 
 /* Grid container with padding to account for fixed elements */
@@ -383,26 +419,6 @@
         z-index: 9999;
         padding: 0;
         margin: 0;
-    }
-
-    .solver-actions-menu {
-        position: fixed;
-        top: 3.5rem;
-        right: 0.75rem;
-        background: #ffffff;
-        border-radius: 0.5rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        padding: 0.5rem;
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(-10px);
-        transition: all 0.2s ease;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        min-width: 150px;
-        border: 1px solid #e5e7eb;
-        z-index: 9999;
     }
 }
 
