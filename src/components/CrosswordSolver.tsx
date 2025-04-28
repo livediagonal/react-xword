@@ -1367,7 +1367,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
         </div>
       )}
       <div className="solver-content">
-        {/* Fixed position actions menu */}
+        {/* Actions menu in the main layout */}
         <div className="solver-actions">
           <button
             ref={actionsToggleRef}

@@ -7,7 +7,6 @@
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0.5rem;
     position: relative;
     overflow: hidden;
     /* Prevent scrolling */
@@ -43,29 +42,37 @@
     display: none;
 }
 
-/* Fixed positioned actions button */
+/* Actions button in the main layout */
 .solver-actions {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 40;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0.25rem;
+    background: transparent;
 }
 
 .solver-actions-toggle {
-    width: 40px;
-    height: 40px;
+    width: 2.25rem;
+    height: 2.25rem;
     border-radius: 50%;
-    background: #4a90e2;
-    color: white;
-    border: none;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    transition: transform 0.2s ease;
+}
+
+.solver-actions-toggle:hover {
+    transform: scale(1.05);
 }
 
 .solver-actions-menu {
-    position: fixed;
+    position: absolute;
     top: 3.5rem;
     right: 0.75rem;
     background: #fff;
@@ -79,7 +86,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    min-width: 180px;
+    min-width: 140px;
+    width: fit-content;
     border: 1px solid rgba(200, 200, 255, 0.18);
     z-index: 9999;
 }
@@ -136,7 +144,7 @@
     position: relative;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
     width: 100%;
     padding-left: 0;
     padding-right: 0;
@@ -197,8 +205,6 @@
         padding-right: 0;
         overflow: visible;
         width: 100%;
-        /* Use full width */
-        margin-top: 2.5rem;
         box-sizing: border-box;
     }
 
@@ -225,12 +231,22 @@
         max-height: 2.5rem;
     }
 
-    /* Move action menu to safer position */
     .solver-actions {
-        position: fixed;
-        top: 10px;
-        right: 10px;
+        position: relative;
+        width: 100%;
+        padding: 0.25rem;
+        background: transparent;
         z-index: 40;
+        margin-bottom: 0.5rem;
+    }
+
+    .solver-actions-menu {
+        position: absolute;
+        top: 3rem;
+        right: 0.5rem;
+        width: fit-content;
+        min-width: 140px;
+        max-width: 300px;
     }
 
     /* Remove left border from active clues on mobile */
@@ -242,7 +258,6 @@
 /* Adjust the layout when using mobile keyboard */
 .solver-container.use-mobile-keyboard .solver-grid-container {
     height: auto;
-    padding-bottom: 20px;
 }
 
 /* If native keyboard is shown, adjust layout */
@@ -306,7 +321,7 @@
     .solver-container {
         overflow: hidden;
         /* Ensure no scrolling on desktop */
-        padding-top: 4.5rem;
+        padding-top: 2rem;
         /* Add padding to account for the fixed header/clue bar */
         box-sizing: border-box;
     }
@@ -358,20 +373,17 @@
     /* Reset mobile fixed sizing for desktop */
     .solver-grid-container {
         position: relative;
-        /* Change from sticky to relative */
         max-width: 600px;
         width: 100%;
         height: auto;
-        margin: 0;
+        margin: 0 auto;
         overflow: visible;
-        align-self: flex-start;
-        /* Align to top */
+        align-self: center;
         justify-self: center;
         z-index: 1;
         aspect-ratio: 1 / 1;
         box-sizing: border-box;
         padding: 0;
-        /* Remove all padding */
     }
 
     .solver-clue-section {
