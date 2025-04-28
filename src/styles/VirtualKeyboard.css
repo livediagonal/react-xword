@@ -69,17 +69,26 @@
     color: #111;
     background: transparent !important;
     border: none;
-    align-items: center;
+    align-items: flex-start;
     overflow: hidden;
-    white-space: nowrap;
+    white-space: normal;
     text-overflow: ellipsis;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .control-button.active-clue .clue-text {
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     margin: 0;
+    line-height: 1.2;
+    text-align: left;
+    width: 100%;
 }
 
 .control-button.active-clue .no-clue {
