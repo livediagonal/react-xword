@@ -40,4 +40,5 @@ export interface CrosswordState {
     Down: { [key: number]: string };
   };
   clueText: string;
+  isAutomaticNavigation?: boolean;
 }

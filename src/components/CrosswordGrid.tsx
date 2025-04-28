@@ -71,6 +71,19 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                         onCellClick(startCell[0], startCell[1]);
                     }
                 }
+            } else {
+                // If we've reached the end of the current orientation's clues, switch to the other orientation
+                const newOrientation = clueOrientation === "across" ? "down" : "across";
+                const firstClueNumber = e.shiftKey
+                    ? findPreviousClueNumber(null, newOrientation) // Get last clue of new orientation
+                    : findNextClueNumber(null, newOrientation); // Get first clue of new orientation
+
+                if (firstClueNumber) {
+                    const firstEmptyCell = findFirstEmptyCellInClue(firstClueNumber, newOrientation);
+                    if (onNavigateToClue) {
+                        onNavigateToClue(firstClueNumber, newOrientation, firstEmptyCell);
+                    }
+                }
             }
         } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
             e.preventDefault();
@@ -99,6 +112,12 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                     } else if (onCellClick) {
                         // Fall back to just updating the cell if onNavigateToClue is not available
                         onCellClick(nextRow, nextCol);
+                    }
+                } else {
+                    // If we can't move further in this direction, switch to the other orientation
+                    const newOrientation = "down";
+                    if (onClueOrientationChange) {
+                        onClueOrientationChange(newOrientation);
                     }
                 }
             }
@@ -129,6 +148,12 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                     } else if (onCellClick) {
                         // Fall back to just updating the cell if onNavigateToClue is not available
                         onCellClick(nextRow, nextCol);
+                    }
+                } else {
+                    // If we can't move further in this direction, switch to the other orientation
+                    const newOrientation = "across";
+                    if (onClueOrientationChange) {
+                        onClueOrientationChange(newOrientation);
                     }
                 }
             }
@@ -418,9 +443,13 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
             return clueNumberList.length > 0 ? clueNumberList[0] : null;
         }
 
-        // Return the next clue number, or wrap around to the first clue
-        const nextIndex = (currentIndex + 1) % clueNumberList.length;
-        return clueNumberList[nextIndex];
+        // If we're at the last clue, return null to indicate we should switch orientations
+        if (currentIndex === clueNumberList.length - 1) {
+            return null;
+        }
+
+        // Return the next clue number
+        return clueNumberList[currentIndex + 1];
     };
 
     // Function to find the previous clue number in the current orientation
@@ -466,9 +495,13 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
             return clueNumberList.length > 0 ? clueNumberList[clueNumberList.length - 1] : null;
         }
 
-        // Return the previous clue number, or wrap around to the last clue
-        const prevIndex = (currentIndex - 1 + clueNumberList.length) % clueNumberList.length;
-        return clueNumberList[prevIndex];
+        // If we're at the first clue, return null to indicate we should switch orientations
+        if (currentIndex === 0) {
+            return null;
+        }
+
+        // Return the previous clue number
+        return clueNumberList[currentIndex - 1];
     };
 
     // Function to find the first empty cell in a clue
