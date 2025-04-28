@@ -135,6 +135,18 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
     }
   }, []);
 
+  // Helper function to find the first valid cell in the grid
+  function findFirstValidCell(grid: boolean[][]): [number, number] {
+    for (let row = 0; row < grid.length; row++) {
+      for (let col = 0; col < grid[row].length; col++) {
+        if (!grid[row][col]) {
+          return [row, col];
+        }
+      }
+    }
+    return [0, 0]; // Fallback to first cell if no white cells found
+  }
+
   // Load puzzle data only once when component mounts
   useEffect(() => {
     const loadPuzzle = async () => {
@@ -239,10 +251,11 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
           grid,
           letters,
           clueOrientation: "across",
-          activeClueNumber: null,
-          activeCell: null,
+          activeClueNumber: 1,
+          activeCell: findClueStartCell(1, "across") || findFirstValidCell(grid),
           clues: processedClues,
           clueText: "",
+          isAutomaticNavigation: true,
         };
 
         // Try to load saved state from localStorage
@@ -269,6 +282,20 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzPath }) => {
         // Set the state once with all the data
         setCrosswordState(initialState);
         setLoading(false);
+
+        // Use requestAnimationFrame to ensure this runs after the grid is fully rendered
+        requestAnimationFrame(() => {
+          if (initialState.activeCell) {
+            const [row, col] = initialState.activeCell;
+            // Add a small delay to ensure the grid is fully rendered before focusing
+            setTimeout(() => {
+              const cellElement = document.querySelector(`[data-row="${row}"][data-col="${col}"]`) as HTMLElement;
+              if (cellElement) {
+                cellElement.focus();
+              }
+            }, 0);
+          }
+        });
       } catch (err) {
         console.error("Error loading puzzle:", err);
         setError(err instanceof Error ? err.message : "Unknown error");

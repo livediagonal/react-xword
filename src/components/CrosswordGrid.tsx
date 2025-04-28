@@ -572,14 +572,41 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
 
     // Modify the useEffect to focus the active cell but NOT scroll it into view
     useEffect(() => {
-        if (activeCell && gridRef.current) {
-            const [row, col] = activeCell;
-            const cellElement = gridRef.current.querySelector(`[data-row="${row}"][data-col="${col}"]`) as HTMLElement;
-            if (cellElement) {
-                cellElement.focus({ preventScroll: true }); // Add preventScroll option
+        if (!activeCell) {
+            // If no active cell, find the first valid cell and set it as active
+            const firstValidCell = findFirstValidCell(grid);
+            if (onCellClick) {
+                onCellClick(firstValidCell[0], firstValidCell[1]);
+            }
+            return;
+        }
+
+        if (gridRef.current) {
+            // Use requestAnimationFrame to ensure this runs after the grid is fully rendered
+            requestAnimationFrame(() => {
+                const [row, col] = activeCell;
+                const cellElement = gridRef.current?.querySelector(`[data-row="${row}"][data-col="${col}"]`) as HTMLElement;
+                if (cellElement) {
+                    // Add a small delay to ensure the cell is fully rendered and ready
+                    setTimeout(() => {
+                        cellElement.focus({ preventScroll: true });
+                    }, 0);
+                }
+            });
+        }
+    }, [activeCell, grid, onCellClick]);
+
+    // Helper function to find the first valid cell in the grid
+    function findFirstValidCell(grid: boolean[][]): [number, number] {
+        for (let row = 0; row < grid.length; row++) {
+            for (let col = 0; col < grid[row].length; col++) {
+                if (!grid[row][col]) {
+                    return [row, col];
+                }
             }
         }
-    }, [activeCell]);
+        return [0, 0]; // Fallback to first cell if no white cells found
+    }
 
     // Add a class to the grid container when the keyboard is visible
     useEffect(() => {
@@ -636,11 +663,11 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                                 onTouchStart={handleTouchStart}
                                 onTouchMove={handleTouchMove}
                                 onTouchEnd={(e) => handleTouchEnd(e, row, col)}
-                                tabIndex={useMobileKeyboard ? -1 : 0}
+                                tabIndex={0}
                                 onKeyDown={(e) => handleKeyDown(e, row, col)}
                                 data-row={row}
                                 data-col={col}
-                                aria-readonly={useMobileKeyboard}
+                                aria-readonly={false}
                                 aria-label={`crossword cell ${row},${col}`}
                             >
                                 {!grid[row][col] && number > 0 && (
