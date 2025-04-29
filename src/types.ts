@@ -1,21 +1,6 @@
 export type Orientation = 0 | 1 | 2 | 3;
 export type ClueOrientation = "across" | "down";
 
-export interface IpuzPuzzle {
-  version: string;
-  kind: string[];
-  dimensions: {
-    width: number;
-    height: number;
-  };
-  puzzle: (number | null | { cell: number; style?: any } | string)[][];
-  solution: (string | null)[][];
-  clues: {
-    Across: [number, string][];
-    Down: [number, string][];
-  };
-}
-
 export interface PuzPuzzle {
   width: number;
   height: number;
