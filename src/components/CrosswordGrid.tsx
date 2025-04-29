@@ -14,7 +14,7 @@ export interface CrosswordGridProps {
     onCellClick: ((row: number, col: number) => void) | undefined;
     onNavigateToClue: ((clueNumber: number, orientation: ClueOrientation, cell: [number, number] | null) => void) | undefined;
     activeCell: [number, number] | null | undefined;
-    validatedCells?: boolean[][] | null;
+    validatedCells?: (boolean | undefined)[][] | null;
     revealedCells?: boolean[][] | null;
     isKeyboardVisible?: boolean;
     useMobileKeyboard?: boolean;

@@ -3,7 +3,7 @@ export interface CrosswordState {
     columns: number;
     grid: boolean[][];
     letters: string[][];
-    validatedCells: (boolean | undefined)[][];
+    validatedCells: (boolean | undefined)[][] | null;
     clueOrientation: "across" | "down";
     activeClueNumber: number | null;
     activeCell: [number, number] | null;

@@ -13,21 +13,11 @@ interface CrosswordSolverProps {
 // Storage key for the solver state
 const SOLVER_STORAGE_KEY = "xword_solver_state";
 
-interface CrosswordState {
-  letters: string[][];
-  validatedCells: (boolean | undefined)[][];
-  revealedCells: boolean[][];
-  clueNumbers: number[][];
-  rows: number;
-  columns: number;
-  clues: CrosswordClues;
-}
-
 const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
   const [grid, setGrid] = useState<boolean[][]>([]);
   const [letters, setLetters] = useState<string[][]>([]);
   const [solution, setSolution] = useState<string[][] | null>(null);
-  const [validatedCells, setValidatedCells] = useState<(boolean | undefined)[][]>([]);
+  const [validatedCells, setValidatedCells] = useState<(boolean | undefined)[][] | null>(null);
   const [revealedCells, setRevealedCells] = useState<boolean[][]>([]);
   const [clueNumbers, setClueNumbers] = useState<number[][]>([]);
   const [activeCell, setActiveCell] = useState<[number, number] | null>(null);
@@ -192,7 +182,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
           // Process the solution data
           for (let row = 0; row < height; row++) {
             for (let col = 0; col < width; col++) {
-              const cell = Array.isArray(ipuzSolution) ? ipuzSolution[row][col] : ipuzSolution.grid[row][col];
+              const cell = ipuzSolution[row][col];
               if (cell && cell !== "#" && cell !== null) {
                 solutionArray[row][col] = cell;
               }
@@ -274,6 +264,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
           letters: Array(height)
             .fill(0)
             .map(() => Array(width).fill("")),
+          validatedCells: null,
           clueOrientation: "across",
           activeClueNumber: clues.Across[0]?.[0] ?? 1,
           activeCell: firstCell,
@@ -407,7 +398,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
       newLetters[row][col] = letter;
 
       // Clear validation state for this cell
-      const newValidatedCells = validatedCells.map(row => [...row]);
+      const newValidatedCells = validatedCells ? validatedCells.map(row => [...row]) : Array(crosswordState.rows).fill(0).map(() => Array(crosswordState.columns).fill(undefined));
       newValidatedCells[row][col] = undefined;
 
       if (letter) {
@@ -1077,7 +1068,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
     }
 
     const newRevealedCells = revealedCells.map(row => [...row]);
-    const newValidatedCells = validatedCells.map(row => [...row]);
+    const newValidatedCells = validatedCells ? validatedCells.map(row => [...row]) : Array(crosswordState.rows).fill(0).map(() => Array(crosswordState.columns).fill(undefined));
     const newLetters = crosswordState.letters.map(row => [...row]);
 
     // Reveal the current word
@@ -1153,7 +1144,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
     if (!crosswordState || !solution) return;
 
     const newRevealedCells = revealedCells.map(row => [...row]);
-    const newValidatedCells = validatedCells.map(row => [...row]);
+    const newValidatedCells = validatedCells ? validatedCells.map(row => [...row]) : Array(crosswordState.rows).fill(0).map(() => Array(crosswordState.columns).fill(undefined));
     const newLetters = crosswordState.letters.map(row => [...row]);
 
     // Reveal all cells in the puzzle
