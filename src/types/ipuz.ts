@@ -25,10 +25,6 @@ export interface IPuzClues {
     Down: [number, string][];
 }
 
-export interface IPuzSolution {
-    grid: (string | null)[][];
-}
-
 export interface IPuzMetadata {
     title?: string;
     author?: string;
@@ -45,6 +41,6 @@ export interface IPuzPuzzle {
     dimensions: IPuzDimensions;
     puzzle: IPuzGrid;
     clues: IPuzClues;
-    solution?: IPuzSolution;
+    solution?: string[][];
     metadata?: IPuzMetadata;
 } 

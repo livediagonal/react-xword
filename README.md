@@ -109,10 +109,6 @@ interface IPuzClues {
   Down: IPuzClue[];
 }
 
-interface IPuzSolution {
-  grid: string[][];
-}
-
 interface IPuzMetadata {
   title?: string;
   author?: string;
@@ -129,7 +125,7 @@ interface IPuzPuzzle {
   dimensions: IPuzDimensions;
   puzzle: IPuzGrid;
   clues: IPuzClues;
-  solution?: IPuzSolution;
+  solution?: string[][];
   metadata?: IPuzMetadata;
 }
 ```
