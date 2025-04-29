@@ -1303,70 +1303,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
         </div>
       )}
       <div className="solver-content">
-        {/* Actions menu in the main layout */}
-        <div className="solver-actions">
-          <button
-            ref={actionsToggleRef}
-            className="solver-actions-toggle"
-            onClick={() => setIsActionsMenuOpen(!isActionsMenuOpen)}
-            aria-label="Toggle actions menu"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-            </svg>
-          </button>
-          <div ref={actionsMenuRef} className={`solver-actions-menu ${isActionsMenuOpen ? 'open' : ''}`}>
-            <button
-              className="solver-action-button"
-              onClick={checkAnswer}
-              disabled={!crosswordState?.activeClueNumber || hasCompleted}
-            >
-              Check Answer
-            </button>
-            <button
-              className="solver-action-button"
-              onClick={checkPuzzle}
-              disabled={hasCompleted}
-            >
-              Check Puzzle
-            </button>
-            <button
-              className="solver-action-button"
-              onClick={revealAnswer}
-              disabled={!crosswordState?.activeClueNumber || hasCompleted}
-            >
-              Reveal Answer
-            </button>
-            <button
-              className="solver-action-button"
-              onClick={revealPuzzle}
-              disabled={hasCompleted}
-            >
-              Reveal Puzzle
-            </button>
-          </div>
-        </div>
-
-        {/* Grid with better touch handling */}
-        <div className="solver-grid-container" id="crossword-grid-container">
-          <CrosswordGrid
-            rows={crosswordState.rows}
-            columns={crosswordState.columns}
-            grid={crosswordState.grid}
-            letters={crosswordState.letters}
-            onLetterChange={handleLetterChange}
-            clueOrientation={crosswordState.clueOrientation}
-            activeClueNumber={crosswordState.activeClueNumber}
-            onClueOrientationChange={handleClueOrientationChange}
-            onCellClick={handleCellClick}
-            onNavigateToClue={navigateToClueAndCell}
-            activeCell={crosswordState.activeCell}
-            validatedCells={validatedCells}
-            revealedCells={revealedCells}
-            useMobileKeyboard={useMobileKeyboard}
-          />
-        </div>
-
         {/* Only show clues list if not using the mobile keyboard */}
         {!useMobileKeyboard && (
           <div className="solver-clues-container">
@@ -1425,20 +1361,85 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
             </div>
           </div>
         )}
-      </div>
+        {/* Main area: actions, grid, keyboard */}
+        <div className="solver-main-area">
+          <div className="solver-actions">
+            <button
+              ref={actionsToggleRef}
+              className="solver-actions-toggle"
+              onClick={() => setIsActionsMenuOpen(!isActionsMenuOpen)}
+              aria-label="Toggle actions menu"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+              </svg>
+            </button>
+            <div ref={actionsMenuRef} className={`solver-actions-menu ${isActionsMenuOpen ? 'open' : ''}`}>
+              <button
+                className="solver-action-button"
+                onClick={checkAnswer}
+                disabled={!crosswordState?.activeClueNumber || hasCompleted}
+              >
+                Check Answer
+              </button>
+              <button
+                className="solver-action-button"
+                onClick={checkPuzzle}
+                disabled={hasCompleted}
+              >
+                Check Puzzle
+              </button>
+              <button
+                className="solver-action-button"
+                onClick={revealAnswer}
+                disabled={!crosswordState?.activeClueNumber || hasCompleted}
+              >
+                Reveal Answer
+              </button>
+              <button
+                className="solver-action-button"
+                onClick={revealPuzzle}
+                disabled={hasCompleted}
+              >
+                Reveal Puzzle
+              </button>
+            </div>
+          </div>
 
-      {/* Virtual keyboard for mobile */}
-      {useMobileKeyboard && (
-        <VirtualKeyboard
-          onKeyPress={handleVirtualKeyPress}
-          onToggleDirection={handleToggleDirection}
-          onNextClue={handleNextClue}
-          onPrevClue={handlePrevClue}
-          currentDirection={crosswordState?.clueOrientation}
-          activeClueNumber={crosswordState?.activeClueNumber}
-          activeClueText={crosswordState?.activeClueNumber ? getActiveClueText(crosswordState.clueOrientation) : null}
-        />
-      )}
+          {/* Grid with better touch handling */}
+          <div className="solver-grid-container" id="crossword-grid-container">
+            <CrosswordGrid
+              rows={crosswordState.rows}
+              columns={crosswordState.columns}
+              grid={crosswordState.grid}
+              letters={crosswordState.letters}
+              onLetterChange={handleLetterChange}
+              clueOrientation={crosswordState.clueOrientation}
+              activeClueNumber={crosswordState.activeClueNumber}
+              onClueOrientationChange={handleClueOrientationChange}
+              onCellClick={handleCellClick}
+              onNavigateToClue={navigateToClueAndCell}
+              activeCell={crosswordState.activeCell}
+              validatedCells={validatedCells}
+              revealedCells={revealedCells}
+              useMobileKeyboard={useMobileKeyboard}
+            />
+          </div>
+
+          {/* Virtual keyboard for mobile */}
+          {useMobileKeyboard && (
+            <VirtualKeyboard
+              onKeyPress={handleVirtualKeyPress}
+              onToggleDirection={handleToggleDirection}
+              onNextClue={handleNextClue}
+              onPrevClue={handlePrevClue}
+              currentDirection={crosswordState?.clueOrientation}
+              activeClueNumber={crosswordState?.activeClueNumber}
+              activeClueText={crosswordState?.activeClueNumber ? getActiveClueText(crosswordState.clueOrientation) : null}
+            />
+          )}
+        </div>
+      </div>
 
       <Modal
         isOpen={showSuccessModal}

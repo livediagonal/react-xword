@@ -8,6 +8,8 @@
     touch-action: none;
     /* Ensure grid is contained within the viewport */
     box-sizing: border-box;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .grid-container {
@@ -23,6 +25,9 @@
     -webkit-tap-highlight-color: transparent;
     /* Ensure container doesn't overflow */
     box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .crossword-cell {
@@ -89,21 +94,20 @@
 @media (max-width: 767px) {
     .crossword-grid {
         width: 100%;
-        /* Use full width of viewport */
-        height: auto;
-        /* Don't set a fixed height */
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
         aspect-ratio: 1/1;
-        /* Keep it square */
         margin: 0 auto;
         padding-bottom: 0;
-        max-width: 100vh;
-        /* Don't let it get too large */
         /* Ensure grid fits inside viewport with borders visible */
         box-sizing: border-box;
+        min-width: 0;
+        overflow: hidden;
     }
 
     .crossword-cell {
-        font-size: min(5vw, 1.75rem);
+        font-size: clamp(0.8rem, 4vw, 1.75rem);
         /* Ensure consistent height regardless of content */
         box-sizing: border-box;
         aspect-ratio: 1/1;
