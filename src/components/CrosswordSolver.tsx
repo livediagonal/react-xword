@@ -30,7 +30,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [hasCompleted, setHasCompleted] = useState(false);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [useMobileKeyboard, setUseMobileKeyboard] = useState(false);
   const [crosswordState, setCrosswordState] = useState<CrosswordState | null>(null);
 
@@ -69,74 +68,20 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
     };
   }, []);
 
-  // Simplified mobile handling - more reliable keyboard detection
-  useEffect(() => {
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    const isMobile = window.innerWidth <= 767;
-
-    const handleKeyboardVisibility = () => {
-      if (!window.visualViewport) return;
-
-      const windowHeight = window.innerHeight;
-      const viewportHeight = window.visualViewport.height;
-      const heightDifference = windowHeight - viewportHeight;
-
-      // More reliable keyboard detection with higher threshold for Safari
-      const keyboardThreshold = isSafari ? 100 : 150;
-      const isKeyboardVisible = heightDifference > keyboardThreshold;
-
-      if (isKeyboardVisible) {
-        setIsKeyboardVisible(true);
-        document.documentElement.style.setProperty('--keyboard-height', `${heightDifference}px`);
-
-        if (containerRef.current) {
-          containerRef.current.classList.add('keyboard-visible');
-        }
-      } else {
-        setIsKeyboardVisible(false);
-        document.documentElement.style.setProperty('--keyboard-height', '0px');
-
-        if (containerRef.current) {
-          containerRef.current.classList.remove('keyboard-visible');
-        }
-      }
-    };
-
-    // Only add visualViewport listeners on mobile
-    if (isMobile && window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleKeyboardVisibility);
-      window.visualViewport.addEventListener('scroll', handleKeyboardVisibility);
-
-      // Initial check
-      handleKeyboardVisibility();
-    }
-
-    // Clean up
-    return () => {
-      if (isMobile && window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleKeyboardVisibility);
-        window.visualViewport.removeEventListener('scroll', handleKeyboardVisibility);
-      }
-    };
-  }, []);
-
   // Detect mobile devices on mount and set keyboard mode
   useEffect(() => {
     const isMobile = window.innerWidth <= 767;
     setUseMobileKeyboard(isMobile);
 
-    // Disable the native keyboard by preventing focus on mobile
-    if (isMobile) {
-      // Add meta viewport tag to prevent zooming
-      const existingViewport = document.querySelector('meta[name="viewport"]');
-      if (existingViewport) {
-        existingViewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-      } else {
-        const viewportMeta = document.createElement('meta');
-        viewportMeta.name = 'viewport';
-        viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
-        document.getElementsByTagName('head')[0].appendChild(viewportMeta);
-      }
+    // Add meta viewport tag to prevent zooming
+    const existingViewport = document.querySelector('meta[name="viewport"]');
+    if (existingViewport) {
+      existingViewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    } else {
+      const viewportMeta = document.createElement('meta');
+      viewportMeta.name = 'viewport';
+      viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+      document.getElementsByTagName('head')[0].appendChild(viewportMeta);
     }
   }, []);
 
@@ -1332,7 +1277,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
   }
 
   return (
-    <div className={`solver-container ${isKeyboardVisible ? 'keyboard-visible' : ''} ${useMobileKeyboard ? 'use-mobile-keyboard' : ''}`} ref={containerRef}>
+    <div className={`solver-container ${useMobileKeyboard ? 'use-mobile-keyboard' : ''}`} ref={containerRef}>
       {showConfetti && (
         <div className="confetti-container">
           <div className="confetti"></div>
@@ -1418,67 +1363,68 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
             activeCell={crosswordState.activeCell}
             validatedCells={validatedCells}
             revealedCells={revealedCells}
-            isKeyboardVisible={isKeyboardVisible}
             useMobileKeyboard={useMobileKeyboard}
           />
         </div>
 
-        {/* Only shown on desktop */}
-        <div className="solver-clues-container">
-          <div className="solver-clue-section">
-            <h3>Across</h3>
-            <div className="solver-clue-list" ref={acrossClueListRef}>
-              {Object.entries(crosswordState.clues.Across).map(
-                ([number, text]) => (
+        {/* Only show clues list if not using the mobile keyboard */}
+        {!useMobileKeyboard && (
+          <div className="solver-clues-container">
+            <div className="solver-clue-section">
+              <h3>Across</h3>
+              <div className="solver-clue-list" ref={acrossClueListRef}>
+                {Object.entries(crosswordState.clues.Across).map(
+                  ([number, text]) => (
+                    <div
+                      key={`across-${number}`}
+                      id={`across-${number}`}
+                      className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
+                        crosswordState.clueOrientation === "across"
+                        ? "active"
+                        : ""
+                        }`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const cellNumber = parseInt(number);
+                        const startCell = findClueStartCell(cellNumber, "across");
+                        const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "across");
+                        navigateToClueAndCell(cellNumber, "across", firstEmptyCell || startCell);
+                      }}
+                    >
+                      <span className="solver-clue-number">{number}.</span> {text}
+                    </div>
+                  ),
+                )}
+              </div>
+            </div>
+
+            <div className="solver-clue-section">
+              <h3>Down</h3>
+              <div className="solver-clue-list" ref={downClueListRef}>
+                {Object.entries(crosswordState.clues.Down).map(([number, text]) => (
                   <div
-                    key={`across-${number}`}
-                    id={`across-${number}`}
+                    key={`down-${number}`}
+                    id={`down-${number}`}
                     className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
-                      crosswordState.clueOrientation === "across"
+                      crosswordState.clueOrientation === "down"
                       ? "active"
                       : ""
                       }`}
                     onClick={(e) => {
                       e.preventDefault();
                       const cellNumber = parseInt(number);
-                      const startCell = findClueStartCell(cellNumber, "across");
-                      const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "across");
-                      navigateToClueAndCell(cellNumber, "across", firstEmptyCell || startCell);
+                      const startCell = findClueStartCell(cellNumber, "down");
+                      const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "down");
+                      navigateToClueAndCell(cellNumber, "down", firstEmptyCell || startCell);
                     }}
                   >
                     <span className="solver-clue-number">{number}.</span> {text}
                   </div>
-                ),
-              )}
+                ))}
+              </div>
             </div>
           </div>
-
-          <div className="solver-clue-section">
-            <h3>Down</h3>
-            <div className="solver-clue-list" ref={downClueListRef}>
-              {Object.entries(crosswordState.clues.Down).map(([number, text]) => (
-                <div
-                  key={`down-${number}`}
-                  id={`down-${number}`}
-                  className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
-                    crosswordState.clueOrientation === "down"
-                    ? "active"
-                    : ""
-                    }`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const cellNumber = parseInt(number);
-                    const startCell = findClueStartCell(cellNumber, "down");
-                    const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "down");
-                    navigateToClueAndCell(cellNumber, "down", firstEmptyCell || startCell);
-                  }}
-                >
-                  <span className="solver-clue-number">{number}.</span> {text}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Virtual keyboard for mobile */}

@@ -16,7 +16,6 @@ export interface CrosswordGridProps {
     activeCell: [number, number] | null | undefined;
     validatedCells?: (boolean | undefined)[][] | null;
     revealedCells?: boolean[][] | null;
-    isKeyboardVisible?: boolean;
     useMobileKeyboard?: boolean;
 }
 
@@ -34,7 +33,6 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     activeCell,
     validatedCells,
     revealedCells,
-    isKeyboardVisible = false,
     useMobileKeyboard = false,
 }) => {
     const gridRef = useRef<HTMLDivElement>(null);
@@ -610,17 +608,6 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         }
         return [0, 0]; // Fallback to first cell if no white cells found
     }
-
-    // Add a class to the grid container when the keyboard is visible
-    useEffect(() => {
-        if (gridRef.current) {
-            if (isKeyboardVisible) {
-                gridRef.current.classList.add('keyboard-visible');
-            } else {
-                gridRef.current.classList.remove('keyboard-visible');
-            }
-        }
-    }, [isKeyboardVisible]);
 
     // Add effect to prevent viewport scaling on input
     useEffect(() => {

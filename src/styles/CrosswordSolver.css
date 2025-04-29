@@ -149,11 +149,15 @@
     padding-left: 0;
     padding-right: 0;
     box-sizing: border-box;
+    max-height: calc(100dvh - 60px);
+    /* 60px for actions/padding */
+    overflow-y: auto;
 }
 
 /* Mobile keyboard adjustments */
 .solver-container.keyboard-visible .solver-grid-container {
-    height: calc(100dvh - var(--keyboard-height, 300px));
+    max-height: calc(100dvh - 60px);
+    height: auto;
 }
 
 /* Clues container for below the grid */
@@ -167,23 +171,36 @@
 
 /* Mobile specific styles */
 @media (max-width: 767px) {
-    .solver-container {
-        --keyboard-offset: 0px;
+
+    .solver-container,
+    .solver-content {
+        height: 100dvh;
+        min-height: 0;
         display: flex;
         flex-direction: column;
-        width: 100%;
-        overflow-x: hidden;
-        /* Prevent horizontal overflow */
+        padding: 0;
+        margin: 0;
     }
 
-    .solver-content {
+    .solver-grid-container {
+        flex: 1 1 auto;
+        height: auto;
+        max-height: none;
+        min-height: 0;
         display: flex;
-        flex-direction: column;
-        /* Adjust height to leave space for keyboard - 180px is keyboard height + some spacing */
-        height: calc(100dvh - 180px);
-        /* Add these for proper centering */
         justify-content: center;
-        align-items: center;
+        align-items: flex-start;
+        padding: 0;
+        margin: 0;
+    }
+
+    .virtual-keyboard {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 100;
+        width: 100vw;
     }
 
     .solver-clues-container {
@@ -192,20 +209,10 @@
     }
 
     .solver-grid-container {
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        /* Changed from center to flex-start to stop vertical centering */
-        padding-top: 60px;
-        /* Offset by the height of the clue bar */
-        padding-bottom: 10px;
-        /* Reduced space above keyboard */
-        padding-left: 0;
-        padding-right: 0;
-        overflow: visible;
-        width: 100%;
-        box-sizing: border-box;
+        padding-bottom: 0 !important;
+        max-height: calc(100dvh - 60px) !important;
+        overflow-y: auto !important;
+        height: auto !important;
     }
 
     /* Make active clue bar more compact */
@@ -215,9 +222,7 @@
         left: 0;
         right: 0;
         min-height: 40px;
-        /* Reduced height */
         max-height: 60px;
-        /* Reduced max height */
         z-index: 30;
         background-color: #fff;
         padding: 10px;
@@ -260,11 +265,6 @@
     height: auto;
 }
 
-/* If native keyboard is shown, adjust layout */
-.solver-container.keyboard-visible .solver-grid-container {
-    height: calc(100dvh - var(--keyboard-height, 300px));
-}
-
 /* Additional classes and animations */
 .solver-clue-item.active {
     background-color: #f0f7ff;
@@ -297,22 +297,14 @@
 /* Safari specific fixes */
 @supports (-webkit-touch-callout: none) {
     .solver-container {
-        /* Safari viewport height fix */
         height: -webkit-fill-available;
-        /* Add padding to account for Safari UI elements at edges */
         padding-left: env(safe-area-inset-left, 0);
         padding-right: env(safe-area-inset-right, 0);
     }
 
-    /* Fix any potential right cutoff issues specific to Safari */
     .virtual-keyboard {
         margin-right: env(safe-area-inset-right, 0);
         width: calc(100% - env(safe-area-inset-right, 0px));
-    }
-
-    .solver-container.keyboard-visible {
-        /* When keyboard is visible on Safari */
-        height: 100%;
     }
 }
 
@@ -396,16 +388,13 @@
         flex: 1;
         margin: 0;
         position: relative;
-        /* Change from sticky to relative */
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 1.5rem;
         align-self: start;
         overflow: visible;
         height: auto;
-        /* Let height be determined by content */
         padding: 0;
-        /* Remove any padding */
     }
 
     .solver-clue-section {
@@ -413,16 +402,13 @@
         flex-direction: column;
         height: auto;
         overflow: visible;
-        /* Ensure overflow is managed by the list */
     }
 
     .solver-clue-list {
         max-height: none;
         height: 600px;
-        /* Match grid's max-width which is 600px with 1:1 aspect ratio */
         overflow-y: auto;
         scrollbar-width: none;
-        /* For Firefox */
     }
 
     /* Style the scrollbars for WebKit browsers */
@@ -460,7 +446,6 @@
 /* Ensure the grid is properly sized */
 .solver-grid-container {
     padding-top: 0;
-    /* Removed extra padding */
     height: calc(100% - var(--clues-height, 0px) - env(safe-area-inset-bottom));
 }
 
@@ -476,14 +461,15 @@
 }
 
 .solver-clue-item {
-    margin-bottom: 0.25rem;
+    padding: 0.5rem;
+    margin: 0.25rem 0;
+    border-radius: 4px;
     cursor: pointer;
-    padding: 0.25rem;
-    border-radius: 0.25rem;
+    transition: background-color 0.2s;
 }
 
 .solver-clue-item:hover {
-    background-color: #f3f4f6;
+    background-color: #f0f7ff;
 }
 
 /* Only show clues container on larger screens */
