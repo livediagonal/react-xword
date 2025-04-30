@@ -6,11 +6,24 @@ interface ModalProps {
     onClose: () => void;
     title: string;
     message: string;
-    type: 'success' | 'error';
+    type: 'success' | 'error' | 'start';
 }
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, message, type }) => {
     if (!isOpen) return null;
+
+    const getButtonText = () => {
+        switch (type) {
+            case 'success':
+                return 'Celebrate!';
+            case 'error':
+                return 'Continue Solving';
+            case 'start':
+                return 'Start';
+            default:
+                return 'Close';
+        }
+    };
 
     return (
         <div className="modal-overlay">
@@ -18,7 +31,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, message, type }) 
                 <h2 className="modal-title">{title}</h2>
                 <p className="modal-message">{message}</p>
                 <button className="modal-button" onClick={onClose}>
-                    {type === 'success' ? 'Celebrate!' : 'Continue Solving'}
+                    {getButtonText()}
                 </button>
             </div>
         </div>

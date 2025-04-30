@@ -27,11 +27,15 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
   const [error, setError] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showSplashModal, setShowSplashModal] = useState(true);
   const [showConfetti, setShowConfetti] = useState(false);
   const [hasCompleted, setHasCompleted] = useState(false);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const [useMobileKeyboard, setUseMobileKeyboard] = useState(false);
   const [crosswordState, setCrosswordState] = useState<CrosswordState | null>(null);
+  const [timer, setTimer] = useState<number>(0);
+  const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Use a ref to track if we've already loaded from localStorage
   const hasLoadedFromStorage = useRef(false);
@@ -84,6 +88,30 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
       document.getElementsByTagName('head')[0].appendChild(viewportMeta);
     }
   }, []);
+
+  // Timer effect
+  useEffect(() => {
+    if (isTimerRunning) {
+      timerRef.current = setInterval(() => {
+        setTimer(prev => prev + 1);
+      }, 1000);
+    } else if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [isTimerRunning]);
+
+  // Format time as M:SS
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
 
   // Helper function to find the first valid cell in the grid
   function findFirstValidCell(grid: boolean[][]): [number, number] {
@@ -368,6 +396,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
             setShowSuccessModal(true);
             setShowConfetti(true);
             setHasCompleted(true);
+            setIsTimerRunning(false);
           } else {
             setShowErrorModal(true);
           }
@@ -1364,6 +1393,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
         {/* Main area: actions, grid, keyboard */}
         <div className="solver-main-area">
           <div className="solver-actions">
+            <div className="solver-timer">{formatTime(timer)}</div>
             <button
               ref={actionsToggleRef}
               className="solver-actions-toggle"
@@ -1445,9 +1475,10 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
         isOpen={showSuccessModal}
         onClose={() => {
           setShowSuccessModal(false);
+          setIsTimerRunning(false);
         }}
         title="Congratulations! 🎉"
-        message="You've successfully completed the crossword puzzle! All your answers are correct."
+        message={`You've successfully completed the crossword puzzle in ${formatTime(timer)}! All your answers are correct.`}
         type="success"
       />
 
@@ -1457,6 +1488,17 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
         title="Not Quite Right"
         message="The puzzle is filled, but some answers are incorrect. Keep solving!"
         type="error"
+      />
+
+      <Modal
+        isOpen={showSplashModal}
+        onClose={() => {
+          setShowSplashModal(false);
+          setIsTimerRunning(true);
+        }}
+        title="Ready to Solve?"
+        message="The timer will start when you begin solving the puzzle."
+        type="start"
       />
     </div>
   );
