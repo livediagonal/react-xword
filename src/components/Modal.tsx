@@ -4,15 +4,18 @@ import './Modal.css';
 interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onAction?: () => void;
     title: string;
     message: string;
     type: 'success' | 'error' | 'start';
+    buttonText?: string;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, message, type }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onAction, title, message, type, buttonText }) => {
     if (!isOpen) return null;
 
     const getButtonText = () => {
+        if (buttonText) return buttonText;
         switch (type) {
             case 'success':
                 return 'Celebrate!';
@@ -37,7 +40,10 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, message, type }) 
             <div className={`modal-content ${type}`} onClick={e => e.stopPropagation()}>
                 <h2 className="modal-title">{title}</h2>
                 <p className="modal-message">{message}</p>
-                <button className="modal-button" onClick={onClose}>
+                <button className="modal-button" onClick={() => {
+                    onClose();
+                    onAction?.();
+                }}>
                     {getButtonText()}
                 </button>
             </div>

@@ -1299,11 +1299,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     setShowConfetti(true);
     setHasCompleted(true);
     setIsTimerRunning(false);
-
-    // Call the onComplete callback if provided
-    if (onComplete) {
-      onComplete(timer);
-    }
   };
 
   if (loading) {
@@ -1504,9 +1499,15 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           setShowSuccessModal(false);
           setIsTimerRunning(false);
         }}
-        title={`${completionAction} 🎉`}
+        onAction={() => {
+          if (onComplete) {
+            onComplete(timer);
+          }
+        }}
+        title={'You did it! 🎉'}
         message={`You successfully completed the crossword in ${formatTime(timer)}!`}
         type="success"
+        buttonText={completionAction}
       />
 
       <Modal
