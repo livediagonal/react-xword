@@ -656,6 +656,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
             >
                 <div
                     className="grid-container"
+                    ref={gridRef}
                     style={{
                         gridTemplateColumns: `repeat(${columns}, ${cellSize}px)`,
                         gridTemplateRows: `repeat(${rows}, ${cellSize}px)`,
