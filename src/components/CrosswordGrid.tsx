@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { ClueOrientation } from "../types";
 import "../styles/CrosswordGrid.css";
 
@@ -36,6 +36,8 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     useMobileKeyboard = false,
 }) => {
     const gridRef = useRef<HTMLDivElement>(null);
+    const wrapperRef = useRef<HTMLDivElement>(null);
+    const [cellSize, setCellSize] = useState<number>(32); // default fallback
 
     const handleKeyDown = (e: React.KeyboardEvent, row: number, col: number) => {
         // Only process keyboard events if we're not using the mobile keyboard
@@ -625,49 +627,78 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         };
     }, []);
 
-    return (
-        <div className={`crossword-grid ${useMobileKeyboard ? 'use-mobile-keyboard' : ''}`} ref={gridRef}>
-            <div
-                className="grid-container"
-                style={{
-                    gridTemplateColumns: `repeat(${columns}, 1fr)`,
-                    gridTemplateRows: `repeat(${rows}, 1fr)`,
-                }}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-            >
-                {Array.from({ length: rows }, (_, row) =>
-                    Array.from({ length: columns }, (_, col) => {
-                        const cellClass = getCellClass(row, col);
-                        const letter = letters[row][col];
-                        const number = clueNumbers[row][col];
+    useEffect(() => {
+        function updateSize() {
+            if (!wrapperRef.current) return;
+            const rect = wrapperRef.current.getBoundingClientRect();
+            const maxCellWidth = Math.floor(rect.width / columns);
+            const maxCellHeight = Math.floor(rect.height / rows);
+            const n = Math.max(16, Math.floor(Math.min(maxCellWidth, maxCellHeight)));
+            setCellSize(n);
+        }
+        updateSize();
+        window.addEventListener('resize', updateSize);
+        return () => window.removeEventListener('resize', updateSize);
+    }, [rows, columns]);
 
-                        return (
-                            <div
-                                key={`${row}-${col}`}
-                                className={cellClass}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    onCellClick && onCellClick(row, col);
-                                }}
-                                onTouchStart={handleTouchStart}
-                                onTouchMove={handleTouchMove}
-                                onTouchEnd={(e) => handleTouchEnd(e, row, col)}
-                                tabIndex={0}
-                                onKeyDown={(e) => handleKeyDown(e, row, col)}
-                                data-row={row}
-                                data-col={col}
-                                aria-readonly={false}
-                                aria-label={`crossword cell ${row},${col}`}
-                            >
-                                {!grid[row][col] && number > 0 && (
-                                    <span className="cell-number">{number}</span>
-                                )}
-                                {letter}
-                            </div>
-                        );
-                    })
-                )}
+    return (
+        <div className="crossword-wrapper" ref={wrapperRef} style={{ width: '100%', height: '100%' }}>
+            <div
+                className={`crossword-grid ${useMobileKeyboard ? 'use-mobile-keyboard' : ''}`}
+                style={{
+                    width: cellSize * columns,
+                    height: cellSize * rows,
+                    minWidth: cellSize * columns,
+                    minHeight: cellSize * rows,
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                }}
+            >
+                <div
+                    className="grid-container"
+                    style={{
+                        gridTemplateColumns: `repeat(${columns}, ${cellSize}px)`,
+                        gridTemplateRows: `repeat(${rows}, ${cellSize}px)`,
+                        width: cellSize * columns,
+                        height: cellSize * rows,
+                    }}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                >
+                    {Array.from({ length: rows }, (_, row) =>
+                        Array.from({ length: columns }, (_, col) => {
+                            const cellClass = getCellClass(row, col);
+                            const letter = letters[row][col];
+                            const number = clueNumbers[row][col];
+
+                            return (
+                                <div
+                                    key={`${row}-${col}`}
+                                    className={cellClass}
+                                    style={{ width: cellSize, height: cellSize }}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        onCellClick && onCellClick(row, col);
+                                    }}
+                                    onTouchStart={handleTouchStart}
+                                    onTouchMove={handleTouchMove}
+                                    onTouchEnd={(e) => handleTouchEnd(e, row, col)}
+                                    tabIndex={0}
+                                    onKeyDown={(e) => handleKeyDown(e, row, col)}
+                                    data-row={row}
+                                    data-col={col}
+                                    aria-readonly={false}
+                                    aria-label={`crossword cell ${row},${col}`}
+                                >
+                                    {!grid[row][col] && number > 0 && (
+                                        <span className="cell-number">{number}</span>
+                                    )}
+                                    {letter}
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
             </div>
         </div>
     );
