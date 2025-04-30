@@ -25,9 +25,16 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, message, type }) 
         }
     };
 
+    const handleOverlayClick = (e: React.MouseEvent) => {
+        // Only close if the click was directly on the overlay
+        if (e.target === e.currentTarget) {
+            onClose();
+        }
+    };
+
     return (
-        <div className="modal-overlay">
-            <div className={`modal-content ${type}`}>
+        <div className="modal-overlay" onClick={handleOverlayClick}>
+            <div className={`modal-content ${type}`} onClick={e => e.stopPropagation()}>
                 <h2 className="modal-title">{title}</h2>
                 <p className="modal-message">{message}</p>
                 <button className="modal-button" onClick={onClose}>

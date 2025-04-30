@@ -7,13 +7,28 @@ import "../styles/CrosswordSolver.css";
 import VirtualKeyboard from "./VirtualKeyboard";
 
 interface CrosswordSolverProps {
+  /** The puzzle data in IPuz format */
   ipuzData: IPuzPuzzle;
+  /** 
+   * Optional callback function that will be called when the puzzle is completed.
+   * Receives the time taken to complete the puzzle in seconds.
+   */
+  onComplete?: (secondsToComplete: number) => void;
+  /** 
+   * Optional text to display in the success modal when the puzzle is completed.
+   * Defaults to "Celebrate!"
+   */
+  completionAction?: string;
 }
 
 // Storage key for the solver state
 const SOLVER_STORAGE_KEY = "xword_solver_state";
 
-const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
+const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
+  ipuzData,
+  onComplete,
+  completionAction = "Celebrate!"
+}) => {
   const [grid, setGrid] = useState<boolean[][]>([]);
   const [letters, setLetters] = useState<string[][]>([]);
   const [solution, setSolution] = useState<string[][] | null>(null);
@@ -393,10 +408,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
           // If the puzzle is complete, check if all answers are correct
           const allCorrect = areAllAnswersCorrect();
           if (allCorrect) {
-            setShowSuccessModal(true);
-            setShowConfetti(true);
-            setHasCompleted(true);
-            setIsTimerRunning(false);
+            handlePuzzleCompletion();
           } else {
             setShowErrorModal(true);
           }
@@ -1281,6 +1293,19 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
     }
   };
 
+  // Function to handle puzzle completion
+  const handlePuzzleCompletion = () => {
+    setShowSuccessModal(true);
+    setShowConfetti(true);
+    setHasCompleted(true);
+    setIsTimerRunning(false);
+
+    // Call the onComplete callback if provided
+    if (onComplete) {
+      onComplete(timer);
+    }
+  };
+
   if (loading) {
     return (
       <div className="solver-loading">
@@ -1479,7 +1504,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
           setShowSuccessModal(false);
           setIsTimerRunning(false);
         }}
-        title="Congratulations! 🎉"
+        title={`${completionAction} 🎉`}
         message={`You successfully completed the crossword in ${formatTime(timer)}!`}
         type="success"
       />
