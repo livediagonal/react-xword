@@ -52,6 +52,12 @@
     position: relative;
 }
 
+.solver-actions-group {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
 .solver-timer {
     font-size: 1.25rem;
     font-weight: 200;

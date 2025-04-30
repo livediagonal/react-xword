@@ -1393,17 +1393,19 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
         {/* Main area: actions, grid, keyboard */}
         <div className="solver-main-area">
           <div className="solver-actions">
-            <div className="solver-timer">{formatTime(timer)}</div>
-            <button
-              ref={actionsToggleRef}
-              className="solver-actions-toggle"
-              onClick={() => setIsActionsMenuOpen(!isActionsMenuOpen)}
-              aria-label="Toggle actions menu"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-              </svg>
-            </button>
+            <div className="solver-actions-group">
+              <div className="solver-timer">{formatTime(timer)}</div>
+              <button
+                ref={actionsToggleRef}
+                className="solver-actions-toggle"
+                onClick={() => setIsActionsMenuOpen(!isActionsMenuOpen)}
+                aria-label="Toggle actions menu"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                </svg>
+              </button>
+            </div>
             <div ref={actionsMenuRef} className={`solver-actions-menu ${isActionsMenuOpen ? 'open' : ''}`}>
               <button
                 className="solver-action-button"
@@ -1478,7 +1480,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
           setIsTimerRunning(false);
         }}
         title="Congratulations! 🎉"
-        message={`You've successfully completed the crossword puzzle in ${formatTime(timer)}! All your answers are correct.`}
+        message={`You successfully completed the crossword in ${formatTime(timer)}!`}
         type="success"
       />
 
@@ -1486,7 +1488,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({ ipuzData }) => {
         isOpen={showErrorModal}
         onClose={() => setShowErrorModal(false)}
         title="Not Quite Right"
-        message="The puzzle is filled, but some answers are incorrect. Keep solving!"
+        message="The puzzle is filled, but some answers are incorrect. Keep trying!"
         type="error"
       />
 
