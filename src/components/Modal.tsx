@@ -6,8 +6,8 @@ interface ModalProps {
     onClose: () => void;
     onAction?: () => void;
     title: string;
-    message: string;
-    type: 'success' | 'error' | 'start';
+    message: string | React.ReactNode;
+    type: 'success' | 'error' | 'start' | 'info';
     buttonText?: string;
 }
 
@@ -23,6 +23,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onAction, title, message
                 return 'Continue Solving';
             case 'start':
                 return 'Start';
+            case 'info':
+                return 'Close';
             default:
                 return 'Close';
         }
@@ -39,7 +41,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onAction, title, message
         <div className="modal-overlay" onClick={handleOverlayClick}>
             <div className={`modal-content ${type}`} onClick={e => e.stopPropagation()}>
                 <h2 className="modal-title">{title}</h2>
-                <p className="modal-message">{message}</p>
+                <div className="modal-message">{message}</div>
                 <button className="modal-button" onClick={() => {
                     onClose();
                     onAction?.();

@@ -9,7 +9,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 9999;
 }
 
 .modal-content {
@@ -32,6 +32,10 @@
 
 .modal-content.start {
     border-top: 4px solid #2563EB;
+}
+
+.modal-content.info {
+    border-top: 4px solid #6B7280;
 }
 
 .modal-title {
@@ -60,4 +64,21 @@
 
 .modal-button:hover {
     background-color: #1D4ED8;
+}
+
+.puzzle-info {
+    text-align: left;
+}
+
+.puzzle-info-item {
+    margin-bottom: 0.75rem;
+}
+
+.puzzle-info-item:last-child {
+    margin-bottom: 0;
+}
+
+.puzzle-info-item strong {
+    color: #1F2937;
+    margin-right: 0.5rem;
 }

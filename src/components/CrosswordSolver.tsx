@@ -43,6 +43,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showSplashModal, setShowSplashModal] = useState(true);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [hasCompleted, setHasCompleted] = useState(false);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
@@ -1301,6 +1302,16 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     setIsTimerRunning(false);
   };
 
+  // Function to check if we have any metadata to show
+  const hasMetadata = () => {
+    const metadata = ipuzData.metadata;
+    return metadata && (
+      (metadata.title && metadata.title.trim() !== '') ||
+      (metadata.author && metadata.author.trim() !== '') ||
+      (metadata.notes && metadata.notes.trim() !== '')
+    );
+  };
+
   if (loading) {
     return (
       <div className="solver-loading">
@@ -1415,6 +1426,19 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           <div className="solver-actions">
             <div className="solver-actions-group">
               <div className="solver-timer">{formatTime(timer)}</div>
+              {hasMetadata() && (
+                <button
+                  className="solver-actions-toggle"
+                  onClick={() => setShowInfoModal(true)}
+                  aria-label="Show puzzle information"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                </button>
+              )}
               <button
                 ref={actionsToggleRef}
                 className="solver-actions-toggle"
@@ -1527,6 +1551,32 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         title="Ready to Solve?"
         message="The timer will start when you begin solving the puzzle."
         type="start"
+      />
+
+      <Modal
+        isOpen={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+        title="Puzzle Information"
+        message={
+          <div className="puzzle-info">
+            {ipuzData.metadata?.title && (
+              <div className="puzzle-info-item">
+                <strong>Title:</strong> {ipuzData.metadata.title}
+              </div>
+            )}
+            {ipuzData.metadata?.author && (
+              <div className="puzzle-info-item">
+                <strong>Author:</strong> {ipuzData.metadata.author}
+              </div>
+            )}
+            {ipuzData.metadata?.notes && (
+              <div className="puzzle-info-item">
+                <strong>Notes:</strong> {ipuzData.metadata.notes}
+              </div>
+            )}
+          </div>
+        }
+        type="info"
       />
     </div>
   );
