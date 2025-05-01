@@ -107,11 +107,6 @@ body {
     color: #f44336;
 }
 
-/* Specific styles for when using mobile keyboard */
-.use-mobile-keyboard .crossword-cell:focus {
-    outline: none;
-}
-
 /* Better touch handling for mobile */
 @media (max-width: 767px) {
     .crossword-wrapper {
@@ -146,11 +141,6 @@ body {
 
     .cell-number {
         font-size: min(2vw, 0.6rem);
-    }
-
-    /* When using mobile keyboard, adjust bottom space */
-    .use-mobile-keyboard {
-        margin-bottom: 10px;
     }
 }
 

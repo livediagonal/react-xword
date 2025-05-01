@@ -1337,7 +1337,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   }
 
   return (
-    <div className={`solver-container ${useMobileKeyboard ? 'use-mobile-keyboard' : ''}`} ref={containerRef}>
+    <div className={`solver-container`} ref={containerRef}>
       {showConfetti && (
         <div className="confetti-container">
           <div className="confetti"></div>
@@ -1499,6 +1499,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
               validatedCells={validatedCells}
               revealedCells={revealedCells}
               useMobileKeyboard={useMobileKeyboard}
+              disabled={hasCompleted}
             />
           </div>
 

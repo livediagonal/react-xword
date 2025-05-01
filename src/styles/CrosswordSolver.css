@@ -313,11 +313,6 @@
     }
 }
 
-/* Adjust the layout when using mobile keyboard */
-.solver-container.use-mobile-keyboard .solver-grid-container {
-    height: auto;
-}
-
 /* Additional classes and animations */
 .solver-clue-item.active {
     background-color: #f0f7ff;
@@ -804,4 +799,14 @@
 .solver-clue-list {
     margin: 0;
     padding: 0;
+}
+
+.crossword-grid.disabled {
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+.crossword-cell.disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
 }

@@ -17,6 +17,7 @@ export interface CrosswordGridProps {
     validatedCells?: (boolean | undefined)[][] | null;
     revealedCells?: boolean[][] | null;
     useMobileKeyboard?: boolean;
+    disabled?: boolean;
 }
 
 const CrosswordGrid: React.FC<CrosswordGridProps> = ({
@@ -34,12 +35,15 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     validatedCells,
     revealedCells,
     useMobileKeyboard = false,
+    disabled = false
 }) => {
     const gridRef = useRef<HTMLDivElement>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [cellSize, setCellSize] = useState<number>(32); // default fallback
 
     const handleKeyDown = (e: React.KeyboardEvent, row: number, col: number) => {
+        if (disabled) return;
+
         // Only process keyboard events if we're not using the mobile keyboard
         if (useMobileKeyboard) return;
 
@@ -185,12 +189,8 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         touchMoveCountRef.current++;
     };
 
-    const handleTouchEnd = (
-        e: React.TouchEvent,
-        row: number,
-        col: number
-    ) => {
-        e.preventDefault();
+    const handleTouchEnd = (e: React.TouchEvent<HTMLDivElement>, row: number, col: number) => {
+        if (disabled) return;
         if (!startTouchRef.current || !lastTouchRef.current) return;
 
         // Reset touch refs
@@ -641,10 +641,19 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         return () => window.removeEventListener('resize', updateSize);
     }, [rows, columns]);
 
+    // Function to handle cell click
+    const handleCellClick = (row: number, col: number) => {
+        if (disabled) return;
+        if (onCellClick) {
+            onCellClick(row, col);
+        }
+    };
+
     return (
         <div className="crossword-wrapper" ref={wrapperRef} style={{ width: '100%', height: '100%' }}>
             <div
-                className={`crossword-grid ${useMobileKeyboard ? 'use-mobile-keyboard' : ''}`}
+                ref={gridRef}
+                className={`crossword-grid ${disabled ? 'disabled' : ''}`}
                 style={{
                     width: cellSize * columns,
                     height: cellSize * rows,
@@ -679,7 +688,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                                     style={{ width: cellSize, height: cellSize }}
                                     onClick={(e) => {
                                         e.preventDefault();
-                                        onCellClick && onCellClick(row, col);
+                                        handleCellClick(row, col);
                                     }}
                                     onTouchStart={handleTouchStart}
                                     onTouchMove={handleTouchMove}
