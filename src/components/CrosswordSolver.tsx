@@ -1557,6 +1557,34 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         buttonText={completionAction}
       />
 
+
+      <Modal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        title="Not Quite Right"
+        message="The puzzle is filled, but some answers are incorrect. Keep trying!"
+        type="error"
+      />
+
+      {/* Splash modal: only show if not isComplete */}
+      {(!isComplete) && (
+        <Modal
+          isOpen={showSplashModal}
+          onClose={() => {
+            setShowSplashModal(false);
+            if (!isComplete) {
+              setIsTimerRunning(true);
+            }
+            if (onStart) {
+              onStart();
+            }
+          }}
+          title="Ready to Solve?"
+          message="The timer will start when you begin solving the puzzle."
+          type="start"
+        />
+      )}
+
       <Modal
         isOpen={showInfoModal}
         onClose={() => setShowInfoModal(false)}
@@ -1581,15 +1609,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           </div>
         }
         type="info"
-      />
-
-      <Modal
-        isOpen={showErrorModal}
-        onClose={() => setShowErrorModal(false)}
-        title="Error"
-        message={error || "An error occurred. Please try again later."}
-        type="error"
-        buttonText="OK"
       />
     </div>
   );
