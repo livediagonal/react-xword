@@ -138,6 +138,7 @@ interface IPuzPuzzle {
 | onComplete | (secondsToComplete: number) => void | No | Callback function called when the puzzle is completed |
 | completionAction | string | No | Text to display in the success modal when the puzzle is completed (defaults to "Celebrate!") |
 | leftNavElements | React.ReactNode | No | Optional React elements to display in the left side of the actions bar |
+| onStart | () => void | No | Callback function called when the user starts the puzzle (dismisses the splash modal) |
 
 ## Examples
 
@@ -167,6 +168,14 @@ interface IPuzPuzzle {
       <span>Custom Text</span>
     </div>
   }
+/>
+```
+
+### With Start Callback
+```tsx
+<CrosswordSolver 
+  ipuzData={puzzle}
+  onStart={() => console.log('Puzzle started!')}
 />
 ```
 

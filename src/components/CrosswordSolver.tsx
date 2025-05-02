@@ -24,13 +24,18 @@ interface CrosswordSolverProps {
    * These elements will be displayed opposite the timer and actions buttons.
    */
   leftNavElements?: React.ReactNode;
+  /**
+   * Optional callback function that will be called when the user starts the puzzle (dismisses the splash modal).
+   */
+  onStart?: () => void;
 }
 
 const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   ipuzData,
   onComplete,
   completionAction = "Celebrate!",
-  leftNavElements
+  leftNavElements,
+  onStart,
 }) => {
   const [grid, setGrid] = useState<boolean[][]>([]);
   const [letters, setLetters] = useState<string[][]>([]);
@@ -1523,6 +1528,9 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         onClose={() => {
           setShowSplashModal(false);
           setIsTimerRunning(true);
+          if (onStart) {
+            onStart();
+          }
         }}
         title="Ready to Solve?"
         message="The timer will start when you begin solving the puzzle."
