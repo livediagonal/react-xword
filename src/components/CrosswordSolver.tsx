@@ -19,6 +19,11 @@ interface CrosswordSolverProps {
    * Defaults to "Celebrate!"
    */
   completionAction?: string;
+  /**
+   * Optional React elements to display in the left side of the actions bar.
+   * These elements will be displayed opposite the timer and actions buttons.
+   */
+  leftNavElements?: React.ReactNode;
 }
 
 // Storage key for the solver state
@@ -27,7 +32,8 @@ const SOLVER_STORAGE_KEY = "xword_solver_state";
 const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   ipuzData,
   onComplete,
-  completionAction = "Celebrate!"
+  completionAction = "Celebrate!",
+  leftNavElements
 }) => {
   const [grid, setGrid] = useState<boolean[][]>([]);
   const [letters, setLetters] = useState<string[][]>([]);
@@ -1424,6 +1430,9 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         {/* Main area: actions, grid, keyboard */}
         <div className="solver-main-area">
           <div className="solver-actions">
+            <div className="solver-actions-left">
+              {leftNavElements}
+            </div>
             <div className="solver-actions-group">
               <div className="solver-timer">{formatTime(timer)}</div>
               {hasMetadata() && (

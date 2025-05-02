@@ -45,17 +45,25 @@
 /* Actions button in the main layout */
 .solver-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
     align-items: center;
     padding: 0.25rem;
     background: transparent;
     position: relative;
 }
 
+.solver-actions-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.25rem;
+}
+
 .solver-actions-group {
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    gap: 0.5rem;
 }
 
 .solver-timer {
@@ -427,6 +435,10 @@
         padding: 0;
         margin: 0;
         background: transparent;
+    }
+
+    .solver-timer {
+        margin-left: 2rem;
     }
 }
 

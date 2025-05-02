@@ -135,6 +135,40 @@ interface IPuzPuzzle {
 | Prop | Type | Required | Description |
 |------|------|----------|-------------|
 | ipuzData | IPuzPuzzle | Yes | The crossword puzzle data in iPuz format |
+| onComplete | (secondsToComplete: number) => void | No | Callback function called when the puzzle is completed |
+| completionAction | string | No | Text to display in the success modal when the puzzle is completed (defaults to "Celebrate!") |
+| leftNavElements | React.ReactNode | No | Optional React elements to display in the left side of the actions bar |
+
+## Examples
+
+### Basic Usage
+```tsx
+<CrosswordSolver ipuzData={puzzle} />
+```
+
+### With Completion Callback
+```tsx
+<CrosswordSolver 
+  ipuzData={puzzle} 
+  onComplete={(seconds) => console.log(`Completed in ${seconds} seconds!`)}
+  completionAction="Share Score"
+/>
+```
+
+### With Left Nav Elements
+```tsx
+<CrosswordSolver 
+  ipuzData={puzzle}
+  leftNavElements={
+    <div className="custom-nav">
+      <button onClick={() => console.log('Custom action')}>
+        Custom Button
+      </button>
+      <span>Custom Text</span>
+    </div>
+  }
+/>
+```
 
 ## Styling
 
