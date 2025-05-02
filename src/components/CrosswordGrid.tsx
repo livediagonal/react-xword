@@ -631,8 +631,12 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         function updateSize() {
             if (!wrapperRef.current) return;
             const rect = wrapperRef.current.getBoundingClientRect();
-            const maxCellWidth = Math.floor(rect.width / columns);
-            const maxCellHeight = Math.floor(rect.height / rows);
+            const gap = 1; // px, must match CSS .grid-container gap
+            const padding = 1; // px, must match CSS .grid-container padding
+            const totalGapWidth = (columns - 1) * gap;
+            const totalGapHeight = (rows - 1) * gap;
+            const maxCellWidth = Math.floor((rect.width - totalGapWidth - 2 * padding) / columns);
+            const maxCellHeight = Math.floor((rect.height - totalGapHeight - 2 * padding) / rows);
             const n = Math.max(16, Math.floor(Math.min(maxCellWidth, maxCellHeight)));
             setCellSize(n);
         }
@@ -649,18 +653,24 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         }
     };
 
+    // Calculate grid container size to prevent squishing
+    const gap = 1; // px, must match CSS .grid-container gap
+    const padding = 1; // px, must match CSS .grid-container padding
+    const gridWidth = cellSize * columns + (columns - 1) * gap + 2 * padding;
+    const gridHeight = cellSize * rows + (rows - 1) * gap + 2 * padding;
+
     return (
         <div className="crossword-wrapper" ref={wrapperRef} style={{ width: '100%', height: '100%' }}>
             <div
                 ref={gridRef}
                 className={`crossword-grid ${disabled ? 'disabled' : ''}`}
                 style={{
-                    width: cellSize * columns,
-                    height: cellSize * rows,
-                    minWidth: cellSize * columns,
-                    minHeight: cellSize * rows,
-                    maxWidth: '100%',
-                    maxHeight: '100%',
+                    width: gridWidth,
+                    height: gridHeight,
+                    minWidth: gridWidth,
+                    minHeight: gridHeight,
+                    maxWidth: gridWidth,
+                    maxHeight: gridHeight,
                 }}
             >
                 <div
@@ -669,8 +679,8 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                     style={{
                         gridTemplateColumns: `repeat(${columns}, ${cellSize}px)`,
                         gridTemplateRows: `repeat(${rows}, ${cellSize}px)`,
-                        width: cellSize * columns,
-                        height: cellSize * rows,
+                        width: '100%',
+                        height: '100%',
                     }}
                     onTouchStart={handleTouchStart}
                     onTouchMove={handleTouchMove}

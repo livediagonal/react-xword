@@ -45,6 +45,7 @@ body {
     height: 100%;
     border: 2px solid #000;
     gap: 1px;
+    padding: 1px;
     background-color: #000;
     touch-action: none;
     -webkit-user-select: none;
