@@ -26,9 +26,6 @@ interface CrosswordSolverProps {
   leftNavElements?: React.ReactNode;
 }
 
-// Storage key for the solver state
-const SOLVER_STORAGE_KEY = "xword_solver_state";
-
 const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   ipuzData,
   onComplete,
@@ -58,9 +55,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   const [timer, setTimer] = useState<number>(0);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Use a ref to track if we've already loaded from localStorage
-  const hasLoadedFromStorage = useRef(false);
 
   // Refs for clue list containers
   const acrossClueListRef = useRef<HTMLDivElement>(null);
@@ -268,27 +262,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           isAutomaticNavigation: true,
         };
 
-        // Try to load saved state from localStorage
-        if (!hasLoadedFromStorage.current) {
-          const savedState = localStorage.getItem(SOLVER_STORAGE_KEY);
-          if (savedState) {
-            try {
-              const parsedState = JSON.parse(savedState);
-              // Only use saved letters if the puzzle dimensions match
-              if (
-                parsedState.rows === height &&
-                parsedState.columns === width
-              ) {
-                // We'll use the saved letters from the user's progress
-                initialState.letters = parsedState.letters;
-              }
-            } catch (e) {
-              console.error("Error parsing saved state:", e);
-            }
-          }
-          hasLoadedFromStorage.current = true;
-        }
-
         // Set the state once with all the data
         setCrosswordState(initialState);
         setLoading(false);
@@ -315,13 +288,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
 
     loadPuzzle();
   }, [ipuzData]);
-
-  // Save state to localStorage when it changes, but only if we've already loaded from storage
-  useEffect(() => {
-    if (crosswordState && hasLoadedFromStorage.current) {
-      localStorage.setItem(SOLVER_STORAGE_KEY, JSON.stringify(crosswordState));
-    }
-  }, [crosswordState]);
 
   // Scroll to active clue when it changes, but only for desktop
   useEffect(() => {
