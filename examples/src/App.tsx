@@ -95,7 +95,7 @@ const App: React.FC = () => {
           Loading puzzle...
         </div>
       ) : (
-        <CrosswordSolver ipuzData={ipuzData} />
+        <CrosswordSolver ipuzData={ipuzData} onStart={() => console.log('Start')} onComplete={() => console.log('Complete')} />
       )}
     </div>
   );

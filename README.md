@@ -139,6 +139,7 @@ interface IPuzPuzzle {
 | completionAction | string | No | Text to display in the success modal when the puzzle is completed (defaults to "Celebrate!") |
 | leftNavElements | React.ReactNode | No | Optional React elements to display in the left side of the actions bar |
 | onStart | () => void | No | Callback function called when the user starts the puzzle (dismisses the splash modal) |
+| isComplete | boolean | No | If true, the puzzle is shown as completed and locked (no further editing, all answers revealed, timer stopped, and success modal shown) |
 
 ## Examples
 
@@ -176,6 +177,14 @@ interface IPuzPuzzle {
 <CrosswordSolver 
   ipuzData={puzzle}
   onStart={() => console.log('Puzzle started!')}
+/>
+```
+
+### With Complete/Locked State
+```tsx
+<CrosswordSolver 
+  ipuzData={puzzle}
+  isComplete={true}
 />
 ```
 

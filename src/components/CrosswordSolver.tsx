@@ -28,6 +28,10 @@ interface CrosswordSolverProps {
    * Optional callback function that will be called when the user starts the puzzle (dismisses the splash modal).
    */
   onStart?: () => void;
+  /**
+   * If true, the puzzle is shown as completed and locked (no further editing, all answers revealed, timer stopped, and success modal shown).
+   */
+  isComplete?: boolean;
 }
 
 const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
@@ -36,6 +40,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   completionAction = "Celebrate!",
   leftNavElements,
   onStart,
+  isComplete,
 }) => {
   const [grid, setGrid] = useState<boolean[][]>([]);
   const [letters, setLetters] = useState<string[][]>([]);
@@ -67,6 +72,9 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   const actionsMenuRef = useRef<HTMLDivElement>(null);
   const actionsToggleRef = useRef<HTMLButtonElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // State for already completed modal
+  const [showAlreadyCompletedModal, setShowAlreadyCompletedModal] = useState(false);
 
   // Function to handle touchmove events
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -1277,6 +1285,9 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     setShowConfetti(true);
     setHasCompleted(true);
     setIsTimerRunning(false);
+    if (onComplete) {
+      onComplete(timer);
+    }
   };
 
   // Function to check if we have any metadata to show
@@ -1288,6 +1299,37 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
       (metadata.notes && metadata.notes.trim() !== '')
     );
   };
+
+  // Effect to handle isComplete prop
+  useEffect(() => {
+    if (isComplete && solution) {
+      setIsTimerRunning(false);
+      setHasCompleted(true);
+      setShowAlreadyCompletedModal(true);
+      setShowSplashModal(false); // Hide splash modal if isComplete
+      // Do NOT show success modal or confetti, and do NOT call onComplete here
+      setCrosswordState(prevState => {
+        if (!prevState) return prevState;
+        const newLetters = solution.map(row => [...row]);
+        return {
+          ...prevState,
+          letters: newLetters,
+        };
+      });
+      setRevealedCells(prev =>
+        prev && crosswordState
+          ? crosswordState.grid.map(row => row.map(cell => !cell))
+          : prev
+      );
+      setValidatedCells(prev =>
+        prev && crosswordState
+          ? crosswordState.grid.map(row => row.map(cell => !cell ? true : undefined))
+          : prev
+      );
+    } else {
+      setShowAlreadyCompletedModal(false);
+    }
+  }, [isComplete, solution]);
 
   if (loading) {
     return (
@@ -1434,28 +1476,28 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
               <button
                 className="solver-action-button"
                 onClick={checkAnswer}
-                disabled={!crosswordState?.activeClueNumber || hasCompleted}
+                disabled={!crosswordState?.activeClueNumber || hasCompleted || isComplete}
               >
                 Check Answer
               </button>
               <button
                 className="solver-action-button"
                 onClick={checkPuzzle}
-                disabled={hasCompleted}
+                disabled={hasCompleted || isComplete}
               >
                 Check Puzzle
               </button>
               <button
                 className="solver-action-button"
                 onClick={revealAnswer}
-                disabled={!crosswordState?.activeClueNumber || hasCompleted}
+                disabled={!crosswordState?.activeClueNumber || hasCompleted || isComplete}
               >
                 Reveal Answer
               </button>
               <button
                 className="solver-action-button"
                 onClick={revealPuzzle}
-                disabled={hasCompleted}
+                disabled={hasCompleted || isComplete}
               >
                 Reveal Puzzle
               </button>
@@ -1479,7 +1521,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
               validatedCells={validatedCells}
               revealedCells={revealedCells}
               useMobileKeyboard={useMobileKeyboard}
-              disabled={hasCompleted}
+              disabled={hasCompleted || isComplete}
             />
           </div>
 
@@ -1515,6 +1557,16 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         buttonText={completionAction}
       />
 
+      {/* Modal for already completed puzzle */}
+      <Modal
+        isOpen={showAlreadyCompletedModal}
+        onClose={() => setShowAlreadyCompletedModal(false)}
+        title="Already Completed"
+        message="You have already completed this puzzle."
+        type="info"
+        buttonText="View solution"
+      />
+
       <Modal
         isOpen={showErrorModal}
         onClose={() => setShowErrorModal(false)}
@@ -1523,19 +1575,24 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         type="error"
       />
 
-      <Modal
-        isOpen={showSplashModal}
-        onClose={() => {
-          setShowSplashModal(false);
-          setIsTimerRunning(true);
-          if (onStart) {
-            onStart();
-          }
-        }}
-        title="Ready to Solve?"
-        message="The timer will start when you begin solving the puzzle."
-        type="start"
-      />
+      {/* Splash modal: only show if not isComplete */}
+      {(!isComplete) && (
+        <Modal
+          isOpen={showSplashModal}
+          onClose={() => {
+            setShowSplashModal(false);
+            if (!isComplete) {
+              setIsTimerRunning(true);
+            }
+            if (onStart) {
+              onStart();
+            }
+          }}
+          title="Ready to Solve?"
+          message="The timer will start when you begin solving the puzzle."
+          type="start"
+        />
+      )}
 
       <Modal
         isOpen={showInfoModal}
