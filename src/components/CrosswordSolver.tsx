@@ -79,9 +79,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   const actionsToggleRef = useRef<HTMLButtonElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // State for already completed modal
-  const [showAlreadyCompletedModal, setShowAlreadyCompletedModal] = useState(false);
-
   // Function to handle touchmove events
   const handleTouchMove = (e: React.TouchEvent) => {
     // Prevent default touchmove behavior to stop unwanted scrolling
@@ -1311,7 +1308,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     if (isComplete && solution) {
       setIsTimerRunning(false);
       setHasCompleted(true);
-      setShowAlreadyCompletedModal(true);
       setShowSplashModal(false); // Hide splash modal if isComplete
       // Do NOT show success modal or confetti, and do NOT call onComplete here
       setCrosswordState(prevState => {
@@ -1332,8 +1328,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           ? crosswordState.grid.map(row => row.map(cell => !cell ? true : undefined))
           : prev
       );
-    } else {
-      setShowAlreadyCompletedModal(false);
     }
   }, [isComplete, solution]);
 
@@ -1563,43 +1557,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         buttonText={completionAction}
       />
 
-      {/* Modal for already completed puzzle */}
-      <Modal
-        isOpen={showAlreadyCompletedModal}
-        onClose={() => setShowAlreadyCompletedModal(false)}
-        title="Already Completed"
-        message="You have already completed this puzzle."
-        type="info"
-        buttonText="View solution"
-      />
-
-      <Modal
-        isOpen={showErrorModal}
-        onClose={() => setShowErrorModal(false)}
-        title="Not Quite Right"
-        message="The puzzle is filled, but some answers are incorrect. Keep trying!"
-        type="error"
-      />
-
-      {/* Splash modal: only show if not isComplete */}
-      {(!isComplete) && (
-        <Modal
-          isOpen={showSplashModal}
-          onClose={() => {
-            setShowSplashModal(false);
-            if (!isComplete) {
-              setIsTimerRunning(true);
-            }
-            if (onStart) {
-              onStart();
-            }
-          }}
-          title="Ready to Solve?"
-          message="The timer will start when you begin solving the puzzle."
-          type="start"
-        />
-      )}
-
       <Modal
         isOpen={showInfoModal}
         onClose={() => setShowInfoModal(false)}
@@ -1624,6 +1581,15 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           </div>
         }
         type="info"
+      />
+
+      <Modal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        title="Error"
+        message={error || "An error occurred. Please try again later."}
+        type="error"
+        buttonText="OK"
       />
     </div>
   );
