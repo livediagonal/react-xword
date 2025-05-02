@@ -11,9 +11,14 @@ interface CrosswordSolverProps {
   ipuzData: IPuzPuzzle;
   /** 
    * Optional callback function that will be called when the puzzle is completed.
+   * This fires when the puzzle is solved and the success modal is about to be shown.
+   */
+  onComplete?: () => void;
+  /**
+   * Optional callback function that will be called when the user clicks the button on the success modal.
    * Receives the time taken to complete the puzzle in seconds.
    */
-  onComplete?: (secondsToComplete: number) => void;
+  onCompleteAction?: (secondsToComplete: number) => void;
   /** 
    * Optional text to display in the success modal when the puzzle is completed.
    * Defaults to "Celebrate!"
@@ -37,6 +42,7 @@ interface CrosswordSolverProps {
 const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   ipuzData,
   onComplete,
+  onCompleteAction,
   completionAction = "Celebrate!",
   leftNavElements,
   onStart,
@@ -1286,7 +1292,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     setHasCompleted(true);
     setIsTimerRunning(false);
     if (onComplete) {
-      onComplete(timer);
+      onComplete();
     }
   };
 
@@ -1547,8 +1553,8 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           setIsTimerRunning(false);
         }}
         onAction={() => {
-          if (onComplete) {
-            onComplete(timer);
+          if (onCompleteAction) {
+            onCompleteAction(timer);
           }
         }}
         title={'You did it! 🎉'}

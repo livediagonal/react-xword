@@ -132,14 +132,20 @@ interface IPuzPuzzle {
 
 ## Props
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| ipuzData | IPuzPuzzle | Yes | The crossword puzzle data in iPuz format |
-| onComplete | (secondsToComplete: number) => void | No | Callback function called when the puzzle is completed |
-| completionAction | string | No | Text to display in the success modal when the puzzle is completed (defaults to "Celebrate!") |
-| leftNavElements | React.ReactNode | No | Optional React elements to display in the left side of the actions bar |
-| onStart | () => void | No | Callback function called when the user starts the puzzle (dismisses the splash modal) |
-| isComplete | boolean | No | If true, the puzzle is shown as completed and locked (no further editing, all answers revealed, timer stopped, and success modal shown) |
+| Prop              | Type                                | Description |
+|-------------------|-------------------------------------|-------------|
+| `ipuzData`        | `IPuzPuzzle`                        | The puzzle data in IPuz format. |
+| `onComplete`      | `() => void`                        | Called when the puzzle is solved and the success modal is about to be shown. |
+| `onCompleteAction`| `(secondsToComplete: number) => void` | Called when the user clicks the button on the success modal. |
+| `completionAction`| `string`                            | Text to display in the success modal button. Defaults to "Celebrate!" |
+| `leftNavElements` | `React.ReactNode`                   | Elements to display in the left side of the actions bar. |
+| `onStart`         | `() => void`                        | Called when the user starts the puzzle (dismisses the splash modal). |
+| `isComplete`      | `boolean`                           | If true, the puzzle is shown as completed and locked. |
+
+### Completion Hooks
+
+- **onComplete**: Fires when the puzzle is solved and the success modal is about to be shown.
+- **onCompleteAction**: Fires when the user clicks the button on the success modal. Receives the time taken to complete the puzzle in seconds.
 
 ## Examples
 
@@ -152,7 +158,7 @@ interface IPuzPuzzle {
 ```tsx
 <CrosswordSolver 
   ipuzData={puzzle} 
-  onComplete={(seconds) => console.log(`Completed in ${seconds} seconds!`)}
+  onComplete={() => console.log('Completed!')}
   completionAction="Share Score"
 />
 ```
