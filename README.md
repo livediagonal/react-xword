@@ -135,16 +135,15 @@ interface IPuzPuzzle {
 | Prop              | Type                                | Description |
 |-------------------|-------------------------------------|-------------|
 | `ipuzData`        | `IPuzPuzzle`                        | The puzzle data in IPuz format. |
-| `onComplete`      | `() => void`                        | Called when the puzzle is solved and the success modal is about to be shown. |
-| `onCompleteAction`| `(secondsToComplete: number) => void` | Called when the user clicks the button on the success modal. |
-| `completionAction`| `string`                            | Text to display in the success modal button. Defaults to "Celebrate!" |
+| `onComplete`      | `(completionTime: number) => void`  | Called when the puzzle is solved and the success modal is about to be shown. Receives the completion time in seconds. |
+| `completedActionsElement` | `React.ReactNode`                   | Optional React node to render as the actions in the completion modal. If not provided, a default "Celebrate!" button is shown. |
 | `leftNavElements` | `React.ReactNode`                   | Elements to display in the left side of the actions bar. |
 | `onStart`         | `() => void`                        | Called when the user starts the puzzle (dismisses the splash modal). |
 | `isComplete`      | `boolean`                           | If true, the puzzle is shown as completed and locked. |
 
 ### Completion Hooks
 
-- **onComplete**: Fires when the puzzle is solved and the success modal is about to be shown.
+- **onComplete**: Fires when the puzzle is solved and the success modal is about to be shown. Receives the completion time in seconds.
 - **onCompleteAction**: Fires when the user clicks the button on the success modal. Receives the time taken to complete the puzzle in seconds.
 
 ## Examples
@@ -158,8 +157,8 @@ interface IPuzPuzzle {
 ```tsx
 <CrosswordSolver 
   ipuzData={puzzle} 
-  onComplete={() => console.log('Completed!')}
-  completionAction="Share Score"
+  onComplete={(time) => console.log(`Completed in ${time} seconds!`)}
+  completedActionsElement={<button onClick={() => console.log('Custom action')}>Share Score</button>}
 />
 ```
 

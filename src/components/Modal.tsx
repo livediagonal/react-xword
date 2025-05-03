@@ -9,9 +9,11 @@ interface ModalProps {
     message: string | React.ReactNode;
     type: 'success' | 'error' | 'start' | 'info';
     buttonText?: string;
+    /** Optional React node to replace the default action button */
+    actions?: React.ReactNode;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onAction, title, message, type, buttonText }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onAction, title, message, type, buttonText, actions }) => {
     if (!isOpen) return null;
 
     const getButtonText = () => {
@@ -42,12 +44,16 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onAction, title, message
             <div className={`modal-content ${type}`} onClick={e => e.stopPropagation()}>
                 <h2 className="modal-title">{title}</h2>
                 <div className="modal-message">{message}</div>
-                <button className="modal-button" onClick={() => {
-                    onClose();
-                    onAction?.();
-                }}>
-                    {getButtonText()}
-                </button>
+                {actions ? (
+                    actions
+                ) : (
+                    <button className="modal-button" onClick={() => {
+                        onClose();
+                        onAction?.();
+                    }}>
+                        {getButtonText()}
+                    </button>
+                )}
             </div>
         </div>
     );

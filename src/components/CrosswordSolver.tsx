@@ -12,18 +12,11 @@ interface CrosswordSolverProps {
   /** 
    * Optional callback function that will be called when the puzzle is completed.
    * This fires when the puzzle is solved and the success modal is about to be shown.
+   * The callback receives the completion time in seconds.
    */
-  onComplete?: () => void;
-  /**
-   * Optional callback function that will be called when the user clicks the button on the success modal.
-   * Receives the time taken to complete the puzzle in seconds.
-   */
-  onCompleteAction?: (secondsToComplete: number) => void;
-  /** 
-   * Optional text to display in the success modal when the puzzle is completed.
-   * Defaults to "Celebrate!"
-   */
-  completionAction?: string;
+  onComplete?: (completionTime: number) => void;
+  /** Optional React node to render as the actions in the completion modal */
+  completedActionsElement?: React.ReactNode;
   /**
    * Optional React elements to display in the left side of the actions bar.
    * These elements will be displayed opposite the timer and actions buttons.
@@ -42,8 +35,7 @@ interface CrosswordSolverProps {
 const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   ipuzData,
   onComplete,
-  onCompleteAction,
-  completionAction = "Celebrate!",
+  completedActionsElement,
   leftNavElements,
   onStart,
   isComplete,
@@ -71,6 +63,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   const [timer, setTimer] = useState<number>(0);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const startTimeRef = useRef<number | null>(null);
 
   // Refs for clue list containers
   const acrossClueListRef = useRef<HTMLDivElement>(null);
@@ -124,11 +117,14 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   // Timer effect
   useEffect(() => {
     if (isTimerRunning) {
+      startTimeRef.current = Date.now() - (timer * 1000); // Account for existing time
       timerRef.current = setInterval(() => {
-        setTimer(prev => prev + 1);
-      }, 1000);
+        const elapsed = Math.floor((Date.now() - (startTimeRef.current || 0)) / 1000);
+        setTimer(elapsed);
+      }, 100);
     } else if (timerRef.current) {
       clearInterval(timerRef.current);
+      startTimeRef.current = null;
     }
 
     return () => {
@@ -136,7 +132,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         clearInterval(timerRef.current);
       }
     };
-  }, [isTimerRunning]);
+  }, [isTimerRunning, timer]);
 
   // Format time as M:SS
   const formatTime = (seconds: number): string => {
@@ -1289,7 +1285,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     setHasCompleted(true);
     setIsTimerRunning(false);
     if (onComplete) {
-      onComplete();
+      onComplete(timer);
     }
   };
 
@@ -1546,15 +1542,10 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           setShowSuccessModal(false);
           setIsTimerRunning(false);
         }}
-        onAction={() => {
-          if (onCompleteAction) {
-            onCompleteAction(timer);
-          }
-        }}
         title={'You did it! 🎉'}
         message={`You successfully completed the crossword in ${formatTime(timer)}!`}
         type="success"
-        buttonText={completionAction}
+        actions={completedActionsElement}
       />
 
 
