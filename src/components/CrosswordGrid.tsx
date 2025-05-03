@@ -169,8 +169,10 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     const lastTouchRef = useRef<{ x: number; y: number } | null>(null);
     const touchMoveCountRef = useRef<number>(0);
 
+    // Add a flag to prevent double-firing on click after touch
+    const ignoreNextClickRef = useRef(false);
+
     const handleTouchStart = (e: React.TouchEvent) => {
-        e.preventDefault();
         const touch = e.touches[0];
         startTouchRef.current = { x: touch.clientX, y: touch.clientY };
         lastTouchRef.current = { x: touch.clientX, y: touch.clientY };
@@ -178,7 +180,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     };
 
     const handleTouchMove = (e: React.TouchEvent) => {
-        e.preventDefault();
+        e.preventDefault(); // Keep this to prevent scrolling
         if (!startTouchRef.current) return;
 
         const touch = e.touches[0];
@@ -202,6 +204,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
             Math.abs(startTouch.y - lastTouch.y) > 10;
 
         if (!touchMoved && touchMoveCountRef.current < 5) {
+            ignoreNextClickRef.current = true; // Set flag to ignore next click
             if (onCellClick) {
                 onCellClick(row, col);
             }
@@ -679,8 +682,6 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                         width: '100%',
                         height: '100%',
                     }}
-                    onTouchStart={handleTouchStart}
-                    onTouchMove={handleTouchMove}
                 >
                     {Array.from({ length: rows }, (_, row) =>
                         Array.from({ length: columns }, (_, col) => {
@@ -694,6 +695,10 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                                     className={cellClass}
                                     style={{ width: cellSize, height: cellSize }}
                                     onClick={(e) => {
+                                        if (ignoreNextClickRef.current) {
+                                            ignoreNextClickRef.current = false;
+                                            return;
+                                        }
                                         e.preventDefault();
                                         handleCellClick(row, col);
                                     }}

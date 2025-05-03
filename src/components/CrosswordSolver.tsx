@@ -682,9 +682,11 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
       }
 
       // Check if we're clicking the active cell
-      if (crosswordState.activeCell &&
+      const isActiveCell = crosswordState.activeCell &&
         crosswordState.activeCell[0] === row &&
-        crosswordState.activeCell[1] === col) {
+        crosswordState.activeCell[1] === col;
+
+      if (isActiveCell) {
         // Toggle between across and down
         const newOrientation = crosswordState.clueOrientation === "across" ? "down" : "across";
         handleClueOrientationChange(newOrientation);
@@ -715,42 +717,29 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         clueNumbers[verticalStartRow][verticalStartCol];
 
       // Set the active cell to the clicked cell
-      const newState: CrosswordState = {
-        ...crosswordState,
-        activeCell: [row, col] as [number, number],
-      };
+      let newOrientation = crosswordState.clueOrientation;
+      let newClueNumber: number | null = null;
 
-      // Only change orientation if we're not in the middle of an automatic navigation
-      const isAutomaticNavigation = crosswordState.isAutomaticNavigation;
-
-      if (!isAutomaticNavigation) {
-        // Determine which clue to activate based on the current orientation
-        if (
-          crosswordState.clueOrientation === "across" &&
-          horizontalClueNumber > 0
-        ) {
-          newState.activeClueNumber = horizontalClueNumber;
-        } else if (
-          crosswordState.clueOrientation === "down" &&
-          verticalClueNumber > 0
-        ) {
-          newState.activeClueNumber = verticalClueNumber;
-        } else {
-          // If the current orientation's clue doesn't exist, try the other orientation
-          if (horizontalClueNumber > 0) {
-            newState.clueOrientation = "across";
-            newState.activeClueNumber = horizontalClueNumber;
-          } else if (verticalClueNumber > 0) {
-            newState.clueOrientation = "down";
-            newState.activeClueNumber = verticalClueNumber;
-          } else {
-            // If no clue exists for this cell, clear the active clue
-            newState.activeClueNumber = null;
-          }
-        }
+      if (crosswordState.clueOrientation === "across" && horizontalClueNumber > 0) {
+        newClueNumber = horizontalClueNumber;
+      } else if (crosswordState.clueOrientation === "down" && verticalClueNumber > 0) {
+        newClueNumber = verticalClueNumber;
+      } else if (horizontalClueNumber > 0) {
+        newOrientation = "across";
+        newClueNumber = horizontalClueNumber;
+      } else if (verticalClueNumber > 0) {
+        newOrientation = "down";
+        newClueNumber = verticalClueNumber;
+      } else {
+        newClueNumber = null;
       }
 
-      setCrosswordState(newState);
+      setCrosswordState({
+        ...crosswordState,
+        activeCell: [row, col] as [number, number],
+        clueOrientation: newOrientation,
+        activeClueNumber: newClueNumber,
+      });
     }
   };
 
