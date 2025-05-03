@@ -660,7 +660,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         <div className="crossword-wrapper" ref={wrapperRef} style={{ width: '100%', height: '100%' }}>
             <div
                 ref={gridRef}
-                className={`crossword-grid ${disabled ? 'disabled' : ''}`}
+                className={`crossword-grid ${disabled ? 'disabled completed-puzzle' : ''}`}
                 style={{
                     width: gridWidth,
                     height: gridHeight,
