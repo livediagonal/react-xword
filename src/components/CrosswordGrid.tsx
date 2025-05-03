@@ -44,9 +44,6 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     const handleKeyDown = (e: React.KeyboardEvent, row: number, col: number) => {
         if (disabled) return;
 
-        // Only process keyboard events if we're not using the mobile keyboard
-        if (useMobileKeyboard) return;
-
         // Handle letter input
         if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key)) {
             e.preventDefault();
