@@ -15,8 +15,6 @@ interface CrosswordSolverProps {
    * The callback receives the completion time in seconds.
    */
   onComplete?: (completionTime: number) => void;
-  /** Optional React node to render as the actions in the completion modal */
-  completedActionsElement?: React.ReactNode;
   /**
    * Optional React elements to display in the left side of the actions bar.
    * These elements will be displayed opposite the timer and actions buttons.
@@ -35,7 +33,6 @@ interface CrosswordSolverProps {
 const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   ipuzData,
   onComplete,
-  completedActionsElement,
   leftNavElements,
   onStart,
   isComplete,
@@ -51,7 +48,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   const [activeOrientation, setActiveOrientation] = useState<"across" | "down">("across");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showSplashModal, setShowSplashModal] = useState(true);
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -1269,7 +1265,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
 
   // Function to handle puzzle completion
   const handlePuzzleCompletion = () => {
-    setShowSuccessModal(true);
     setShowConfetti(true);
     setHasCompleted(true);
     setIsTimerRunning(false);
@@ -1524,19 +1519,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           )}
         </div>
       </div>
-
-      <Modal
-        isOpen={showSuccessModal}
-        onClose={() => {
-          setShowSuccessModal(false);
-          setIsTimerRunning(false);
-        }}
-        title={'You did it! 🎉'}
-        message={`You successfully completed the crossword in ${formatTime(timer)}!`}
-        type="success"
-        actions={completedActionsElement}
-      />
-
 
       <Modal
         isOpen={showErrorModal}

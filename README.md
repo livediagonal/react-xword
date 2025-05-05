@@ -136,7 +136,6 @@ interface IPuzPuzzle {
 |-------------------|-------------------------------------|-------------|
 | `ipuzData`        | `IPuzPuzzle`                        | The puzzle data in IPuz format. |
 | `onComplete`      | `(completionTime: number) => void`  | Called when the puzzle is solved and the success modal is about to be shown. Receives the completion time in seconds. |
-| `completedActionsElement` | `React.ReactNode`                   | Optional React node to render as the actions in the completion modal. If not provided, a default "Celebrate!" button is shown. |
 | `leftNavElements` | `React.ReactNode`                   | Elements to display in the left side of the actions bar. |
 | `onStart`         | `() => void`                        | Called when the user starts the puzzle (dismisses the splash modal). |
 | `isComplete`      | `boolean`                           | If true, the puzzle is shown as completed and locked. |
@@ -144,7 +143,6 @@ interface IPuzPuzzle {
 ### Completion Hooks
 
 - **onComplete**: Fires when the puzzle is solved and the success modal is about to be shown. Receives the completion time in seconds.
-- **onCompleteAction**: Fires when the user clicks the button on the success modal. Receives the time taken to complete the puzzle in seconds.
 
 ## Examples
 
@@ -158,7 +156,6 @@ interface IPuzPuzzle {
 <CrosswordSolver 
   ipuzData={puzzle} 
   onComplete={(time) => console.log(`Completed in ${time} seconds!`)}
-  completedActionsElement={<button onClick={() => console.log('Custom action')}>Share Score</button>}
 />
 ```
 
