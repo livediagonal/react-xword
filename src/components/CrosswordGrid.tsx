@@ -18,6 +18,7 @@ export interface CrosswordGridProps {
     revealedCells?: boolean[][] | null;
     useMobileKeyboard?: boolean;
     disabled?: boolean;
+    skipFilledCells?: boolean;
 }
 
 const CrosswordGrid: React.FC<CrosswordGridProps> = ({
@@ -35,11 +36,62 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     validatedCells,
     revealedCells,
     useMobileKeyboard = false,
-    disabled = false
+    disabled = false,
+    skipFilledCells = false
 }) => {
     const gridRef = useRef<HTMLDivElement>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [cellSize, setCellSize] = useState<number>(32); // default fallback
+
+    // Helper to find the immediate next cell in the clue's structure, regardless of content.
+    const findImmediateNextCellInClueStructure = (currentR: number, currentC: number): [number, number] | null => {
+        if (activeClueNumber === null) {
+            return null;
+        }
+
+        let nextR = currentR;
+        let nextC = currentC;
+
+        if (clueOrientation === "across") {
+            nextC++;
+        } else { // "down"
+            nextR++;
+        }
+
+        if (nextR >= 0 && nextR < rows &&
+            nextC >= 0 && nextC < columns &&
+            grid[nextR] !== undefined && !grid[nextR][nextC] &&
+            isPartOfActiveClue(nextR, nextC)) {
+            return [nextR, nextC];
+        }
+        return null;
+    };
+
+    // Find the next empty cell within the current active clue, skipping filled ones.
+    // Starts searching from the cell *after* (currentR, currentC).
+    const findNextEmptyCellInClue = (currentR: number, currentC: number): [number, number] | null => {
+        if (activeClueNumber === null) {
+            return null;
+        }
+
+        let r = currentR;
+        let c = currentC;
+
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+            const nextStructuralCell = findImmediateNextCellInClueStructure(r, c);
+            if (!nextStructuralCell) {
+                return null; // End of clue or blocked
+            }
+            const [nextR, nextC] = nextStructuralCell;
+            if (letters[nextR] === undefined || !letters[nextR][nextC]) { // Found an empty cell
+                return [nextR, nextC];
+            } else { // Cell is filled, continue search from this cell
+                r = nextR;
+                c = nextC;
+            }
+        }
+    };
 
     const handleKeyDown = (e: React.KeyboardEvent, row: number, col: number) => {
         if (disabled) return;
@@ -47,7 +99,63 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         // Handle letter input
         if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key)) {
             e.preventDefault();
-            onLetterChange(row, col, e.key.toUpperCase());
+            const newLetter = e.key.toUpperCase();
+
+            if (skipFilledCells) {
+                let placementRow = row; // Cell where key event occurred (current focus)
+                let placementCol = col;
+                let letterActuallyPlaced = false;
+
+                // 1. Determine where to place the letter
+                if (letters[row] && letters[row][col]) { // If focused cell is filled
+                    const nextEmptyCellForLetter = findNextEmptyCellInClue(row, col);
+                    if (nextEmptyCellForLetter) {
+                        placementRow = nextEmptyCellForLetter[0];
+                        placementCol = nextEmptyCellForLetter[1];
+                        onLetterChange(placementRow, placementCol, newLetter);
+                        letterActuallyPlaced = true;
+                    } else {
+                        return; // No place to put the letter
+                    }
+                } else { // Current focused cell is empty
+                    onLetterChange(placementRow, placementCol, newLetter);
+                    letterActuallyPlaced = true;
+                }
+
+                // 2. If letter was placed, determine where to advance focus
+                if (letterActuallyPlaced) {
+                    let cellToAdvanceFocusTo: [number, number] | null = null;
+                    const nextEmptyCellForFocus = findNextEmptyCellInClue(placementRow, placementCol);
+
+                    if (nextEmptyCellForFocus) {
+                        cellToAdvanceFocusTo = nextEmptyCellForFocus;
+                    } else {
+                        const immediateNextStructural = findImmediateNextCellInClueStructure(placementRow, placementCol);
+                        if (immediateNextStructural) {
+                            cellToAdvanceFocusTo = immediateNextStructural;
+                        }
+                    }
+
+                    if (cellToAdvanceFocusTo) {
+                        if (onNavigateToClue && activeClueNumber !== null) {
+                            onNavigateToClue(activeClueNumber, clueOrientation, cellToAdvanceFocusTo);
+                        } else if (onCellClick) {
+                            onCellClick(cellToAdvanceFocusTo[0], cellToAdvanceFocusTo[1]);
+                        }
+                    }
+                }
+            } else { // Old logic: skipFilledCells is false
+                onLetterChange(row, col, newLetter); // Place letter in current cell
+
+                const cellToAdvanceFocusTo = findImmediateNextCellInClueStructure(row, col);
+                if (cellToAdvanceFocusTo) {
+                    if (onNavigateToClue && activeClueNumber !== null) {
+                        onNavigateToClue(activeClueNumber, clueOrientation, cellToAdvanceFocusTo);
+                    } else if (onCellClick) {
+                        onCellClick(cellToAdvanceFocusTo[0], cellToAdvanceFocusTo[1]);
+                    }
+                }
+            }
         } else if (e.key === "Backspace" || e.key === "Delete") {
             e.preventDefault();
             onLetterChange(row, col, "");

@@ -139,6 +139,7 @@ interface IPuzPuzzle {
 | `leftNavElements` | `React.ReactNode`                   | Elements to display in the left side of the actions bar. |
 | `onStart`         | `() => void`                        | Called when the user starts the puzzle (dismisses the splash modal). |
 | `isComplete`      | `boolean`                           | If true, the puzzle is shown as completed and locked. |
+| `skipFilledCells` | `boolean`                           | Optional. If `true`, typing in a filled cell attempts to place the letter in the next empty cell of the clue and advances focus intelligently. If `false` (default), letters overwrite the current cell, and focus moves to the next structural cell. |
 
 ### Completion Hooks
 
