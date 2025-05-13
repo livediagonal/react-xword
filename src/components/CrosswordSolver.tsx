@@ -28,6 +28,11 @@ interface CrosswordSolverProps {
    * If true, the puzzle is shown as completed and locked (no further editing, all answers revealed, timer stopped, and success modal shown).
    */
   isComplete?: boolean;
+  /**
+   * Optional. If true, typing in a filled cell attempts to place the letter in the next empty cell of the clue and advances focus intelligently.
+   * If false (default), letters overwrite the current cell, and focus moves to the next structural cell.
+   */
+  skipFilledCells?: boolean;
 }
 
 const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
@@ -36,6 +41,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   leftNavElements,
   onStart,
   isComplete,
+  skipFilledCells = true,
 }) => {
   const [grid, setGrid] = useState<boolean[][]>([]);
   const [letters, setLetters] = useState<string[][]>([]);
@@ -1502,6 +1508,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
               revealedCells={revealedCells}
               useMobileKeyboard={useMobileKeyboard}
               disabled={hasCompleted || isComplete}
+              skipFilledCells={skipFilledCells}
             />
           </div>
 
