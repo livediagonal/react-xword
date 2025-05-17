@@ -5,6 +5,7 @@ import { IPuzPuzzle } from "../types/ipuz";
 import Modal from "./Modal";
 import "../styles/CrosswordSolver.css";
 import VirtualKeyboard from "./VirtualKeyboard";
+import Toast from "./Toast";
 
 interface CrosswordSolverProps {
   /** The puzzle data in IPuz format */
@@ -48,7 +49,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   const [activeOrientation, setActiveOrientation] = useState<"across" | "down">("across");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showErrorToast, setShowErrorToast] = useState(false);
   const [showSplashModal, setShowSplashModal] = useState(true);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -391,7 +392,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           if (allCorrect) {
             handlePuzzleCompletion();
           } else {
-            setShowErrorModal(true);
+            setShowErrorToast(true);
           }
         }
 
@@ -1265,6 +1266,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
 
   // Function to handle puzzle completion
   const handlePuzzleCompletion = () => {
+    setShowErrorToast(false);
     setShowConfetti(true);
     setHasCompleted(true);
     setIsTimerRunning(false);
@@ -1520,12 +1522,13 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         </div>
       </div>
 
-      <Modal
-        isOpen={showErrorModal}
-        onClose={() => setShowErrorModal(false)}
-        title="Not Quite Right"
-        message="The puzzle is filled, but some answers are incorrect. Keep trying!"
+      {/* Toast notification for incorrect puzzle */}
+      <Toast
+        isVisible={showErrorToast}
+        message="Not quite right. Keep solving!"
         type="error"
+        onClose={() => setShowErrorToast(false)}
+        duration={1000}
       />
 
       {/* Splash modal: only show if not isComplete */}
