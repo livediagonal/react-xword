@@ -10,6 +10,16 @@ A React component for solving crossword puzzles, supporting the iPuz format.
 - Save progress automatically
 - Check answers and reveal solutions
 - Responsive design
+- Smart navigation that ensures all squares in an answer are filled before moving to the next clue
+
+## Navigation Behavior
+
+The crossword solver includes smart navigation features to help you complete the puzzle efficiently:
+
+- When filling in an answer, the cursor automatically moves to the next empty square
+- If you reach the end of a word and there are still empty squares earlier in the answer, the cursor will cycle back to the first empty square
+- Only when all squares in the current answer are filled will it automatically advance to the next clue
+- When you reach the end of the clue list in one orientation (across/down), it will automatically switch to the other orientation and continue from the beginning
 
 ## Installation
 

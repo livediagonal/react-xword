@@ -397,8 +397,45 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         }
 
         if (isEndOfWord) {
-          // If we're at the end of the word, advance to the next clue
-          handleNextClue();
+          // If we're at the end of the word, check for empty cells in the current word
+          const [startRow, startCol] = findWordStart(
+            crosswordState.grid,
+            row,
+            col,
+            crosswordState.clueOrientation === "across"
+          );
+
+          // Find the first empty cell in the current word
+          let firstEmptyCell: [number, number] | null = null;
+          if (crosswordState.clueOrientation === "across") {
+            for (let c = startCol; c < crosswordState.columns; c++) {
+              if (crosswordState.grid[startRow][c]) break; // Stop at black cell
+              if (!newLetters[startRow][c]) {
+                firstEmptyCell = [startRow, c];
+                break;
+              }
+            }
+          } else {
+            for (let r = startRow; r < crosswordState.rows; r++) {
+              if (crosswordState.grid[r][startCol]) break; // Stop at black cell
+              if (!newLetters[r][startCol]) {
+                firstEmptyCell = [r, startCol];
+                break;
+              }
+            }
+          }
+
+          if (firstEmptyCell) {
+            // If there's an empty cell, navigate to it
+            navigateToClueAndCell(
+              crosswordState.activeClueNumber || 1,
+              crosswordState.clueOrientation,
+              firstEmptyCell
+            );
+          } else {
+            // If all cells are filled, advance to the next clue
+            handleNextClue();
+          }
         } else if (nextCell) {
           const clueNumbers = calculateClueNumbers(crosswordState.grid);
           const [nextRow, nextCol] = nextCell;
