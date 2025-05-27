@@ -377,37 +377,38 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         const nextCell = findNextCellInWord(row, col, crosswordState.clueOrientation);
         const isEndOfWord = !nextCell;
 
-        // Only check for word completion if we filled an empty cell
-        let isCurrentWordComplete = false;
-        if (wasEmpty) {
-          // Find the start of the current word
-          const [startRow, startCol] = findWordStart(
-            crosswordState.grid,
-            row,
-            col,
-            crosswordState.clueOrientation === "across"
-          );
+        // Find the start of the current word
+        const [startRow, startCol] = findWordStart(
+          crosswordState.grid,
+          row,
+          col,
+          crosswordState.clueOrientation === "across"
+        );
 
-          // Check if the current word is complete
-          isCurrentWordComplete = true;
-          if (crosswordState.clueOrientation === "across") {
-            for (let c = startCol; c < crosswordState.columns; c++) {
-              if (crosswordState.grid[startRow][c]) break; // Stop at black cell
-              if (!newLetters[startRow][c]) {
-                isCurrentWordComplete = false;
-                break;
-              }
+        // Check if the current word is complete and count empty cells
+        let isCurrentWordComplete = true;
+        let emptyCellCount = 0;
+        if (crosswordState.clueOrientation === "across") {
+          for (let c = startCol; c < crosswordState.columns; c++) {
+            if (crosswordState.grid[startRow][c]) break; // Stop at black cell
+            if (!newLetters[startRow][c]) {
+              isCurrentWordComplete = false;
+              emptyCellCount++;
             }
-          } else {
-            for (let r = startRow; r < crosswordState.rows; r++) {
-              if (crosswordState.grid[r][startCol]) break; // Stop at black cell
-              if (!newLetters[r][startCol]) {
-                isCurrentWordComplete = false;
-                break;
-              }
+          }
+        } else {
+          for (let r = startRow; r < crosswordState.rows; r++) {
+            if (crosswordState.grid[r][startCol]) break; // Stop at black cell
+            if (!newLetters[r][startCol]) {
+              isCurrentWordComplete = false;
+              emptyCellCount++;
             }
           }
         }
+
+        // If we just filled the last empty cell, or we're at the end and the word is complete
+        const wasLastEmptyCell = wasEmpty && emptyCellCount === 0;
+        const shouldAdvance = wasLastEmptyCell || (isEndOfWord && isCurrentWordComplete);
 
         setCrosswordState({
           ...crosswordState,
@@ -429,18 +430,11 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           }
         }
 
-        if (isCurrentWordComplete) {
-          // If the current word is complete, advance to the next clue
+        if (shouldAdvance) {
+          // If we should advance, go to the next clue
           handleNextClue();
         } else if (isEndOfWord) {
           // If we're at the end of the word but it's not complete, find the first empty cell
-          const [startRow, startCol] = findWordStart(
-            crosswordState.grid,
-            row,
-            col,
-            crosswordState.clueOrientation === "across"
-          );
-
           let firstEmptyCell: [number, number] | null = null;
           if (crosswordState.clueOrientation === "across") {
             for (let c = startCol; c < crosswordState.columns; c++) {
