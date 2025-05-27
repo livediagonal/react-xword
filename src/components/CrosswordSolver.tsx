@@ -373,10 +373,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
       newValidatedCells[row][col] = undefined;
 
       if (letter) {
-        // If a letter was entered, check if we're at the end of the word
-        const nextCell = findNextCellInWord(row, col, crosswordState.clueOrientation);
-        const isEndOfWord = !nextCell;
-
         // Find the start of the current word
         const [startRow, startCol] = findWordStart(
           crosswordState.grid,
@@ -385,96 +381,130 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           crosswordState.clueOrientation === "across"
         );
 
-        // Check if the current word is complete and count empty cells
+        // Check if the current word is complete and find the next empty cell
         let isCurrentWordComplete = true;
+        let nextEmptyCell: [number, number] | null = null;
+        let foundCurrentCell = false;
         let emptyCellCount = 0;
+        let wordCells: [number, number][] = [];
+        let currentCellIndex = -1;
+
         if (crosswordState.clueOrientation === "across") {
           for (let c = startCol; c < crosswordState.columns; c++) {
-            if (crosswordState.grid[startRow][c]) break; // Stop at black cell
+            if (crosswordState.grid[startRow][c]) break;
+            wordCells.push([startRow, c]);
             if (!newLetters[startRow][c]) {
               isCurrentWordComplete = false;
               emptyCellCount++;
+              if (foundCurrentCell) {
+                nextEmptyCell = [startRow, c];
+                break;
+              }
+            }
+            if (startRow === row && c === col) {
+              foundCurrentCell = true;
+              currentCellIndex = wordCells.length - 1;
+            }
+          }
+          if (!nextEmptyCell) {
+            for (let c = startCol; c < col; c++) {
+              if (crosswordState.grid[startRow][c]) break;
+              if (!newLetters[startRow][c]) {
+                nextEmptyCell = [startRow, c];
+                break;
+              }
             }
           }
         } else {
           for (let r = startRow; r < crosswordState.rows; r++) {
-            if (crosswordState.grid[r][startCol]) break; // Stop at black cell
+            if (crosswordState.grid[r][startCol]) break;
+            wordCells.push([r, startCol]);
             if (!newLetters[r][startCol]) {
               isCurrentWordComplete = false;
               emptyCellCount++;
+              if (foundCurrentCell) {
+                nextEmptyCell = [r, startCol];
+                break;
+              }
+            }
+            if (r === row && startCol === col) {
+              foundCurrentCell = true;
+              currentCellIndex = wordCells.length - 1;
+            }
+          }
+          if (!nextEmptyCell) {
+            for (let r = startRow; r < row; r++) {
+              if (crosswordState.grid[r][startCol]) break;
+              if (!newLetters[r][startCol]) {
+                nextEmptyCell = [r, startCol];
+                break;
+              }
             }
           }
         }
 
-        // If we just filled the last empty cell, or we're at the end and the word is complete
-        const wasLastEmptyCell = wasEmpty && emptyCellCount === 0;
-        const shouldAdvance = wasLastEmptyCell || (isEndOfWord && isCurrentWordComplete);
+        // If the word is now complete (no empty cells), advance to the next clue
+        if (isCurrentWordComplete) {
+          setCrosswordState({
+            ...crosswordState,
+            letters: newLetters,
+            activeCell: [row, col],
+            isAutomaticNavigation: true
+          });
+          setValidatedCells(newValidatedCells);
 
+          // Check if the puzzle is complete
+          const isComplete = isPuzzleFilled();
+          if (isComplete) {
+            const allCorrect = areAllAnswersCorrect();
+            if (allCorrect) {
+              handlePuzzleCompletion();
+            } else {
+              setShowErrorToast(true);
+            }
+          }
+
+          // Always advance to the next clue when the word is complete
+          handleNextClue();
+          return;
+        }
+
+        // If not complete and replacing a letter, move to the next cell in the word
+        if (!wasEmpty) {
+          let nextCell: [number, number] | null = null;
+          if (currentCellIndex !== -1 && currentCellIndex < wordCells.length - 1) {
+            nextCell = wordCells[currentCellIndex + 1];
+          }
+          setCrosswordState({
+            ...crosswordState,
+            letters: newLetters,
+            activeCell: nextCell || [row, col],
+            isAutomaticNavigation: !!nextCell
+          });
+          setValidatedCells(newValidatedCells);
+          return;
+        }
+
+        // If not complete and just filled an empty cell, jump cyclically to the next empty cell
+        if (nextEmptyCell) {
+          setCrosswordState({
+            ...crosswordState,
+            letters: newLetters,
+            activeCell: nextEmptyCell,
+            isAutomaticNavigation: true
+          });
+          setValidatedCells(newValidatedCells);
+          return;
+        }
+
+        // Fallback: stay in current cell
         setCrosswordState({
           ...crosswordState,
           letters: newLetters,
-          activeCell: nextCell || [row, col],
-          isAutomaticNavigation: !!nextCell
+          activeCell: [row, col],
+          isAutomaticNavigation: false
         });
         setValidatedCells(newValidatedCells);
-
-        // Check if the puzzle is complete
-        const isComplete = isPuzzleFilled();
-        if (isComplete) {
-          // If the puzzle is complete, check if all answers are correct
-          const allCorrect = areAllAnswersCorrect();
-          if (allCorrect) {
-            handlePuzzleCompletion();
-          } else {
-            setShowErrorToast(true);
-          }
-        }
-
-        if (shouldAdvance) {
-          // If we should advance, go to the next clue
-          handleNextClue();
-        } else if (isEndOfWord) {
-          // If we're at the end of the word but it's not complete, find the first empty cell
-          let firstEmptyCell: [number, number] | null = null;
-          if (crosswordState.clueOrientation === "across") {
-            for (let c = startCol; c < crosswordState.columns; c++) {
-              if (crosswordState.grid[startRow][c]) break; // Stop at black cell
-              if (!newLetters[startRow][c]) {
-                firstEmptyCell = [startRow, c];
-                break;
-              }
-            }
-          } else {
-            for (let r = startRow; r < crosswordState.rows; r++) {
-              if (crosswordState.grid[r][startCol]) break; // Stop at black cell
-              if (!newLetters[r][startCol]) {
-                firstEmptyCell = [r, startCol];
-                break;
-              }
-            }
-          }
-
-          if (firstEmptyCell) {
-            // If there's an empty cell, navigate to it
-            navigateToClueAndCell(
-              crosswordState.activeClueNumber || 1,
-              crosswordState.clueOrientation,
-              firstEmptyCell
-            );
-          }
-        } else if (nextCell) {
-          const clueNumbers = calculateClueNumbers(crosswordState.grid);
-          const [nextRow, nextCol] = nextCell;
-          const clueNumber = clueNumbers[nextRow][nextCol];
-
-          if (clueNumber) {
-            navigateToClueAndCell(
-              crosswordState.activeClueNumber || clueNumber,
-              crosswordState.clueOrientation,
-              nextCell
-            );
-          }
-        }
       } else {
         // If deleting (letter is empty)
         const currentCellIsEmpty = !crosswordState.letters[row][col];
