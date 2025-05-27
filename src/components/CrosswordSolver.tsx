@@ -1295,9 +1295,70 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
 
     const currentClueNumber = crosswordState.activeClueNumber;
     const currentOrientation = crosswordState.clueOrientation;
+    const visitedClues = new Set<number>();
 
-    // Find the next clue
-    const nextClueNumber = findNextClueNumber(currentClueNumber, currentOrientation);
+    // Helper function to check if a clue has any empty cells
+    const hasEmptyCells = (clueNumber: number, orientation: "across" | "down"): boolean => {
+      const startCell = findClueStartCell(clueNumber, orientation);
+      if (!startCell) return false;
+
+      const [startRow, startCol] = startCell;
+      if (orientation === "across") {
+        for (let c = startCol; c < crosswordState.columns; c++) {
+          if (crosswordState.grid[startRow][c]) break; // Stop at black cell
+          if (!crosswordState.letters[startRow][c]) return true;
+        }
+      } else {
+        for (let r = startRow; r < crosswordState.rows; r++) {
+          if (crosswordState.grid[r][startCol]) break; // Stop at black cell
+          if (!crosswordState.letters[r][startCol]) return true;
+        }
+      }
+      return false;
+    };
+
+    // Helper function to find the next clue with empty cells
+    const findNextClueWithEmptyCells = (startClueNumber: number | null, orientation: "across" | "down"): number | null => {
+      let nextClueNumber = findNextClueNumber(startClueNumber, orientation);
+
+      // Keep track of visited clues to prevent infinite loops
+      while (nextClueNumber && !visitedClues.has(nextClueNumber)) {
+        visitedClues.add(nextClueNumber);
+        if (hasEmptyCells(nextClueNumber, orientation)) {
+          return nextClueNumber;
+        }
+        nextClueNumber = findNextClueNumber(nextClueNumber, orientation);
+      }
+      return null;
+    };
+
+    // First try to find a clue with empty cells in the current orientation
+    let nextClueNumber = findNextClueWithEmptyCells(currentClueNumber, currentOrientation);
+
+    // If no clues with empty cells in current orientation, try the other orientation
+    if (!nextClueNumber) {
+      const otherOrientation = currentOrientation === "across" ? "down" : "across";
+      nextClueNumber = findNextClueWithEmptyCells(null, otherOrientation);
+
+      if (nextClueNumber) {
+        // Found a clue with empty cells in the other orientation
+        const startCell = findClueStartCell(nextClueNumber, otherOrientation);
+        const firstEmptyCell = findFirstEmptyCellInClue(nextClueNumber, otherOrientation);
+        navigateToClueAndCell(nextClueNumber, otherOrientation, firstEmptyCell || startCell);
+        return;
+      }
+    }
+
+    // If we found a clue with empty cells in the current orientation
+    if (nextClueNumber) {
+      const startCell = findClueStartCell(nextClueNumber, currentOrientation);
+      const firstEmptyCell = findFirstEmptyCellInClue(nextClueNumber, currentOrientation);
+      navigateToClueAndCell(nextClueNumber, currentOrientation, firstEmptyCell || startCell);
+      return;
+    }
+
+    // If no clues with empty cells found in either orientation, fall back to normal cycling
+    nextClueNumber = findNextClueNumber(currentClueNumber, currentOrientation);
 
     if (nextClueNumber) {
       // Find the start cell for the next clue
