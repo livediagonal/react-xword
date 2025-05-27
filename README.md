@@ -4,22 +4,35 @@ A React component for solving crossword puzzles, supporting the iPuz format.
 
 ## Features
 
-- Interactive crossword grid
-- Support for iPuz format puzzles
+- Interactive crossword grid with keyboard and mouse support
 - Mobile-friendly with virtual keyboard
-- Save progress automatically
-- Check answers and reveal solutions
-- Responsive design
-- Smart navigation that ensures all squares in an answer are filled before moving to the next clue
+- Smart navigation that automatically moves to the next empty cell
+- Support for checking answers and revealing solutions
+- Timer functionality
+- Responsive design that works on all devices
+- Support for iPuz format puzzles
 
 ## Navigation Behavior
 
-The crossword solver includes smart navigation features to help you complete the puzzle efficiently:
+The crossword solver features intelligent navigation that helps you move through the puzzle efficiently:
 
-- When filling in an answer, the cursor automatically moves to the next empty square
-- If you reach the end of a word and there are still empty squares earlier in the answer, the cursor will cycle back to the first empty square
-- Only when all squares in the current answer are filled will it automatically advance to the next clue
-- When you reach the end of the clue list in one orientation (across/down), it will automatically switch to the other orientation and continue from the beginning
+1. **Filling Empty Cells**:
+   - When you fill in the last empty cell of an answer, the cursor automatically advances to the next clue
+   - If you fill in a cell but there are still other empty cells in the answer, the cursor moves to the next cell in the current answer
+
+2. **Replacing Letters**:
+   - When you replace a letter in the middle of an answer, you stay in the current answer
+   - If you replace a letter in the last cell and the answer becomes complete, the cursor advances to the next clue
+
+3. **End of Answer Behavior**:
+   - If you reach the end of an incomplete answer, the cursor cycles back to the first empty cell in that answer
+   - If you reach the end of a complete answer, the cursor advances to the next clue
+
+4. **Orientation Changes**:
+   - When you complete the last answer in one orientation (across/down), the cursor automatically switches to the other orientation
+   - The cursor always moves to the first empty cell of the next answer
+
+This navigation system ensures a smooth solving experience by automatically guiding you to the next cell that needs attention.
 
 ## Installation
 
