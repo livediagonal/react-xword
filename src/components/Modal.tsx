@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './Modal.css';
 
 interface ModalProps {
@@ -15,6 +15,20 @@ interface ModalProps {
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onAction, title, message, type, buttonText, actions }) => {
     if (!isOpen) return null;
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Enter') {
+                onClose();
+                onAction?.();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [onClose, onAction]);
 
     const getButtonText = () => {
         if (buttonText) return buttonText;
