@@ -5,7 +5,7 @@ interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
     onAction?: () => void;
-    title: string;
+    title: string | React.ReactNode;
     message: string | React.ReactNode;
     type: 'success' | 'error' | 'start' | 'info';
     buttonText?: string;
@@ -56,7 +56,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onAction, title, message
     return (
         <div className="modal-overlay" onClick={handleOverlayClick}>
             <div className={`modal-content ${type}`} onClick={e => e.stopPropagation()}>
-                <h2 className="modal-title">{title}</h2>
+                {typeof title === 'string' ? <h2 className="modal-title">{title}</h2> : title}
                 <div className="modal-message">{message}</div>
                 {actions ? (
                     actions

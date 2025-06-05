@@ -29,6 +29,21 @@ interface CrosswordSolverProps {
    * If true, the puzzle is shown as completed and locked (no further editing, all answers revealed, timer stopped, and success modal shown).
    */
   isComplete?: boolean;
+
+  /**
+   * If true, the action buttons will not be shown.
+   */
+  hideActionButtons?: boolean;
+
+  /**
+   * The title to display in the splash modal.
+   */
+  splashTitle?: string | React.ReactNode;
+
+  /**
+   * The description to display in the splash modal.
+   */
+  splashDescription?: string | React.ReactNode;
 }
 
 const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
@@ -37,6 +52,9 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   leftNavElements,
   onStart,
   isComplete,
+  hideActionButtons,
+  splashTitle,
+  splashDescription,
 }) => {
   const [grid, setGrid] = useState<boolean[][]>([]);
   const [letters, setLetters] = useState<string[][]>([]);
@@ -1597,16 +1615,18 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
                   </svg>
                 </button>
               )}
-              <button
-                ref={actionsToggleRef}
-                className="solver-actions-toggle"
-                onClick={() => setIsActionsMenuOpen(!isActionsMenuOpen)}
-                aria-label="Toggle actions menu"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                </svg>
-              </button>
+              {!hideActionButtons && (
+                <button
+                  ref={actionsToggleRef}
+                  className="solver-actions-toggle"
+                  onClick={() => setIsActionsMenuOpen(!isActionsMenuOpen)}
+                  aria-label="Toggle actions menu"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                  </svg>
+                </button>
+              )}
             </div>
             <div ref={actionsMenuRef} className={`solver-actions-menu ${isActionsMenuOpen ? 'open' : ''}`}>
               <button
@@ -1698,8 +1718,8 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
               onStart();
             }
           }}
-          title="Ready to Solve?"
-          message="The timer will start when you begin solving the puzzle."
+          title={splashTitle || "Ready to Solve?"}
+          message={splashDescription || "The timer will start when you begin solving the puzzle."}
           type="start"
         />
       )}
