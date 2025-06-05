@@ -1,84 +1,84 @@
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(4px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
 }
 
 .modal-content {
-    background: white;
-    padding: 2rem;
-    border-radius: 8px;
-    max-width: 90%;
-    width: 400px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    text-align: center;
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 90%;
+  width: 400px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
 }
 
 .modal-content.success {
-    border-top: 4px solid #10B981;
+  border-top: 4px solid #10b981;
 }
 
 .modal-content.error {
-    border-top: 4px solid #EF4444;
+  border-top: 4px solid #ef4444;
 }
 
 .modal-content.start {
-    border-top: 4px solid #2563EB;
+  border-top: 4px solid #fbcb33;
 }
 
 .modal-content.info {
-    border-top: 4px solid #6B7280;
+  border-top: 4px solid #6b7280;
 }
 
 .modal-title {
-    margin: 0 0 1rem 0;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #1F2937;
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
 }
 
 .modal-message {
-    margin: 0 0 1.5rem 0;
-    color: #4B5563;
-    line-height: 1.5;
+  margin: 0 0 1.5rem 0;
+  color: #4b5563;
+  line-height: 1.5;
 }
 
 .modal-button {
-    background-color: #2563EB;
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 6px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
+  background-color: #fbcb33;
+  color: black;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .modal-button:hover {
-    background-color: #1D4ED8;
+  background-color: #fbbb33;
 }
 
 .puzzle-info {
-    text-align: left;
+  text-align: left;
 }
 
 .puzzle-info-item {
-    margin-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 .puzzle-info-item:last-child {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 .puzzle-info-item strong {
-    color: #1F2937;
-    margin-right: 0.5rem;
+  color: #1f2937;
+  margin-right: 0.5rem;
 }
