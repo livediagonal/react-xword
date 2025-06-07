@@ -31,9 +31,9 @@ interface CrosswordSolverProps {
   isComplete?: boolean;
 
   /**
-   * If true, the action buttons will not be shown.
+   * If true, the reveal buttons will not be shown.
    */
-  hideActionButtons?: boolean;
+  hideRevealButtons?: boolean;
 
   /**
    * The title to display in the splash modal.
@@ -52,7 +52,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   leftNavElements,
   onStart,
   isComplete,
-  hideActionButtons,
+  hideRevealButtons,
   splashTitle,
   splashDescription,
 }) => {
@@ -1615,18 +1615,16 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
                   </svg>
                 </button>
               )}
-              {!hideActionButtons && (
-                <button
-                  ref={actionsToggleRef}
-                  className="solver-actions-toggle"
-                  onClick={() => setIsActionsMenuOpen(!isActionsMenuOpen)}
-                  aria-label="Toggle actions menu"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                  </svg>
-                </button>
-              )}
+              <button
+                ref={actionsToggleRef}
+                className="solver-actions-toggle"
+                onClick={() => setIsActionsMenuOpen(!isActionsMenuOpen)}
+                aria-label="Toggle actions menu"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                </svg>
+              </button>
             </div>
             <div ref={actionsMenuRef} className={`solver-actions-menu ${isActionsMenuOpen ? 'open' : ''}`}>
               <button
@@ -1643,20 +1641,20 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
               >
                 Check Puzzle
               </button>
-              <button
+              {!hideRevealButtons && (<><button
                 className="solver-action-button"
                 onClick={revealAnswer}
                 disabled={!crosswordState?.activeClueNumber || hasCompleted || isComplete}
               >
                 Reveal Answer
               </button>
-              <button
-                className="solver-action-button"
-                onClick={revealPuzzle}
-                disabled={hasCompleted || isComplete}
-              >
-                Reveal Puzzle
-              </button>
+                <button
+                  className="solver-action-button"
+                  onClick={revealPuzzle}
+                  disabled={hasCompleted || isComplete}
+                >
+                  Reveal Puzzle
+                </button></>)}
             </div>
           </div>
 
