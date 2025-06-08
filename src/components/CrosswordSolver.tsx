@@ -6,6 +6,7 @@ import Modal from "./Modal";
 import "../styles/CrosswordSolver.css";
 import VirtualKeyboard from "./VirtualKeyboard";
 import Toast from "./Toast";
+import { calculateClueNumbers } from '../utils';
 
 interface CrosswordSolverProps {
   /** The puzzle data in IPuz format */
@@ -226,7 +227,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         setRevealedCells(revealedCellsArray);
 
         // Calculate clue numbers
-        const clueNumbers = calculateClueNumbers(grid);
+        const clueNumbers = calculateClueNumbers(grid, height, width);
         setClueNumbers(clueNumbers);
 
         // Set the grid
@@ -540,7 +541,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           setValidatedCells(newValidatedCells);
 
           if (prevCell) {
-            const clueNumbers = calculateClueNumbers(crosswordState.grid);
+            const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
             const [prevRow, prevCol] = prevCell;
             const clueNumber = clueNumbers[prevRow][prevCol];
 
@@ -623,7 +624,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   ): number | null => {
     if (!crosswordState) return null;
 
-    const clueNumbers = calculateClueNumbers(crosswordState.grid);
+    const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
     const clueNumberList: number[] = [];
 
     // Collect all clue numbers from the grid
@@ -677,7 +678,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   ): number | null => {
     if (!crosswordState) return null;
 
-    const clueNumbers = calculateClueNumbers(crosswordState.grid);
+    const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
     const clueNumberList: number[] = [];
 
     // Collect all clue numbers from the grid
@@ -751,7 +752,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         );
 
         // Calculate clue numbers
-        const clueNumbers = calculateClueNumbers(crosswordState.grid);
+        const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
 
         // Get the clue numbers for both starting cells
         const horizontalClueNumber =
@@ -816,7 +817,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
       );
 
       // Calculate clue numbers
-      const clueNumbers = calculateClueNumbers(crosswordState.grid);
+      const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
 
       // Get the clue numbers for both starting cells
       const horizontalClueNumber =
@@ -902,154 +903,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
       }
     }
     return [row, col];
-  };
-
-  // Helper function to calculate clue numbers
-  const calculateClueNumbers = (grid: boolean[][]): number[][] => {
-    const rows = grid.length;
-    const columns = grid[0].length;
-    const clueNumbers: number[][] = Array(rows)
-      .fill(0)
-      .map(() => Array(columns).fill(0));
-    let currentNumber = 1;
-
-    // Helper function to check if a cell is white
-    const isWhiteCell = (row: number, col: number): boolean => {
-      return (
-        row >= 0 && row < rows && col >= 0 && col < columns && !grid[row][col]
-      );
-    };
-
-    // Helper function to check if a cell starts a horizontal word
-    const startsHorizontal = (row: number, col: number): boolean => {
-      if (!isWhiteCell(row, col)) return false;
-      return col === 0 || !isWhiteCell(row, col - 1);
-    };
-
-    // Helper function to check if a cell starts a vertical word
-    const startsVertical = (row: number, col: number): boolean => {
-      if (!isWhiteCell(row, col)) return false;
-      return row === 0 || !isWhiteCell(row - 1, col);
-    };
-
-    // Helper function to check if a horizontal word has at least 2 cells
-    const hasHorizontalWord = (row: number, col: number): boolean => {
-      if (!startsHorizontal(row, col)) return false;
-      // Check if there's at least one more white cell to the right
-      return col + 1 < columns && isWhiteCell(row, col + 1);
-    };
-
-    // Helper function to check if a vertical word has at least 2 cells
-    const hasVerticalWord = (row: number, col: number): boolean => {
-      if (!startsVertical(row, col)) return false;
-      // Check if there's at least one more white cell below
-      return row + 1 < rows && isWhiteCell(row + 1, col);
-    };
-
-    // First pass: identify cells that start words
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < columns; col++) {
-        if (isWhiteCell(row, col)) {
-          // Check if this cell starts a horizontal word with at least 2 cells
-          if (hasHorizontalWord(row, col)) {
-            clueNumbers[row][col] = -1; // Mark as potential clue start
-          }
-
-          // Check if this cell starts a vertical word with at least 2 cells
-          if (hasVerticalWord(row, col)) {
-            clueNumbers[row][col] = -1; // Mark as potential clue start
-          }
-        }
-      }
-    }
-
-    // Second pass: assign numbers to cells that start words
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < columns; col++) {
-        if (clueNumbers[row][col] === -1) {
-          clueNumbers[row][col] = currentNumber++;
-        }
-      }
-    }
-
-    return clueNumbers;
-  };
-
-  // Helper function to find the starting cell for a given clue number
-  const findClueStartCell = (
-    clueNumber: number,
-    orientation: "across" | "down",
-  ): [number, number] | null => {
-    if (!crosswordState) return null;
-
-    const { grid, rows, columns } = crosswordState;
-    const clueNumbers = calculateClueNumbers(grid);
-
-    // Search for the cell with the given clue number
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < columns; col++) {
-        if (clueNumbers[row][col] === clueNumber) {
-          // Check if this cell starts a word in the requested orientation
-          if (orientation === "across") {
-            // For across clues, check if this cell starts a horizontal word
-            if (col === 0 || grid[row][col - 1]) {
-              return [row, col];
-            }
-          } else {
-            // For down clues, check if this cell starts a vertical word
-            if (row === 0 || grid[row - 1][col]) {
-              return [row, col];
-            }
-          }
-        }
-      }
-    }
-
-    return null;
-  };
-
-  // Helper function to find the first empty cell in a clue
-  const findFirstEmptyCellInClue = (
-    clueNumber: number,
-    orientation: "across" | "down",
-  ): [number, number] | null => {
-    if (!crosswordState) return null;
-
-    const { grid, rows, columns, letters } = crosswordState;
-    const clueNumbers = calculateClueNumbers(grid);
-
-    // Find the start cell of the clue
-    const startCell = findClueStartCell(clueNumber, orientation);
-    if (!startCell) return null;
-
-    const [startRow, startCol] = startCell;
-
-    if (orientation === "across") {
-      // For across clues, check cells from left to right
-      for (let col = startCol; col < columns; col++) {
-        // Stop if we hit a black cell
-        if (grid[startRow][col]) break;
-
-        // If this cell is empty, return it
-        if (!letters[startRow][col]) {
-          return [startRow, col];
-        }
-      }
-    } else {
-      // For down clues, check cells from top to bottom
-      for (let row = startRow; row < rows; row++) {
-        // Stop if we hit a black cell
-        if (grid[row][startCol]) break;
-
-        // If this cell is empty, return it
-        if (!letters[row][startCol]) {
-          return [row, startCol];
-        }
-      }
-    }
-
-    // If no empty cell found, return the start cell
-    return startCell;
   };
 
   // Function to check a single answer
@@ -1484,6 +1337,64 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
       );
     }
   }, [isComplete, solution]);
+
+  // Add back the helper function to find the starting cell for a given clue number
+  const findClueStartCell = (
+    clueNumber: number,
+    orientation: "across" | "down",
+  ): [number, number] | null => {
+    if (!crosswordState) return null;
+    const { grid, rows, columns } = crosswordState;
+    const clueNumbers = calculateClueNumbers(grid, rows, columns);
+    // Search for the cell with the given clue number
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < columns; col++) {
+        if (clueNumbers[row][col] === clueNumber) {
+          // Check if this cell starts a word in the requested orientation
+          if (orientation === "across") {
+            if (col === 0 || grid[row][col - 1]) {
+              return [row, col];
+            }
+          } else {
+            if (row === 0 || grid[row - 1][col]) {
+              return [row, col];
+            }
+          }
+        }
+      }
+    }
+    return null;
+  };
+
+  // Add back the helper function to find the first empty cell in a clue
+  const findFirstEmptyCellInClue = (
+    clueNumber: number,
+    orientation: "across" | "down",
+  ): [number, number] | null => {
+    if (!crosswordState) return null;
+    const { grid, rows, columns, letters } = crosswordState;
+    const clueNumbers = calculateClueNumbers(grid, rows, columns);
+    // Find the start cell of the clue
+    const startCell = findClueStartCell(clueNumber, orientation);
+    if (!startCell) return null;
+    const [startRow, startCol] = startCell;
+    if (orientation === "across") {
+      for (let col = startCol; col < columns; col++) {
+        if (grid[startRow][col]) break;
+        if (!letters[startRow][col]) {
+          return [startRow, col];
+        }
+      }
+    } else {
+      for (let row = startRow; row < rows; row++) {
+        if (grid[row][startCol]) break;
+        if (!letters[row][startCol]) {
+          return [row, startCol];
+        }
+      }
+    }
+    return startCell;
+  };
 
   if (loading) {
     return (

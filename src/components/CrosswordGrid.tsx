@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { ClueOrientation } from "../types";
 import "../styles/CrosswordGrid.css";
+import { calculateClueNumbers } from '../utils';
 
 export interface CrosswordGridProps {
     rows: number;
@@ -101,7 +102,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
 
                 if (nextCell) {
                     // Calculate clue numbers to find the clue number for the next cell
-                    const clueNumbers = calculateClueNumbers();
+                    const clueNumbers = calculateClueNumbers(grid, rows, columns);
                     const [nextRow, nextCol] = nextCell;
 
                     // Find the clue number for the next cell in the "across" orientation
@@ -137,7 +138,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
 
                 if (nextCell) {
                     // Calculate clue numbers to find the clue number for the next cell
-                    const clueNumbers = calculateClueNumbers();
+                    const clueNumbers = calculateClueNumbers(grid, rows, columns);
                     const [nextRow, nextCol] = nextCell;
 
                     // Find the clue number for the next cell in the "down" orientation
@@ -162,7 +163,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     };
 
     // Calculate clue numbers only once
-    const clueNumbers = calculateClueNumbers();
+    const clueNumbers = calculateClueNumbers(grid, rows, columns);
 
     // Handle touch events for mobile
     const startTouchRef = useRef<{ x: number; y: number } | null>(null);
@@ -286,70 +287,6 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         }
 
         return null;
-    };
-
-    // Helper function to calculate clue numbers
-    function calculateClueNumbers(): number[][] {
-        const clueNumbers: number[][] = Array(rows)
-            .fill(0)
-            .map(() => Array(columns).fill(0));
-        let currentNumber = 1;
-
-        const isWhiteCell = (row: number, col: number): boolean => {
-            return (
-                row >= 0 && row < rows && col >= 0 && col < columns && !grid[row][col]
-            );
-        };
-
-        const startsHorizontal = (row: number, col: number): boolean => {
-            if (!isWhiteCell(row, col)) return false;
-            return col === 0 || !isWhiteCell(row, col - 1);
-        };
-
-        const startsVertical = (row: number, col: number): boolean => {
-            if (!isWhiteCell(row, col)) return false;
-            return row === 0 || !isWhiteCell(row - 1, col);
-        };
-
-        const hasHorizontalWord = (row: number, col: number): boolean => {
-            if (!startsHorizontal(row, col)) return false;
-            // Check if there's at least one more white cell to the right
-            return col + 1 < columns && isWhiteCell(row, col + 1);
-        };
-
-        const hasVerticalWord = (row: number, col: number): boolean => {
-            if (!startsVertical(row, col)) return false;
-            // Check if there's at least one more white cell below
-            return row + 1 < rows && isWhiteCell(row + 1, col);
-        };
-
-        // First pass: identify cells that start words
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < columns; col++) {
-                if (isWhiteCell(row, col)) {
-                    // Check if this cell starts a horizontal word with at least 2 cells
-                    if (hasHorizontalWord(row, col)) {
-                        clueNumbers[row][col] = -1; // Mark as potential clue start
-                    }
-
-                    // Check if this cell starts a vertical word with at least 2 cells
-                    if (hasVerticalWord(row, col)) {
-                        clueNumbers[row][col] = -1; // Mark as potential clue start
-                    }
-                }
-            }
-        }
-
-        // Second pass: assign numbers to cells that start words
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < columns; col++) {
-                if (clueNumbers[row][col] === -1) {
-                    clueNumbers[row][col] = currentNumber++;
-                }
-            }
-        }
-
-        return clueNumbers;
     };
 
     // Function to check if a cell is part of the active clue
@@ -551,7 +488,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         col: number,
         orientation: ClueOrientation
     ): number | null => {
-        const clueNumbers = calculateClueNumbers();
+        const clueNumbers = calculateClueNumbers(grid, rows, columns);
 
         // Find the start of the word in the given orientation
         let startRow = row;
