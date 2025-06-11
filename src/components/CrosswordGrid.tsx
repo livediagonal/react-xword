@@ -5,10 +5,8 @@ import { calculateClueNumbers } from '../utils';
 
 export interface CrosswordGridProps {
     crosswordState: CrosswordState;
+    setCrosswordState: React.Dispatch<React.SetStateAction<CrosswordState | null>>;
     onLetterChange: (row: number, col: number, letter: string) => void;
-    onClueOrientationChange: ((orientation: ClueOrientation) => void) | undefined;
-    onCellClick: ((row: number, col: number) => void) | undefined;
-    onNavigateToClue: ((clueNumber: number, orientation: ClueOrientation, cell: [number, number] | null) => void) | undefined;
     validatedCells?: (boolean | undefined)[][] | null;
     revealedCells?: boolean[][] | null;
     disabled?: boolean;
@@ -16,10 +14,8 @@ export interface CrosswordGridProps {
 
 const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     crosswordState,
+    setCrosswordState,
     onLetterChange,
-    onClueOrientationChange,
-    onCellClick,
-    onNavigateToClue,
     validatedCells,
     revealedCells,
     disabled = false
@@ -38,6 +34,166 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         activeClueNumber,
         activeCell
     } = crosswordState;
+
+    // Internal implementation of handleClueOrientationChange
+    const handleClueOrientationChange = (orientation: ClueOrientation) => {
+        // Create a new state with the updated orientation
+        const newState: CrosswordState = {
+            ...crosswordState,
+            clueOrientation: orientation,
+        };
+
+        // If we have an active cell, find the clue number for the new orientation
+        if (crosswordState.activeCell) {
+            const [row, col] = crosswordState.activeCell;
+
+            // Find the starting cells for both horizontal and vertical words
+            const [horizontalStartRow, horizontalStartCol] = findWordStart(
+                crosswordState.grid,
+                row,
+                col,
+                true,
+            );
+            const [verticalStartRow, verticalStartCol] = findWordStart(
+                crosswordState.grid,
+                row,
+                col,
+                false,
+            );
+
+            // Get the clue numbers for both starting cells
+            const horizontalClueNumber =
+                clueNumbers[horizontalStartRow][horizontalStartCol];
+            const verticalClueNumber =
+                clueNumbers[verticalStartRow][verticalStartCol];
+
+            // Always set the active clue number based on the new orientation
+            if (orientation === "across" && horizontalClueNumber > 0) {
+                newState.activeClueNumber = horizontalClueNumber;
+            } else if (orientation === "down" && verticalClueNumber > 0) {
+                newState.activeClueNumber = verticalClueNumber;
+            } else {
+                // If no clue exists for the new orientation, keep the current orientation
+                // but update the active clue number if possible
+                if (horizontalClueNumber > 0) {
+                    newState.activeClueNumber = horizontalClueNumber;
+                } else if (verticalClueNumber > 0) {
+                    newState.activeClueNumber = verticalClueNumber;
+                } else {
+                    // If no clue exists for this cell, clear the active clue
+                    newState.activeClueNumber = null;
+                }
+            }
+        }
+
+        setCrosswordState(newState);
+    };
+
+    // Internal implementation of handleCellClick
+    const handleCellClick = (row: number, col: number) => {
+        if (disabled) return;
+
+        // Skip if the clicked cell is a black cell
+        if (crosswordState.grid[row][col]) {
+            return;
+        }
+
+        // Check if we're clicking the active cell
+        const isActiveCell = crosswordState.activeCell &&
+            crosswordState.activeCell[0] === row &&
+            crosswordState.activeCell[1] === col;
+
+        if (isActiveCell) {
+            // Toggle between across and down
+            const newOrientation = crosswordState.clueOrientation === "across" ? "down" : "across";
+            handleClueOrientationChange(newOrientation);
+            return;
+        }
+
+        // Find the starting cells for both horizontal and vertical words
+        const [horizontalStartRow, horizontalStartCol] = findWordStart(
+            crosswordState.grid,
+            row,
+            col,
+            true,
+        );
+        const [verticalStartRow, verticalStartCol] = findWordStart(
+            crosswordState.grid,
+            row,
+            col,
+            false,
+        );
+
+        // Get the clue numbers for both starting cells
+        const horizontalClueNumber =
+            clueNumbers[horizontalStartRow][horizontalStartCol];
+        const verticalClueNumber =
+            clueNumbers[verticalStartRow][verticalStartCol];
+
+        // Set the active cell to the clicked cell
+        let newOrientation = crosswordState.clueOrientation;
+        let newClueNumber: number | null = null;
+
+        if (crosswordState.clueOrientation === "across" && horizontalClueNumber > 0) {
+            newClueNumber = horizontalClueNumber;
+        } else if (crosswordState.clueOrientation === "down" && verticalClueNumber > 0) {
+            newClueNumber = verticalClueNumber;
+        } else if (horizontalClueNumber > 0) {
+            newOrientation = "across";
+            newClueNumber = horizontalClueNumber;
+        } else if (verticalClueNumber > 0) {
+            newOrientation = "down";
+            newClueNumber = verticalClueNumber;
+        } else {
+            newClueNumber = null;
+        }
+
+        setCrosswordState({
+            ...crosswordState,
+            activeCell: [row, col] as [number, number],
+            clueOrientation: newOrientation,
+            activeClueNumber: newClueNumber,
+        });
+    };
+
+    // Internal implementation of navigateToClue
+    const handleNavigateToClue = (
+        clueNumber: number,
+        orientation: ClueOrientation,
+        cell: [number, number] | null
+    ) => {
+        // Create a new state with the updated clue number, orientation, and cell
+        const newState: CrosswordState = {
+            ...crosswordState,
+            activeClueNumber: clueNumber,
+            clueOrientation: orientation,
+            activeCell: cell,
+        };
+
+        // Update the state directly
+        setCrosswordState(newState);
+    };
+
+    // Helper function to find the start of a word
+    const findWordStart = (
+        grid: boolean[][],
+        row: number,
+        col: number,
+        isHorizontal: boolean,
+    ): [number, number] => {
+        if (isHorizontal) {
+            // For horizontal words, move left until we hit a black cell or the edge
+            while (col > 0 && !grid[row][col - 1]) {
+                col--;
+            }
+        } else {
+            // For vertical words, move up until we hit a black cell or the edge
+            while (row > 0 && !grid[row - 1][col]) {
+                row--;
+            }
+        }
+        return [row, col];
+    };
 
     const handleKeyDown = (e: React.KeyboardEvent, row: number, col: number) => {
         if (disabled) return;
@@ -60,16 +216,8 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                 // Find the first empty cell in the next clue
                 const firstEmptyCell = findFirstEmptyCellInClue(nextClueNumber, clueOrientation);
 
-                if (onNavigateToClue) {
-                    // Use the new navigation function
-                    onNavigateToClue(nextClueNumber, clueOrientation, firstEmptyCell);
-                } else if (onCellClick) {
-                    // Fall back to the old method if the new function is not available
-                    const startCell = findClueStartCell(nextClueNumber, clueOrientation);
-                    if (startCell) {
-                        onCellClick(startCell[0], startCell[1]);
-                    }
-                }
+                // Use the new navigation function
+                handleNavigateToClue(nextClueNumber, clueOrientation, firstEmptyCell);
             } else {
                 // If we've reached the end of the current orientation's clues, switch to the other orientation
                 const newOrientation = clueOrientation === "across" ? "down" : "across";
@@ -79,9 +227,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
 
                 if (firstClueNumber) {
                     const firstEmptyCell = findFirstEmptyCellInClue(firstClueNumber, newOrientation);
-                    if (onNavigateToClue) {
-                        onNavigateToClue(firstClueNumber, newOrientation, firstEmptyCell);
-                    }
+                    handleNavigateToClue(firstClueNumber, newOrientation, firstEmptyCell);
                 }
             }
         } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
@@ -90,9 +236,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
             // Check if we need to change orientation
             if (clueOrientation !== "across") {
                 // If we're not in "across" mode, just change the orientation
-                if (onClueOrientationChange) {
-                    onClueOrientationChange("across");
-                }
+                handleClueOrientationChange("across");
             } else {
                 // If we're already in "across" mode, move to the next cell
                 const nextCell = findNextWhiteCell(row, col, e.key === "ArrowLeft" ? "left" : "right");
@@ -103,19 +247,14 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                     // Find the clue number for the next cell in the "across" orientation
                     const clueNumber = findClueNumberForCell(nextRow, nextCol, "across");
 
-                    if (clueNumber && onNavigateToClue) {
-                        // Use onNavigateToClue to update both orientation and active cell
-                        onNavigateToClue(clueNumber, "across", nextCell);
-                    } else if (onCellClick) {
-                        // Fall back to just updating the cell if onNavigateToClue is not available
-                        onCellClick(nextRow, nextCol);
+                    if (clueNumber) {
+                        // Use handleNavigateToClue to update both orientation and active cell
+                        handleNavigateToClue(clueNumber, "across", nextCell);
                     }
                 } else {
                     // If we can't move further in this direction, switch to the other orientation
                     const newOrientation = "down";
-                    if (onClueOrientationChange) {
-                        onClueOrientationChange(newOrientation);
-                    }
+                    handleClueOrientationChange(newOrientation);
                 }
             }
         } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
@@ -124,9 +263,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
             // Check if we need to change orientation
             if (clueOrientation !== "down") {
                 // If we're not in "down" mode, just change the orientation
-                if (onClueOrientationChange) {
-                    onClueOrientationChange("down");
-                }
+                handleClueOrientationChange("down");
             } else {
                 // If we're already in "down" mode, move to the next cell
                 const nextCell = findNextWhiteCell(row, col, e.key === "ArrowUp" ? "up" : "down");
@@ -137,19 +274,14 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                     // Find the clue number for the next cell in the "down" orientation
                     const clueNumber = findClueNumberForCell(nextRow, nextCol, "down");
 
-                    if (clueNumber && onNavigateToClue) {
-                        // Use onNavigateToClue to update both orientation and active cell
-                        onNavigateToClue(clueNumber, "down", nextCell);
-                    } else if (onCellClick) {
-                        // Fall back to just updating the cell if onNavigateToClue is not available
-                        onCellClick(nextRow, nextCol);
+                    if (clueNumber) {
+                        // Use handleNavigateToClue to update both orientation and active cell
+                        handleNavigateToClue(clueNumber, "down", nextCell);
                     }
                 } else {
                     // If we can't move further in this direction, switch to the other orientation
                     const newOrientation = "across";
-                    if (onClueOrientationChange) {
-                        onClueOrientationChange(newOrientation);
-                    }
+                    handleClueOrientationChange(newOrientation);
                 }
             }
         }
@@ -199,9 +331,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
 
         if (!touchMoved && touchMoveCountRef.current < 5) {
             ignoreNextClickRef.current = true; // Set flag to ignore next click
-            if (onCellClick) {
-                onCellClick(row, col);
-            }
+            handleCellClick(row, col);
         }
     };
 
@@ -508,9 +638,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         if (!activeCell) {
             // If no active cell, find the first valid cell and set it as active
             const firstValidCell = findFirstValidCell(grid);
-            if (onCellClick) {
-                onCellClick(firstValidCell[0], firstValidCell[1]);
-            }
+            handleCellClick(firstValidCell[0], firstValidCell[1]);
             return;
         }
 
@@ -527,7 +655,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                 }
             });
         }
-    }, [activeCell, grid, onCellClick]);
+    }, [activeCell, grid]);
 
     // Helper function to find the first valid cell in the grid
     function findFirstValidCell(grid: boolean[][]): [number, number] {
@@ -575,13 +703,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         return () => window.removeEventListener('resize', updateSize);
     }, [rows, columns]);
 
-    // Function to handle cell click
-    const handleCellClick = (row: number, col: number) => {
-        if (disabled) return;
-        if (onCellClick) {
-            onCellClick(row, col);
-        }
-    };
+    // Function to handle cell click is now defined earlier in the component
 
     // Calculate grid container size to prevent squishing
     const gap = 1; // px, must match CSS .grid-container gap

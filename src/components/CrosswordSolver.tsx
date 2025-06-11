@@ -1511,10 +1511,8 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           <div className="solver-grid-container" id="crossword-grid-container">
             <CrosswordGrid
               crosswordState={crosswordState}
+              setCrosswordState={setCrosswordState}
               onLetterChange={handleLetterChange}
-              onClueOrientationChange={handleClueOrientationChange}
-              onCellClick={handleCellClick}
-              onNavigateToClue={navigateToClueAndCell}
               validatedCells={validatedCells}
               revealedCells={revealedCells}
               disabled={hasCompleted || isComplete}
