@@ -11,7 +11,8 @@ import {
     findNextCellInWord,
     findPreviousCellInWord,
     navigateToClueAndCell,
-    handleNextClue
+    handleNextClue,
+    handlePreviousClue
 } from '../utils';
 
 interface VirtualKeyboardProps {
@@ -53,45 +54,12 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
     };
 
     // Function to handle navigating to the previous clue
+    // Uses smart navigation that prioritizes clues with empty cells
     const handlePrevClue = () => {
-        if (!crosswordState) return;
-
-        const currentClueNumber = crosswordState.activeClueNumber;
-        const currentOrientation = crosswordState.clueOrientation;
-        const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
-
-        // Helper function to navigate to a specific clue and cell
-        const navigate = (clueNumber: number, orientation: "across" | "down", cell: [number, number] | null) => {
-            navigateToClueAndCell({
-                clueNumber,
-                orientation,
-                cell,
-                crosswordState,
-                setCrosswordState
-            });
-        };
-
-        // Find the previous clue
-        const prevClueNumber = findPreviousClueNumber(currentClueNumber, currentOrientation, crosswordState.grid, clueNumbers, crosswordState.rows, crosswordState.columns);
-
-        if (prevClueNumber) {
-            // Find the start cell for the previous clue
-            const startCell = findClueStartCell(prevClueNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
-            // Find the first empty cell in the previous clue
-            const firstEmptyCell = findFirstEmptyCellInClue(prevClueNumber, currentOrientation, crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
-            // Navigate to the previous clue
-            navigate(prevClueNumber, currentOrientation, firstEmptyCell || startCell);
-        } else {
-            // If we're at the first clue, switch to the last clue of the other orientation
-            const newOrientation = currentOrientation === "across" ? "down" : "across";
-            const lastClueNumber = findPreviousClueNumber(null, newOrientation, crosswordState.grid, clueNumbers, crosswordState.rows, crosswordState.columns);
-
-            if (lastClueNumber) {
-                const startCell = findClueStartCell(lastClueNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
-                const firstEmptyCell = findFirstEmptyCellInClue(lastClueNumber, newOrientation, crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
-                navigate(lastClueNumber, newOrientation, firstEmptyCell || startCell);
-            }
-        }
+        handlePreviousClue({
+            crosswordState,
+            setCrosswordState
+        });
     };
 
     // Function to handle toggling the direction

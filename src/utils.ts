@@ -387,6 +387,20 @@ export const findPreviousCellInWord = (
   return null;
 };
 
+/**
+ * Checks if a given cell is the last cell in its word for the specified orientation.
+ * This is used to determine navigation behavior when editing filled cells:
+ * - If NOT the last cell: advance to next cell in same word
+ * - If IS the last cell: jump to next clue
+ * 
+ * @param grid - The crossword grid (true = black cell, false = white cell)
+ * @param row - The row index of the cell to check
+ * @param col - The column index of the cell to check
+ * @param orientation - Whether to check "across" or "down" direction
+ * @param rows - Total number of rows in the grid
+ * @param columns - Total number of columns in the grid
+ * @returns true if this is the last cell in the word, false otherwise
+ */
 export const isLastCellInWord = (
   grid: boolean[][],
   row: number,
@@ -433,6 +447,19 @@ export interface HandleNextClueParams {
   setCrosswordState: (state: any) => void;
 }
 
+/**
+ * SMART NEXT CLUE NAVIGATION
+ * 
+ * This function implements intelligent next clue navigation that prioritizes incomplete clues.
+ * When the puzzle is not complete, it will continue searching forward until it finds a clue
+ * with at least one empty cell, changing orientation if necessary.
+ * 
+ * Navigation behavior:
+ * 1. First, try to find an incomplete clue in the current orientation (moving forward)
+ * 2. If no incomplete clues in current orientation, switch to the other orientation and search from the beginning
+ * 3. If all clues are complete, fall back to normal next clue cycling
+ * 4. Always navigate to the first empty cell in the target clue (or start cell if no empty cells)
+ */
 export const handleNextClue = ({
   crosswordState,
   setCrosswordState
@@ -553,4 +580,168 @@ export const handleNextClue = ({
       });
     }
   }
+};
+
+export interface HandlePreviousClueParams {
+  crosswordState: any;
+  setCrosswordState: (state: any) => void;
+}
+
+/**
+ * SMART PREVIOUS CLUE NAVIGATION
+ * 
+ * This function implements intelligent previous clue navigation that prioritizes incomplete clues.
+ * When the puzzle is not complete, it will continue searching backwards until it finds a clue
+ * with at least one empty cell, changing orientation if necessary.
+ * 
+ * Navigation behavior:
+ * 1. First, try to find an incomplete clue in the current orientation (moving backwards)
+ * 2. If no incomplete clues in current orientation, switch to the other orientation and search from the end
+ * 3. If all clues are complete, fall back to normal previous clue cycling
+ * 4. Always navigate to the first empty cell in the target clue (or start cell if no empty cells)
+ */
+export const handlePreviousClue = ({
+  crosswordState,
+  setCrosswordState
+}: HandlePreviousClueParams) => {
+  if (!crosswordState) return;
+
+  const currentClueNumber = crosswordState.activeClueNumber;
+  const currentOrientation = crosswordState.clueOrientation;
+  const visitedClues = new Set<number>();
+
+  // Helper function to check if a clue has any empty cells
+  const hasEmptyCells = (clueNumber: number, orientation: "across" | "down"): boolean => {
+    const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
+    const startCell = findClueStartCell(clueNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
+    if (!startCell) return false;
+
+    const [startRow, startCol] = startCell;
+    if (orientation === "across") {
+      for (let c = startCol; c < crosswordState.columns; c++) {
+        if (crosswordState.grid[startRow][c]) break; // Stop at black cell
+        if (!crosswordState.letters[startRow][c]) return true;
+      }
+    } else {
+      for (let r = startRow; r < crosswordState.rows; r++) {
+        if (crosswordState.grid[r][startCol]) break; // Stop at black cell
+        if (!crosswordState.letters[r][startCol]) return true;
+      }
+    }
+    return false;
+  };
+
+  // Helper function to find the previous clue with empty cells
+  const findPreviousClueWithEmptyCells = (startClueNumber: number | null, orientation: "across" | "down"): number | null => {
+    const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
+    let prevClueNumber = findPreviousClueNumber(startClueNumber, orientation, crosswordState.grid, clueNumbers, crosswordState.rows, crosswordState.columns);
+
+    // Keep track of visited clues to prevent infinite loops
+    while (prevClueNumber && !visitedClues.has(prevClueNumber)) {
+      visitedClues.add(prevClueNumber);
+      if (hasEmptyCells(prevClueNumber, orientation)) {
+        return prevClueNumber;
+      }
+      prevClueNumber = findPreviousClueNumber(prevClueNumber, orientation, crosswordState.grid, clueNumbers, crosswordState.rows, crosswordState.columns);
+    }
+    return null;
+  };
+
+  // First try to find a clue with empty cells in the current orientation (moving backwards)
+  let prevClueNumber = findPreviousClueWithEmptyCells(currentClueNumber, currentOrientation);
+
+  // If no clues with empty cells in current orientation, try the other orientation (from the end)
+  if (!prevClueNumber) {
+    const otherOrientation = currentOrientation === "across" ? "down" : "across";
+    prevClueNumber = findPreviousClueWithEmptyCells(null, otherOrientation);
+
+    if (prevClueNumber) {
+      // Found a clue with empty cells in the other orientation
+      const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
+      const startCell = findClueStartCell(prevClueNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
+      const firstEmptyCell = findFirstEmptyCellInClue(prevClueNumber, otherOrientation, crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
+      navigateToClueAndCell({
+        clueNumber: prevClueNumber,
+        orientation: otherOrientation,
+        cell: firstEmptyCell || startCell,
+        crosswordState,
+        setCrosswordState
+      });
+      return;
+    }
+  }
+
+  // If we found a clue with empty cells in the current orientation
+  if (prevClueNumber) {
+    const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
+    const startCell = findClueStartCell(prevClueNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
+    const firstEmptyCell = findFirstEmptyCellInClue(prevClueNumber, currentOrientation, crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
+    navigateToClueAndCell({
+      clueNumber: prevClueNumber,
+      orientation: currentOrientation,
+      cell: firstEmptyCell || startCell,
+      crosswordState,
+      setCrosswordState
+    });
+    return;
+  }
+
+  // If no clues with empty cells found in either orientation, fall back to normal cycling
+  const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
+  prevClueNumber = findPreviousClueNumber(currentClueNumber, currentOrientation, crosswordState.grid, clueNumbers, crosswordState.rows, crosswordState.columns);
+
+  if (prevClueNumber) {
+    // Find the start cell for the previous clue
+    const startCell = findClueStartCell(prevClueNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
+    // Find the first empty cell in the previous clue
+    const firstEmptyCell = findFirstEmptyCellInClue(prevClueNumber, currentOrientation, crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
+    // Navigate to the previous clue
+    navigateToClueAndCell({
+      clueNumber: prevClueNumber,
+      orientation: currentOrientation,
+      cell: firstEmptyCell || startCell,
+      crosswordState,
+      setCrosswordState
+    });
+  } else {
+    // If we've reached the beginning of the current orientation's clues, switch to the other orientation
+    const newOrientation = currentOrientation === "across" ? "down" : "across";
+    const lastClueNumber = findPreviousClueNumber(null, newOrientation, crosswordState.grid, clueNumbers, crosswordState.rows, crosswordState.columns);
+
+    if (lastClueNumber) {
+      const startCell = findClueStartCell(lastClueNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
+      const firstEmptyCell = findFirstEmptyCellInClue(lastClueNumber, newOrientation, crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
+      navigateToClueAndCell({
+        clueNumber: lastClueNumber,
+        orientation: newOrientation,
+        cell: firstEmptyCell || startCell,
+        crosswordState,
+        setCrosswordState
+      });
+    }
+  }
+};
+
+/**
+ * SMART TAB NAVIGATION (FORWARD)
+ * 
+ * Handles Tab key navigation that prioritizes incomplete clues.
+ * Uses the same logic as handleNextClue but is specifically for Tab key presses.
+ * 
+ * @param params - Navigation parameters including crossword state and setter
+ */
+export const handleTabNavigation = (params: HandleNextClueParams) => {
+  handleNextClue(params);
+};
+
+/**
+ * SMART TAB NAVIGATION (BACKWARD)
+ * 
+ * Handles Shift+Tab key navigation that prioritizes incomplete clues.
+ * Uses the same logic as handlePreviousClue but is specifically for Shift+Tab key presses.
+ * 
+ * @param params - Navigation parameters including crossword state and setter
+ */
+export const handleShiftTabNavigation = (params: HandlePreviousClueParams) => {
+  handlePreviousClue(params);
 };

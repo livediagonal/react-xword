@@ -9,7 +9,9 @@ import {
     findFirstEmptyCellInClue,
     findClueNumberForCell,
     isPartOfActiveClue,
-    findFirstValidCell
+    findFirstValidCell,
+    handleTabNavigation,
+    handleShiftTabNavigation
 } from '../utils';
 
 export interface CrosswordGridProps {
@@ -216,28 +218,25 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
             onLetterChange(row, col, "");
         } else if (e.key === "Tab") {
             e.preventDefault();
-            // Find the next or previous clue in the current orientation based on Shift key
-            const nextClueNumber = e.shiftKey
-                ? findPreviousClueNumber(activeClueNumber, clueOrientation, grid, clueNumbers, rows, columns)
-                : findNextClueNumber(activeClueNumber, clueOrientation, grid, clueNumbers, rows, columns);
 
-            if (nextClueNumber) {
-                // Find the first empty cell in the next clue
-                const firstEmptyCell = findFirstEmptyCellInClue(nextClueNumber, clueOrientation, grid, letters, clueNumbers, rows, columns);
-
-                // Use the new navigation function
-                handleNavigateToClue(nextClueNumber, clueOrientation, firstEmptyCell);
+            /**
+             * SMART TAB NAVIGATION
+             * 
+             * Tab and Shift+Tab now use intelligent navigation that prioritizes clues with empty cells.
+             * This ensures users always land on clues they can work on when the puzzle is incomplete.
+             */
+            if (e.shiftKey) {
+                // Shift+Tab: Navigate to previous clue with empty cells
+                handleShiftTabNavigation({
+                    crosswordState,
+                    setCrosswordState
+                });
             } else {
-                // If we've reached the end of the current orientation's clues, switch to the other orientation
-                const newOrientation = clueOrientation === "across" ? "down" : "across";
-                const firstClueNumber = e.shiftKey
-                    ? findPreviousClueNumber(null, newOrientation, grid, clueNumbers, rows, columns) // Get last clue of new orientation
-                    : findNextClueNumber(null, newOrientation, grid, clueNumbers, rows, columns); // Get first clue of new orientation
-
-                if (firstClueNumber) {
-                    const firstEmptyCell = findFirstEmptyCellInClue(firstClueNumber, newOrientation, grid, letters, clueNumbers, rows, columns);
-                    handleNavigateToClue(firstClueNumber, newOrientation, firstEmptyCell);
-                }
+                // Tab: Navigate to next clue with empty cells
+                handleTabNavigation({
+                    crosswordState,
+                    setCrosswordState
+                });
             }
         } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
             e.preventDefault();

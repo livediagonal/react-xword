@@ -16,6 +16,7 @@ import {
   findPreviousCellInWord,
   navigateToClueAndCell,
   handleNextClue,
+  handlePreviousClue,
   isLastCellInWord
 } from "../utils";
 
@@ -439,9 +440,24 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
             }
           }
 
-          // If we're editing a filled cell in a filled answer, check if we're at the last cell
+          /**
+           * NAVIGATION BEHAVIOR FOR COMPLETED WORDS:
+           * 
+           * This section handles navigation when a user types a letter that results in a complete word.
+           * There are two distinct scenarios with different desired behaviors:
+           * 
+           * 1. EDITING A FILLED CELL IN A FILLED ANSWER:
+           *    - Example: In "TEST", user replaces 'E' with 'A' to get "TAST"
+           *    - Behavior: Advance to next cell in same word ('S'), unless it's the last cell
+           *    - Only jump to next clue if editing the last cell in the word
+           * 
+           * 2. FILLING AN EMPTY CELL THAT COMPLETES THE WORD:
+           *    - Example: In "TES_", user fills the blank with 'T' to complete "TEST"
+           *    - Behavior: Jump to next clue immediately
+           */
           if (!wasEmpty) {
-            // Check if we're at the last cell in the word
+            // SCENARIO 1: Editing a filled cell in a filled answer
+            // Check if we're at the last cell in the word to determine navigation
             const isLastCell = isLastCellInWord(
               crosswordState.grid,
               row,
@@ -452,14 +468,15 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
             );
 
             if (isLastCell) {
-              // If it's the last cell, advance to the next clue
+              // If editing the last cell (e.g., 'T' in "TEST"), advance to the next clue
               handleNextClue({
                 crosswordState,
                 setCrosswordState
               });
               return;
             } else {
-              // If not the last cell, move to the next cell in the word
+              // If editing a non-last cell (e.g., 'E' in "TEST"), move to the next cell in same word ('S')
+              // This prevents the annoying behavior of jumping to next clue when editing middle letters
               const nextCell = findNextCellInWord(
                 crosswordState.grid,
                 row,
@@ -477,7 +494,8 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
               return;
             }
           } else {
-            // If we filled an empty cell that completed the word, advance to the next clue
+            // SCENARIO 2: Filling an empty cell that completed the word
+            // Always advance to the next clue when completing a word by filling an empty cell
             handleNextClue({
               crosswordState,
               setCrosswordState
@@ -486,6 +504,13 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           }
         }
 
+        /**
+         * NAVIGATION BEHAVIOR FOR INCOMPLETE WORDS:
+         * 
+         * When editing a cell in a word that is NOT yet complete (has empty cells),
+         * always move to the next cell in the same word, regardless of whether we're
+         * editing a filled or empty cell.
+         */
         // If not complete and replacing a letter, move to the next cell in the word
         if (!wasEmpty) {
           const nextCell = findNextCellInWord(
@@ -505,6 +530,13 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           return;
         }
 
+        /**
+         * NAVIGATION BEHAVIOR FOR FILLING EMPTY CELLS IN INCOMPLETE WORDS:
+         * 
+         * When filling an empty cell in a word that still has other empty cells,
+         * jump cyclically to the next empty cell in the same word. This allows
+         * users to efficiently fill in partial answers.
+         */
         // If not complete and just filled an empty cell, jump cyclically to the next empty cell
         if (nextEmptyCell) {
           setCrosswordState({
