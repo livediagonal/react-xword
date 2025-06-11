@@ -1510,17 +1510,11 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           {/* Grid with better touch handling */}
           <div className="solver-grid-container" id="crossword-grid-container">
             <CrosswordGrid
-              rows={crosswordState.rows}
-              columns={crosswordState.columns}
-              grid={crosswordState.grid}
-              letters={crosswordState.letters}
+              crosswordState={crosswordState}
               onLetterChange={handleLetterChange}
-              clueOrientation={crosswordState.clueOrientation}
-              activeClueNumber={crosswordState.activeClueNumber}
               onClueOrientationChange={handleClueOrientationChange}
               onCellClick={handleCellClick}
               onNavigateToClue={navigateToClueAndCell}
-              activeCell={crosswordState.activeCell}
               validatedCells={validatedCells}
               revealedCells={revealedCells}
               disabled={hasCompleted || isComplete}

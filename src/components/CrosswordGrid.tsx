@@ -1,37 +1,25 @@
 import React, { useRef, useEffect, useState } from "react";
-import { ClueOrientation } from "../types/crossword";
+import { ClueOrientation, CrosswordState } from "../types/crossword";
 import "../styles/CrosswordGrid.css";
 import { calculateClueNumbers } from '../utils';
 
 export interface CrosswordGridProps {
-    rows: number;
-    columns: number;
-    grid: boolean[][];
-    letters: string[][];
+    crosswordState: CrosswordState;
     onLetterChange: (row: number, col: number, letter: string) => void;
-    clueOrientation: ClueOrientation;
-    activeClueNumber: number | null;
     onClueOrientationChange: ((orientation: ClueOrientation) => void) | undefined;
     onCellClick: ((row: number, col: number) => void) | undefined;
     onNavigateToClue: ((clueNumber: number, orientation: ClueOrientation, cell: [number, number] | null) => void) | undefined;
-    activeCell: [number, number] | null | undefined;
     validatedCells?: (boolean | undefined)[][] | null;
     revealedCells?: boolean[][] | null;
     disabled?: boolean;
 }
 
 const CrosswordGrid: React.FC<CrosswordGridProps> = ({
-    rows,
-    columns,
-    grid,
-    letters,
+    crosswordState,
     onLetterChange,
-    clueOrientation,
-    activeClueNumber,
     onClueOrientationChange,
     onCellClick,
     onNavigateToClue,
-    activeCell,
     validatedCells,
     revealedCells,
     disabled = false
@@ -39,6 +27,17 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     const gridRef = useRef<HTMLDivElement>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [cellSize, setCellSize] = useState<number>(32); // default fallback
+
+    // Extract values from crosswordState for easier access
+    const {
+        rows,
+        columns,
+        grid,
+        letters,
+        clueOrientation,
+        activeClueNumber,
+        activeCell
+    } = crosswordState;
 
     const handleKeyDown = (e: React.KeyboardEvent, row: number, col: number) => {
         if (disabled) return;
