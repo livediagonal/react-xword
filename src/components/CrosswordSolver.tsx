@@ -155,8 +155,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-
-
   // Load puzzle data only once when component mounts
   useEffect(() => {
     const loadPuzzle = async () => {
@@ -367,7 +365,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         let foundCurrentCell = false;
         let emptyCellCount = 0;
         let wordCells: [number, number][] = [];
-        let currentCellIndex = -1;
 
         if (crosswordState.clueOrientation === "across") {
           for (let c = startCol; c < crosswordState.columns; c++) {
@@ -383,7 +380,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
             }
             if (startRow === row && c === col) {
               foundCurrentCell = true;
-              currentCellIndex = wordCells.length - 1;
             }
           }
           if (!nextEmptyCell) {
@@ -409,7 +405,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
             }
             if (r === row && startCol === col) {
               foundCurrentCell = true;
-              currentCellIndex = wordCells.length - 1;
             }
           }
           if (!nextEmptyCell) {
@@ -530,12 +525,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     }
   };
 
-
-
-
-
-
-
   const handleClueOrientationChange = (orientation: "across" | "down") => {
     if (crosswordState) {
       // Create a new state with the updated orientation
@@ -594,75 +583,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     }
   };
 
-  const handleCellClick = (row: number, col: number) => {
-    if (crosswordState) {
-      // Skip if the clicked cell is a black cell
-      if (crosswordState.grid[row][col]) {
-        return;
-      }
-
-      // Check if we're clicking the active cell
-      const isActiveCell = crosswordState.activeCell &&
-        crosswordState.activeCell[0] === row &&
-        crosswordState.activeCell[1] === col;
-
-      if (isActiveCell) {
-        // Toggle between across and down
-        const newOrientation = crosswordState.clueOrientation === "across" ? "down" : "across";
-        handleClueOrientationChange(newOrientation);
-        return;
-      }
-
-      // Find the starting cells for both horizontal and vertical words
-      const [horizontalStartRow, horizontalStartCol] = findWordStart(
-        crosswordState.grid,
-        row,
-        col,
-        true,
-      );
-      const [verticalStartRow, verticalStartCol] = findWordStart(
-        crosswordState.grid,
-        row,
-        col,
-        false,
-      );
-
-      // Calculate clue numbers
-      const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
-
-      // Get the clue numbers for both starting cells
-      const horizontalClueNumber =
-        clueNumbers[horizontalStartRow][horizontalStartCol];
-      const verticalClueNumber =
-        clueNumbers[verticalStartRow][verticalStartCol];
-
-      // Set the active cell to the clicked cell
-      let newOrientation = crosswordState.clueOrientation;
-      let newClueNumber: number | null = null;
-
-      if (crosswordState.clueOrientation === "across" && horizontalClueNumber > 0) {
-        newClueNumber = horizontalClueNumber;
-      } else if (crosswordState.clueOrientation === "down" && verticalClueNumber > 0) {
-        newClueNumber = verticalClueNumber;
-      } else if (horizontalClueNumber > 0) {
-        newOrientation = "across";
-        newClueNumber = horizontalClueNumber;
-      } else if (verticalClueNumber > 0) {
-        newOrientation = "down";
-        newClueNumber = verticalClueNumber;
-      } else {
-        newClueNumber = null;
-      }
-
-      setCrosswordState({
-        ...crosswordState,
-        activeCell: [row, col] as [number, number],
-        clueOrientation: newOrientation,
-        activeClueNumber: newClueNumber,
-      });
-    }
-  };
-
   // Function to navigate to a specific clue and cell
   const navigateToClueAndCell = (
     clueNumber: number,
@@ -692,8 +612,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
       }, 100);
     }
   };
-
-
 
   // Function to check a single answer
   const checkAnswer = () => {
