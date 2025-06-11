@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import { ClueOrientation } from "../types";
+import { ClueOrientation } from "../types/crossword";
 import "../styles/CrosswordGrid.css";
 import { calculateClueNumbers } from '../utils';
 
@@ -17,7 +17,6 @@ export interface CrosswordGridProps {
     activeCell: [number, number] | null | undefined;
     validatedCells?: (boolean | undefined)[][] | null;
     revealedCells?: boolean[][] | null;
-    useMobileKeyboard?: boolean;
     disabled?: boolean;
 }
 
@@ -35,7 +34,6 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     activeCell,
     validatedCells,
     revealedCells,
-    useMobileKeyboard = false,
     disabled = false
 }) => {
     const gridRef = useRef<HTMLDivElement>(null);

@@ -249,7 +249,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           activeCell: firstCell,
           clues: processedClues,
           clueText: "",
-          isAutomaticNavigation: true,
         };
 
         // Set the state once with all the data
@@ -429,8 +428,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           setCrosswordState({
             ...crosswordState,
             letters: newLetters,
-            activeCell: [row, col],
-            isAutomaticNavigation: true
+            activeCell: [row, col]
           });
           setValidatedCells(newValidatedCells);
 
@@ -460,7 +458,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
             ...crosswordState,
             letters: newLetters,
             activeCell: nextCell || [row, col],
-            isAutomaticNavigation: !!nextCell
           });
           setValidatedCells(newValidatedCells);
           return;
@@ -472,7 +469,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
             ...crosswordState,
             letters: newLetters,
             activeCell: nextEmptyCell,
-            isAutomaticNavigation: true
           });
           setValidatedCells(newValidatedCells);
           return;
@@ -482,8 +478,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         setCrosswordState({
           ...crosswordState,
           letters: newLetters,
-          activeCell: [row, col],
-          isAutomaticNavigation: false
+          activeCell: [row, col]
         });
         setValidatedCells(newValidatedCells);
       } else {
@@ -498,7 +493,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
             ...crosswordState,
             letters: newLetters,
             activeCell: prevCell || [row, col],
-            isAutomaticNavigation: !!prevCell
           });
           setValidatedCells(newValidatedCells);
 
@@ -827,7 +821,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         activeClueNumber: clueNumber,
         clueOrientation: orientation,
         activeCell: cell,
-        isAutomaticNavigation: true, // Mark this as automatic navigation
       };
 
       // Update the state directly
@@ -839,7 +832,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           if (!prevState) return prevState;
           return {
             ...prevState,
-            isAutomaticNavigation: false,
           };
         });
       }, 100);
@@ -1531,7 +1523,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
               activeCell={crosswordState.activeCell}
               validatedCells={validatedCells}
               revealedCells={revealedCells}
-              useMobileKeyboard={useMobileKeyboard}
               disabled={hasCompleted || isComplete}
             />
           </div>

@@ -1,3 +1,5 @@
+export type ClueOrientation = "across" | "down";
+
 export interface CrosswordState {
     rows: number;
     columns: number;
@@ -12,5 +14,4 @@ export interface CrosswordState {
         Down: { [key: number]: string };
     };
     clueText: string;
-    isAutomaticNavigation: boolean;
 } 
