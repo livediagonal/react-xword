@@ -1,7 +1,16 @@
 import React, { useRef, useEffect, useState } from "react";
 import { ClueOrientation, CrosswordState } from "../types/crossword";
 import "../styles/CrosswordGrid.css";
-import { calculateClueNumbers } from '../utils';
+import {
+    calculateClueNumbers,
+    findNextWhiteCell,
+    findNextClueNumber,
+    findPreviousClueNumber,
+    findFirstEmptyCellInClue,
+    findClueNumberForCell,
+    isPartOfActiveClue,
+    findFirstValidCell
+} from '../utils';
 
 export interface CrosswordGridProps {
     crosswordState: CrosswordState;
@@ -209,12 +218,12 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
             e.preventDefault();
             // Find the next or previous clue in the current orientation based on Shift key
             const nextClueNumber = e.shiftKey
-                ? findPreviousClueNumber(activeClueNumber, clueOrientation)
-                : findNextClueNumber(activeClueNumber, clueOrientation);
+                ? findPreviousClueNumber(activeClueNumber, clueOrientation, grid, clueNumbers, rows, columns)
+                : findNextClueNumber(activeClueNumber, clueOrientation, grid, clueNumbers, rows, columns);
 
             if (nextClueNumber) {
                 // Find the first empty cell in the next clue
-                const firstEmptyCell = findFirstEmptyCellInClue(nextClueNumber, clueOrientation);
+                const firstEmptyCell = findFirstEmptyCellInClue(nextClueNumber, clueOrientation, grid, letters, clueNumbers, rows, columns);
 
                 // Use the new navigation function
                 handleNavigateToClue(nextClueNumber, clueOrientation, firstEmptyCell);
@@ -222,11 +231,11 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                 // If we've reached the end of the current orientation's clues, switch to the other orientation
                 const newOrientation = clueOrientation === "across" ? "down" : "across";
                 const firstClueNumber = e.shiftKey
-                    ? findPreviousClueNumber(null, newOrientation) // Get last clue of new orientation
-                    : findNextClueNumber(null, newOrientation); // Get first clue of new orientation
+                    ? findPreviousClueNumber(null, newOrientation, grid, clueNumbers, rows, columns) // Get last clue of new orientation
+                    : findNextClueNumber(null, newOrientation, grid, clueNumbers, rows, columns); // Get first clue of new orientation
 
                 if (firstClueNumber) {
-                    const firstEmptyCell = findFirstEmptyCellInClue(firstClueNumber, newOrientation);
+                    const firstEmptyCell = findFirstEmptyCellInClue(firstClueNumber, newOrientation, grid, letters, clueNumbers, rows, columns);
                     handleNavigateToClue(firstClueNumber, newOrientation, firstEmptyCell);
                 }
             }
@@ -239,13 +248,13 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                 handleClueOrientationChange("across");
             } else {
                 // If we're already in "across" mode, move to the next cell
-                const nextCell = findNextWhiteCell(row, col, e.key === "ArrowLeft" ? "left" : "right");
+                const nextCell = findNextWhiteCell(grid, row, col, e.key === "ArrowLeft" ? "left" : "right", rows, columns);
 
                 if (nextCell) {
                     const [nextRow, nextCol] = nextCell;
 
                     // Find the clue number for the next cell in the "across" orientation
-                    const clueNumber = findClueNumberForCell(nextRow, nextCol, "across");
+                    const clueNumber = findClueNumberForCell(nextRow, nextCol, "across", grid, clueNumbers, rows, columns);
 
                     if (clueNumber) {
                         // Use handleNavigateToClue to update both orientation and active cell
@@ -266,13 +275,13 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                 handleClueOrientationChange("down");
             } else {
                 // If we're already in "down" mode, move to the next cell
-                const nextCell = findNextWhiteCell(row, col, e.key === "ArrowUp" ? "up" : "down");
+                const nextCell = findNextWhiteCell(grid, row, col, e.key === "ArrowUp" ? "up" : "down", rows, columns);
 
                 if (nextCell) {
                     const [nextRow, nextCol] = nextCell;
 
                     // Find the clue number for the next cell in the "down" orientation
-                    const clueNumber = findClueNumberForCell(nextRow, nextCol, "down");
+                    const clueNumber = findClueNumberForCell(nextRow, nextCol, "down", grid, clueNumbers, rows, columns);
 
                     if (clueNumber) {
                         // Use handleNavigateToClue to update both orientation and active cell
@@ -355,7 +364,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         // Add part of active clue class if this cell is part of the active clue
         else if (
             activeClueNumber &&
-            isPartOfActiveClue(row, col)
+            isPartOfActiveClue(row, col, activeClueNumber, clueOrientation, grid, clueNumbers, rows, columns)
         ) {
             className += " part-of-active-clue";
         }
@@ -374,263 +383,6 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         }
 
         return className;
-    };
-
-    // Helper function to find the next white cell in a given direction
-    const findNextWhiteCell = (
-        row: number,
-        col: number,
-        direction: "left" | "right" | "up" | "down"
-    ): [number, number] | null => {
-        let nextRow = row;
-        let nextCol = col;
-
-        switch (direction) {
-            case "left":
-                nextCol = col - 1;
-                break;
-            case "right":
-                nextCol = col + 1;
-                break;
-            case "up":
-                nextRow = row - 1;
-                break;
-            case "down":
-                nextRow = row + 1;
-                break;
-        }
-
-        // Check if the next position is within bounds and is a white cell
-        if (
-            nextRow >= 0 && nextRow < rows &&
-            nextCol >= 0 && nextCol < columns &&
-            !grid[nextRow][nextCol]
-        ) {
-            return [nextRow, nextCol];
-        }
-
-        return null;
-    };
-
-    // Function to check if a cell is part of the active clue
-    const isPartOfActiveClue = (row: number, col: number): boolean => {
-        if (!activeClueNumber || grid[row][col]) return false;
-
-        // Check if this cell is part of the active clue in the current orientation
-        const clueStartCell = findClueStartCell(activeClueNumber, clueOrientation);
-        if (!clueStartCell) return false;
-
-        const [startRow, startCol] = clueStartCell;
-
-        if (clueOrientation === "across") {
-            // Check if cell is in the same row as the clue start and to the right of it
-            // Stop if we encounter a black cell
-            if (row === startRow && col >= startCol) {
-                // Check all cells from start to current position for black cells
-                for (let c = startCol; c <= col; c++) {
-                    if (grid[row][c]) return false;
-                }
-                return true;
-            }
-        } else {
-            // Check if cell is in the same column as the clue start and below it
-            // Stop if we encounter a black cell
-            if (col === startCol && row >= startRow) {
-                // Check all cells from start to current position for black cells
-                for (let r = startRow; r <= row; r++) {
-                    if (grid[r][col]) return false;
-                }
-                return true;
-            }
-        }
-
-        return false;
-    };
-
-    // Function to find the start cell of a clue
-    const findClueStartCell = (
-        clueNumber: number,
-        orientation: ClueOrientation,
-    ): [number, number] | null => {
-        // Find the cell with the given clue number
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < columns; col++) {
-                if (clueNumbers[row][col] === clueNumber) {
-                    return [row, col];
-                }
-            }
-        }
-        return null;
-    };
-
-    // Function to find the next clue number in the current orientation
-    const findNextClueNumber = (
-        currentClueNumber: number | null,
-        orientation: ClueOrientation
-    ): number | null => {
-        // Get all clue numbers in the current orientation
-        const clueNumberList: number[] = [];
-
-        // Collect all clue numbers from the grid
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < columns; col++) {
-                const number = clueNumbers[row][col];
-                if (number > 0) {
-                    // Check if this cell starts a word in the current orientation
-                    if (orientation === "across") {
-                        if (col === 0 || grid[row][col - 1]) {
-                            clueNumberList.push(number);
-                        }
-                    } else {
-                        if (row === 0 || grid[row - 1][col]) {
-                            clueNumberList.push(number);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Sort the clue numbers
-        clueNumberList.sort((a, b) => a - b);
-
-        // If no current clue number, return the first clue
-        if (!currentClueNumber) {
-            return clueNumberList.length > 0 ? clueNumberList[0] : null;
-        }
-
-        // Find the index of the current clue number
-        const currentIndex = clueNumberList.indexOf(currentClueNumber);
-
-        // If the current clue number is not found, return the first clue
-        if (currentIndex === -1) {
-            return clueNumberList.length > 0 ? clueNumberList[0] : null;
-        }
-
-        // If we're at the last clue, return null to indicate we should switch orientations
-        if (currentIndex === clueNumberList.length - 1) {
-            return null;
-        }
-
-        // Return the next clue number
-        return clueNumberList[currentIndex + 1];
-    };
-
-    // Function to find the previous clue number in the current orientation
-    const findPreviousClueNumber = (
-        currentClueNumber: number | null,
-        orientation: ClueOrientation
-    ): number | null => {
-        // Get all clue numbers in the current orientation
-        const clueNumberList: number[] = [];
-
-        // Collect all clue numbers from the grid
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < columns; col++) {
-                const number = clueNumbers[row][col];
-                if (number > 0) {
-                    // Check if this cell starts a word in the current orientation
-                    if (orientation === "across") {
-                        if (col === 0 || grid[row][col - 1]) {
-                            clueNumberList.push(number);
-                        }
-                    } else {
-                        if (row === 0 || grid[row - 1][col]) {
-                            clueNumberList.push(number);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Sort the clue numbers
-        clueNumberList.sort((a, b) => a - b);
-
-        // If no current clue number, return the last clue
-        if (!currentClueNumber) {
-            return clueNumberList.length > 0 ? clueNumberList[clueNumberList.length - 1] : null;
-        }
-
-        // Find the index of the current clue number
-        const currentIndex = clueNumberList.indexOf(currentClueNumber);
-
-        // If the current clue number is not found, return the last clue
-        if (currentIndex === -1) {
-            return clueNumberList.length > 0 ? clueNumberList[clueNumberList.length - 1] : null;
-        }
-
-        // If we're at the first clue, return null to indicate we should switch orientations
-        if (currentIndex === 0) {
-            return null;
-        }
-
-        // Return the previous clue number
-        return clueNumberList[currentIndex - 1];
-    };
-
-    // Function to find the first empty cell in a clue
-    const findFirstEmptyCellInClue = (
-        clueNumber: number,
-        orientation: ClueOrientation
-    ): [number, number] | null => {
-        const startCell = findClueStartCell(clueNumber, orientation);
-        if (!startCell) return null;
-
-        const [startRow, startCol] = startCell;
-
-        if (orientation === "across") {
-            // For across clues, check cells from left to right
-            for (let col = startCol; col < columns; col++) {
-                // Stop if we hit a black cell
-                if (grid[startRow][col]) break;
-
-                // If this cell is empty, return it
-                if (!letters[startRow][col]) {
-                    return [startRow, col];
-                }
-            }
-        } else {
-            // For down clues, check cells from top to bottom
-            for (let row = startRow; row < rows; row++) {
-                // Stop if we hit a black cell
-                if (grid[row][startCol]) break;
-
-                // If this cell is empty, return it
-                if (!letters[row][startCol]) {
-                    return [row, startCol];
-                }
-            }
-        }
-
-        // If no empty cell found, return the start cell
-        return startCell;
-    };
-
-    // Helper function to find the clue number for a cell in a given orientation
-    const findClueNumberForCell = (
-        row: number,
-        col: number,
-        orientation: ClueOrientation
-    ): number | null => {
-        const clueNumbers = calculateClueNumbers(grid, rows, columns);
-
-        // Find the start of the word in the given orientation
-        let startRow = row;
-        let startCol = col;
-
-        if (orientation === "across") {
-            // For across clues, move left until we hit a black cell or the edge
-            while (startCol > 0 && !grid[startRow][startCol - 1]) {
-                startCol--;
-            }
-        } else {
-            // For down clues, move up until we hit a black cell or the edge
-            while (startRow > 0 && !grid[startRow - 1][startCol]) {
-                startRow--;
-            }
-        }
-
-        // Return the clue number at the start of the word
-        return clueNumbers[startRow][startCol] || null;
     };
 
     // Modify the useEffect to focus the active cell but NOT scroll it into view
@@ -657,17 +409,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         }
     }, [activeCell, grid]);
 
-    // Helper function to find the first valid cell in the grid
-    function findFirstValidCell(grid: boolean[][]): [number, number] {
-        for (let row = 0; row < grid.length; row++) {
-            for (let col = 0; col < grid[row].length; col++) {
-                if (!grid[row][col]) {
-                    return [row, col];
-                }
-            }
-        }
-        return [0, 0]; // Fallback to first cell if no white cells found
-    }
+
 
     // Add effect to prevent viewport scaling on input
     useEffect(() => {
