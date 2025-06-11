@@ -844,6 +844,18 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
             if (onStart) {
               onStart();
             }
+            // Focus on the first valid cell after modal is dismissed
+            requestAnimationFrame(() => {
+              if (crosswordState?.activeCell) {
+                const [row, col] = crosswordState.activeCell;
+                setTimeout(() => {
+                  const cellElement = document.querySelector(`[data-row="${row}"][data-col="${col}"]`) as HTMLElement;
+                  if (cellElement) {
+                    cellElement.focus();
+                  }
+                }, 100); // Slightly longer delay to ensure modal is fully closed
+              }
+            });
           }}
           title={splashTitle || "Ready to Solve?"}
           message={splashDescription || "The timer will start when you begin solving the puzzle."}
