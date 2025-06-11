@@ -15,7 +15,8 @@ import {
   findNextCellInWord,
   findPreviousCellInWord,
   navigateToClueAndCell,
-  handleNextClue
+  handleNextClue,
+  isLastCellInWord
 } from "../utils";
 
 interface CrosswordSolverProps {
@@ -418,7 +419,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           }
         }
 
-        // If the word is now complete (no empty cells), advance to the next clue
+        // If the word is now complete (no empty cells)
         if (isCurrentWordComplete) {
           setCrosswordState({
             ...crosswordState,
@@ -438,12 +439,51 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
             }
           }
 
-          // Always advance to the next clue when the word is complete
-          handleNextClue({
-            crosswordState,
-            setCrosswordState
-          });
-          return;
+          // If we're editing a filled cell in a filled answer, check if we're at the last cell
+          if (!wasEmpty) {
+            // Check if we're at the last cell in the word
+            const isLastCell = isLastCellInWord(
+              crosswordState.grid,
+              row,
+              col,
+              crosswordState.clueOrientation,
+              crosswordState.rows,
+              crosswordState.columns
+            );
+
+            if (isLastCell) {
+              // If it's the last cell, advance to the next clue
+              handleNextClue({
+                crosswordState,
+                setCrosswordState
+              });
+              return;
+            } else {
+              // If not the last cell, move to the next cell in the word
+              const nextCell = findNextCellInWord(
+                crosswordState.grid,
+                row,
+                col,
+                crosswordState.clueOrientation,
+                crosswordState.rows,
+                crosswordState.columns
+              );
+              setCrosswordState({
+                ...crosswordState,
+                letters: newLetters,
+                activeCell: nextCell || [row, col],
+              });
+              setValidatedCells(newValidatedCells);
+              return;
+            }
+          } else {
+            // If we filled an empty cell that completed the word, advance to the next clue
+            handleNextClue({
+              crosswordState,
+              setCrosswordState
+            });
+            return;
+          }
         }
 
         // If not complete and replacing a letter, move to the next cell in the word

@@ -387,6 +387,23 @@ export const findPreviousCellInWord = (
   return null;
 };
 
+export const isLastCellInWord = (
+  grid: boolean[][],
+  row: number,
+  col: number,
+  orientation: "across" | "down",
+  rows: number,
+  columns: number
+): boolean => {
+  if (orientation === "across") {
+    // For across clues, check if the next cell to the right is a black cell or edge
+    return col + 1 >= columns || grid[row][col + 1];
+  } else {
+    // For down clues, check if the next cell below is a black cell or edge
+    return row + 1 >= rows || grid[row + 1][col];
+  }
+};
+
 export interface NavigateToClueAndCellParams {
   clueNumber: number;
   orientation: "across" | "down";
