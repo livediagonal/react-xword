@@ -101,8 +101,6 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                 const nextCell = findNextWhiteCell(row, col, e.key === "ArrowLeft" ? "left" : "right");
 
                 if (nextCell) {
-                    // Calculate clue numbers to find the clue number for the next cell
-                    const clueNumbers = calculateClueNumbers(grid, rows, columns);
                     const [nextRow, nextCol] = nextCell;
 
                     // Find the clue number for the next cell in the "across" orientation
@@ -137,8 +135,6 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
                 const nextCell = findNextWhiteCell(row, col, e.key === "ArrowUp" ? "up" : "down");
 
                 if (nextCell) {
-                    // Calculate clue numbers to find the clue number for the next cell
-                    const clueNumbers = calculateClueNumbers(grid, rows, columns);
                     const [nextRow, nextCol] = nextCell;
 
                     // Find the clue number for the next cell in the "down" orientation

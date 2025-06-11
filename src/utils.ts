@@ -1,4 +1,4 @@
-import { Orientation, PuzPuzzle } from "./types";
+import { PuzPuzzle } from "./types";
 
 export const calculateClueNumbers = (
   grid: boolean[][],

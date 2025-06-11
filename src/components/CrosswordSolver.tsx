@@ -6,7 +6,7 @@ import Modal from "./Modal";
 import "../styles/CrosswordSolver.css";
 import VirtualKeyboard from "./VirtualKeyboard";
 import Toast from "./Toast";
-import { calculateClueNumbers } from '../utils';
+import { calculateClueNumbers } from "../utils";
 
 interface CrosswordSolverProps {
   /** The puzzle data in IPuz format */
@@ -57,15 +57,9 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   splashTitle,
   splashDescription,
 }) => {
-  const [grid, setGrid] = useState<boolean[][]>([]);
-  const [letters, setLetters] = useState<string[][]>([]);
   const [solution, setSolution] = useState<string[][] | null>(null);
   const [validatedCells, setValidatedCells] = useState<(boolean | undefined)[][] | null>(null);
   const [revealedCells, setRevealedCells] = useState<boolean[][]>([]);
-  const [clueNumbers, setClueNumbers] = useState<number[][]>([]);
-  const [activeCell, setActiveCell] = useState<[number, number] | null>(null);
-  const [activeClueNumber, setActiveClueNumber] = useState<number | null>(null);
-  const [activeOrientation, setActiveOrientation] = useState<"across" | "down">("across");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showErrorToast, setShowErrorToast] = useState(false);
@@ -87,12 +81,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   const actionsMenuRef = useRef<HTMLDivElement>(null);
   const actionsToggleRef = useRef<HTMLButtonElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Function to handle touchmove events
-  const handleTouchMove = (e: React.TouchEvent) => {
-    // Prevent default touchmove behavior to stop unwanted scrolling
-    e.preventDefault();
-  };
 
   // Add click outside handler
   useEffect(() => {
@@ -226,34 +214,8 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           .map(() => Array(width).fill(false));
         setRevealedCells(revealedCellsArray);
 
-        // Calculate clue numbers
-        const clueNumbers = calculateClueNumbers(grid, height, width);
-        setClueNumbers(clueNumbers);
-
-        // Set the grid
-        setGrid(grid);
-
-        // Initialize letters array
-        setLetters(Array(height)
-          .fill(0)
-          .map(() => Array(width).fill("")));
-
-        // Find the first valid cell and set it as active
+        // Find the first valid cell (used for initializing crosswordState)
         const firstCell = findFirstValidCell(grid);
-        if (firstCell) {
-          setActiveCell(firstCell);
-        }
-
-        // Set the first clue as active
-        const firstAcrossClue = clues.Across[0]?.[0] ?? null;
-        const firstDownClue = clues.Down[0]?.[0] ?? null;
-        if (firstAcrossClue) {
-          setActiveClueNumber(firstAcrossClue);
-          setActiveOrientation("across");
-        } else if (firstDownClue) {
-          setActiveClueNumber(firstDownClue);
-          setActiveOrientation("down");
-        }
 
         // Process clues
         const processedClues = {
@@ -1137,21 +1099,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     return crosswordState.clues[orientation === "across" ? "Across" : "Down"][clueNumber];
   };
 
-  // Function to get the first clue from each orientation
-  const getFirstClueFromOrientation = (orientation: "across" | "down") => {
-    if (!crosswordState) return null;
-
-    const clues = orientation === "across" ? crosswordState.clues.Across : crosswordState.clues.Down;
-    const firstClueNumber = Object.keys(clues)[0];
-
-    if (!firstClueNumber) return null;
-
-    return {
-      number: parseInt(firstClueNumber),
-      text: clues[parseInt(firstClueNumber)]
-    };
-  };
-
   // Updated function to handle key presses from virtual keyboard
   const handleVirtualKeyPress = (key: string) => {
     if (crosswordState && crosswordState.activeCell) {
@@ -1373,7 +1320,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   ): [number, number] | null => {
     if (!crosswordState) return null;
     const { grid, rows, columns, letters } = crosswordState;
-    const clueNumbers = calculateClueNumbers(grid, rows, columns);
     // Find the start cell of the clue
     const startCell = findClueStartCell(clueNumber, orientation);
     if (!startCell) return null;
