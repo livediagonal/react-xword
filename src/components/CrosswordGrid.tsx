@@ -13,11 +13,11 @@ import {
     handleTabNavigation,
     handleShiftTabNavigation
 } from '../utils';
+import { useCrosswordLetterHandler } from "../hooks/useCrosswordLetterHandler";
 
 export interface CrosswordGridProps {
     crosswordState: CrosswordState;
     setCrosswordState: React.Dispatch<React.SetStateAction<CrosswordState | null>>;
-    onLetterChange: (row: number, col: number, letter: string) => void;
     validatedCells?: (boolean | undefined)[][] | null;
     revealedCells?: boolean[][] | null;
     disabled?: boolean;
@@ -26,7 +26,6 @@ export interface CrosswordGridProps {
 const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     crosswordState,
     setCrosswordState,
-    onLetterChange,
     validatedCells,
     revealedCells,
     disabled = false
@@ -34,6 +33,18 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     const gridRef = useRef<HTMLDivElement>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [cellSize, setCellSize] = useState<number>(32); // default fallback
+
+    // Use the centralized letter handling hook - provide dummy values since CrosswordGrid doesn't handle completion
+    const { handleLetterChange } = useCrosswordLetterHandler({
+        crosswordState,
+        setCrosswordState,
+        validatedCells: validatedCells || null,
+        setValidatedCells: () => { }, // CrosswordGrid doesn't manage this
+        revealedCells: revealedCells || [],
+        solution: null, // CrosswordGrid doesn't handle puzzle completion
+        onPuzzleComplete: () => { }, // Dummy callback
+        onShowError: () => { } // Dummy callback
+    });
 
     // Extract values from crosswordState for easier access
     const {
@@ -212,10 +223,10 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
         // Handle letter input
         if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key)) {
             e.preventDefault();
-            onLetterChange(row, col, e.key.toUpperCase());
+            handleLetterChange(row, col, e.key.toUpperCase());
         } else if (e.key === "Backspace" || e.key === "Delete") {
             e.preventDefault();
-            onLetterChange(row, col, "");
+            handleLetterChange(row, col, "");
         } else if (e.key === "Tab") {
             e.preventDefault();
 

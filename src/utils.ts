@@ -1089,3 +1089,214 @@ export const handleLetterDeletion = (
     setValidatedCells(validatedCells);
   }
 };
+
+/**
+ * CENTRALIZED LETTER HANDLING SYSTEM
+ * 
+ * This system provides reusable letter handling logic that can be used by any component
+ * without requiring prop drilling or tight coupling to specific React components.
+ */
+
+export interface LetterChangeResult {
+  newLetters: string[][];
+  newValidatedCells: (boolean | undefined)[][];
+  newActiveCell: [number, number] | null;
+  actions: Array<{
+    type: 'SET_STATE' | 'HANDLE_NEXT_CLUE' | 'CHECK_COMPLETION' | 'SHOW_ERROR';
+    payload?: any;
+  }>;
+}
+
+export interface LetterChangeInput {
+  grid: boolean[][];
+  letters: string[][];
+  validatedCells: (boolean | undefined)[][] | null;
+  revealedCells: boolean[][];
+  activeClueNumber: number | null;
+  clueOrientation: "across" | "down";
+  rows: number;
+  columns: number;
+  row: number;
+  col: number;
+  letter: string;
+}
+
+/**
+ * CORE LETTER HANDLING LOGIC
+ * 
+ * This is a pure function that handles all letter change logic without React dependencies.
+ * It can be used by any component or even non-React code.
+ * 
+ * @param input - All the input parameters needed for letter handling
+ * @returns Result containing new state and actions to perform
+ */
+export const processLetterChange = (input: LetterChangeInput): LetterChangeResult | null => {
+  const {
+    grid,
+    letters,
+    validatedCells,
+    revealedCells,
+    activeClueNumber,
+    clueOrientation,
+    rows,
+    columns,
+    row,
+    col,
+    letter
+  } = input;
+
+  // Don't allow changes to revealed cells or cells that were validated as correct
+  if (
+    (revealedCells && revealedCells[row] && revealedCells[row][col]) ||
+    (validatedCells && validatedCells[row] && validatedCells[row][col] === true)
+  ) {
+    return null;
+  }
+
+  const newLetters = letters.map(row => [...row]);
+  const wasEmpty = !letters[row][col];
+  newLetters[row][col] = letter;
+
+  // Clear validation state for this cell
+  const newValidatedCells = validatedCells
+    ? validatedCells.map(row => [...row])
+    : Array(rows).fill(0).map(() => Array(columns).fill(undefined));
+  newValidatedCells[row][col] = undefined;
+
+  const actions: LetterChangeResult['actions'] = [];
+  let newActiveCell: [number, number] | null = [row, col];
+
+  if (letter) {
+    // LETTER INPUT: Analyze word and determine navigation
+    const analysis = analyzeCurrentWord(
+      grid,
+      newLetters,
+      row,
+      col,
+      clueOrientation,
+      rows,
+      columns
+    );
+
+    if (analysis.isComplete) {
+      // Add completion check action
+      actions.push({ type: 'CHECK_COMPLETION' });
+
+      // Determine and execute navigation for completed word
+      const decision = determineCompletedWordNavigation(
+        wasEmpty,
+        row,
+        col,
+        clueOrientation,
+        grid,
+        rows,
+        columns
+      );
+
+      switch (decision) {
+        case "next-clue":
+          actions.push({ type: 'HANDLE_NEXT_CLUE' });
+          break;
+        case "next-cell":
+          const nextCell = findNextCellInWord(grid, row, col, clueOrientation, rows, columns);
+          newActiveCell = nextCell || [row, col];
+          break;
+        case "stay":
+        default:
+          newActiveCell = [row, col];
+          break;
+      }
+    } else {
+      // Word is not complete - determine navigation for incomplete word
+      const decision = determineIncompleteWordNavigation(wasEmpty, analysis.nextEmptyCell);
+
+      switch (decision) {
+        case "next-cell":
+          const nextCell = findNextCellInWord(grid, row, col, clueOrientation, rows, columns);
+          newActiveCell = nextCell || [row, col];
+          break;
+        case "next-empty":
+          newActiveCell = analysis.nextEmptyCell || [row, col];
+          break;
+        case "stay":
+        default:
+          newActiveCell = [row, col];
+          break;
+      }
+    }
+  } else {
+    // LETTER DELETION: Handle backspace/delete
+    const currentCellIsEmpty = !letters[row][col];
+
+    if (currentCellIsEmpty) {
+      // If the current cell was already empty, move to previous cell
+      const prevCell = findPreviousCellInWord(grid, row, col, clueOrientation);
+      newActiveCell = prevCell || [row, col];
+
+      if (prevCell) {
+        const clueNumbers = calculateClueNumbers(grid, rows, columns);
+        const [prevRow, prevCol] = prevCell;
+        const clueNumber = clueNumbers[prevRow][prevCol];
+
+        if (clueNumber) {
+          actions.push({
+            type: 'SET_STATE',
+            payload: {
+              activeClueNumber: activeClueNumber || clueNumber,
+              clueOrientation,
+              activeCell: prevCell
+            }
+          });
+        }
+      }
+    } else {
+      // If the current cell had a letter, just clear it and stay in the current cell
+      newActiveCell = [row, col];
+    }
+  }
+
+  return {
+    newLetters,
+    newValidatedCells,
+    newActiveCell,
+    actions
+  };
+};
+
+/**
+ * Helper function to check if a puzzle is complete (all white cells filled)
+ */
+export const isPuzzleComplete = (grid: boolean[][], letters: string[][]): boolean => {
+  for (let row = 0; row < grid.length; row++) {
+    for (let col = 0; col < grid[row].length; col++) {
+      // If it's a white cell and it's empty, puzzle is not complete
+      if (!grid[row][col] && !letters[row][col]) {
+        return false;
+      }
+    }
+  }
+  return true;
+};
+
+/**
+ * Helper function to check if all answers are correct
+ */
+export const areAllAnswersCorrect = (
+  grid: boolean[][],
+  letters: string[][],
+  solution: string[][] | null
+): boolean => {
+  if (!solution) return false;
+
+  for (let row = 0; row < grid.length; row++) {
+    for (let col = 0; col < grid[row].length; col++) {
+      // Check white cells only
+      if (!grid[row][col]) {
+        if (letters[row][col] !== solution[row][col]) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+};

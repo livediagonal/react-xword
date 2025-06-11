@@ -11,19 +11,11 @@ import {
   findFirstValidCell,
   findClueStartCell,
   findFirstEmptyCellInClue,
-  findWordStart,
-  findNextCellInWord,
-  findPreviousCellInWord,
   navigateToClueAndCell,
   handleNextClue,
-  isLastCellInWord,
-  analyzeCurrentWord,
-  determineCompletedWordNavigation,
-  determineIncompleteWordNavigation,
-  executeLetterInputNavigation,
-  handleLetterDeletion,
-  type NavigationParams
+  findWordStart
 } from "../utils";
+import { useCrosswordLetterHandler } from "../hooks/useCrosswordLetterHandler";
 
 interface CrosswordSolverProps {
   /** The puzzle data in IPuz format */
@@ -339,94 +331,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     return () => clearTimeout(timeout);
   }, [crosswordState?.activeClueNumber, crosswordState?.clueOrientation]);
 
-  const handleLetterChange = (row: number, col: number, letter: string) => {
-    if (!crosswordState) return;
-
-    // Don't allow changes to revealed cells or cells that were validated as correct
-    if (
-      (revealedCells && revealedCells[row] && revealedCells[row][col]) ||
-      (validatedCells && validatedCells[row] && validatedCells[row][col] === true)
-    ) {
-      return;
-    }
-
-    const newLetters = [...crosswordState.letters];
-    const wasEmpty = !crosswordState.letters[row][col];
-    newLetters[row][col] = letter;
-
-    // Clear validation state for this cell
-    const newValidatedCells = validatedCells
-      ? validatedCells.map(row => [...row])
-      : Array(crosswordState.rows).fill(0).map(() => Array(crosswordState.columns).fill(undefined));
-    newValidatedCells[row][col] = undefined;
-
-    // Prepare navigation parameters
-    const navParams: NavigationParams = {
-      crosswordState,
-      setCrosswordState,
-      newLetters,
-      validatedCells: newValidatedCells,
-      setValidatedCells,
-      row,
-      col
-    };
-
-    if (letter) {
-      // LETTER INPUT: Analyze word and determine navigation
-      const analysis = analyzeCurrentWord(
-        crosswordState.grid,
-        newLetters,
-        row,
-        col,
-        crosswordState.clueOrientation,
-        crosswordState.rows,
-        crosswordState.columns
-      );
-
-      // Check if the puzzle is complete after this letter
-      if (analysis.isComplete) {
-        // Update state first to check puzzle completion
-        setCrosswordState({
-          ...crosswordState,
-          letters: newLetters,
-          activeCell: [row, col]
-        });
-        setValidatedCells(newValidatedCells);
-
-        const isComplete = isPuzzleFilled();
-        if (isComplete) {
-          const allCorrect = areAllAnswersCorrect();
-          if (allCorrect) {
-            handlePuzzleCompletion();
-          } else {
-            setShowErrorToast(true);
-          }
-        }
-
-        // Determine and execute navigation for completed word
-        const decision = determineCompletedWordNavigation(
-          wasEmpty,
-          row,
-          col,
-          crosswordState.clueOrientation,
-          crosswordState.grid,
-          crosswordState.rows,
-          crosswordState.columns
-        );
-
-        executeLetterInputNavigation(decision, navParams);
-      } else {
-        // Word is not complete - determine navigation for incomplete word
-        const decision = determineIncompleteWordNavigation(wasEmpty, analysis.nextEmptyCell);
-        executeLetterInputNavigation(decision, navParams, analysis);
-      }
-    } else {
-      // LETTER DELETION: Handle backspace/delete
-      const currentCellIsEmpty = !crosswordState.letters[row][col];
-      handleLetterDeletion(currentCellIsEmpty, navParams);
-    }
-  };
-
   // Function to check a single answer
   const checkAnswer = () => {
     console.log('checkAnswer called');
@@ -662,6 +566,18 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     }
   };
 
+  // Use the centralized letter handling hook
+  const { handleLetterChange } = useCrosswordLetterHandler({
+    crosswordState,
+    setCrosswordState,
+    validatedCells,
+    setValidatedCells,
+    revealedCells,
+    solution,
+    onPuzzleComplete: handlePuzzleCompletion,
+    onShowError: () => setShowErrorToast(true)
+  });
+
   // Function to check if we have any metadata to show
   const hasMetadata = () => {
     const metadata = ipuzData.metadata;
@@ -892,7 +808,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
             <CrosswordGrid
               crosswordState={crosswordState}
               setCrosswordState={setCrosswordState}
-              onLetterChange={handleLetterChange}
               validatedCells={validatedCells}
               revealedCells={revealedCells}
               disabled={hasCompleted || isComplete}
@@ -906,7 +821,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
               setCrosswordState={setCrosswordState}
               validatedCells={validatedCells}
               revealedCells={revealedCells}
-              onLetterChange={handleLetterChange}
             />
           )}
         </div>

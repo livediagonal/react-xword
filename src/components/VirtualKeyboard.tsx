@@ -14,22 +14,32 @@ import {
     handleNextClue,
     handlePreviousClue
 } from '../utils';
+import { useCrosswordLetterHandler } from "../hooks/useCrosswordLetterHandler";
 
 interface VirtualKeyboardProps {
     crosswordState: CrosswordState;
     setCrosswordState: React.Dispatch<React.SetStateAction<CrosswordState | null>>;
     validatedCells: (boolean | undefined)[][] | null;
     revealedCells: boolean[][];
-    onLetterChange: (row: number, col: number, letter: string) => void;
 }
 
 const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
     crosswordState,
     setCrosswordState,
     validatedCells,
-    revealedCells,
-    onLetterChange
+    revealedCells
 }) => {
+    // Use the centralized letter handling hook - provide dummy values since VirtualKeyboard doesn't handle completion
+    const { handleLetterChange } = useCrosswordLetterHandler({
+        crosswordState,
+        setCrosswordState,
+        validatedCells,
+        setValidatedCells: () => { }, // VirtualKeyboard doesn't manage this
+        revealedCells,
+        solution: null, // VirtualKeyboard doesn't handle puzzle completion
+        onPuzzleComplete: () => { }, // Dummy callback
+        onShowError: () => { } // Dummy callback
+    });
     // Adjusted rows for better layout
     const rows = [
         ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -41,7 +51,7 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
     const handleVirtualKeyPress = (key: string) => {
         if (crosswordState && crosswordState.activeCell) {
             const [row, col] = crosswordState.activeCell;
-            onLetterChange(row, col, key);
+            handleLetterChange(row, col, key);
         }
     };
 

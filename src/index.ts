@@ -8,3 +8,6 @@ export * from "./types/ipuz";
 
 // Export utilities
 export * from "./utils";
+
+// Export hooks
+export * from "./hooks/useCrosswordLetterHandler";
