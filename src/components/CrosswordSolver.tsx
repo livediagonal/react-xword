@@ -16,7 +16,13 @@ import {
   findPreviousCellInWord,
   navigateToClueAndCell,
   handleNextClue,
-  isLastCellInWord
+  isLastCellInWord,
+  analyzeCurrentWord,
+  determineCompletedWordNavigation,
+  determineIncompleteWordNavigation,
+  executeLetterInputNavigation,
+  handleLetterDeletion,
+  type NavigationParams
 } from "../utils";
 
 interface CrosswordSolverProps {
@@ -334,270 +340,90 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   }, [crosswordState?.activeClueNumber, crosswordState?.clueOrientation]);
 
   const handleLetterChange = (row: number, col: number, letter: string) => {
-    if (crosswordState) {
-      // Don't allow changes to revealed cells or cells that were validated as correct
-      if (
-        (revealedCells && revealedCells[row] && revealedCells[row][col]) ||
-        (validatedCells && validatedCells[row] && validatedCells[row][col] === true)
-      ) {
-        return;
-      }
+    if (!crosswordState) return;
 
-      const newLetters = [...crosswordState.letters];
-      const wasEmpty = !crosswordState.letters[row][col];
-      newLetters[row][col] = letter;
+    // Don't allow changes to revealed cells or cells that were validated as correct
+    if (
+      (revealedCells && revealedCells[row] && revealedCells[row][col]) ||
+      (validatedCells && validatedCells[row] && validatedCells[row][col] === true)
+    ) {
+      return;
+    }
 
-      // Clear validation state for this cell
-      const newValidatedCells = validatedCells ? validatedCells.map(row => [...row]) : Array(crosswordState.rows).fill(0).map(() => Array(crosswordState.columns).fill(undefined));
-      newValidatedCells[row][col] = undefined;
+    const newLetters = [...crosswordState.letters];
+    const wasEmpty = !crosswordState.letters[row][col];
+    newLetters[row][col] = letter;
 
-      if (letter) {
-        // Find the start of the current word
-        const [startRow, startCol] = findWordStart(
-          crosswordState.grid,
-          row,
-          col,
-          crosswordState.clueOrientation === "across"
-        );
+    // Clear validation state for this cell
+    const newValidatedCells = validatedCells
+      ? validatedCells.map(row => [...row])
+      : Array(crosswordState.rows).fill(0).map(() => Array(crosswordState.columns).fill(undefined));
+    newValidatedCells[row][col] = undefined;
 
-        // Check if the current word is complete and find the next empty cell
-        let isCurrentWordComplete = true;
-        let nextEmptyCell: [number, number] | null = null;
-        let foundCurrentCell = false;
-        let emptyCellCount = 0;
-        let wordCells: [number, number][] = [];
+    // Prepare navigation parameters
+    const navParams: NavigationParams = {
+      crosswordState,
+      setCrosswordState,
+      newLetters,
+      validatedCells: newValidatedCells,
+      setValidatedCells,
+      row,
+      col
+    };
 
-        if (crosswordState.clueOrientation === "across") {
-          for (let c = startCol; c < crosswordState.columns; c++) {
-            if (crosswordState.grid[startRow][c]) break;
-            wordCells.push([startRow, c]);
-            if (!newLetters[startRow][c]) {
-              isCurrentWordComplete = false;
-              emptyCellCount++;
-              if (foundCurrentCell) {
-                nextEmptyCell = [startRow, c];
-                break;
-              }
-            }
-            if (startRow === row && c === col) {
-              foundCurrentCell = true;
-            }
-          }
-          if (!nextEmptyCell) {
-            for (let c = startCol; c < col; c++) {
-              if (crosswordState.grid[startRow][c]) break;
-              if (!newLetters[startRow][c]) {
-                nextEmptyCell = [startRow, c];
-                break;
-              }
-            }
-          }
-        } else {
-          for (let r = startRow; r < crosswordState.rows; r++) {
-            if (crosswordState.grid[r][startCol]) break;
-            wordCells.push([r, startCol]);
-            if (!newLetters[r][startCol]) {
-              isCurrentWordComplete = false;
-              emptyCellCount++;
-              if (foundCurrentCell) {
-                nextEmptyCell = [r, startCol];
-                break;
-              }
-            }
-            if (r === row && startCol === col) {
-              foundCurrentCell = true;
-            }
-          }
-          if (!nextEmptyCell) {
-            for (let r = startRow; r < row; r++) {
-              if (crosswordState.grid[r][startCol]) break;
-              if (!newLetters[r][startCol]) {
-                nextEmptyCell = [r, startCol];
-                break;
-              }
-            }
-          }
-        }
+    if (letter) {
+      // LETTER INPUT: Analyze word and determine navigation
+      const analysis = analyzeCurrentWord(
+        crosswordState.grid,
+        newLetters,
+        row,
+        col,
+        crosswordState.clueOrientation,
+        crosswordState.rows,
+        crosswordState.columns
+      );
 
-        // If the word is now complete (no empty cells)
-        if (isCurrentWordComplete) {
-          setCrosswordState({
-            ...crosswordState,
-            letters: newLetters,
-            activeCell: [row, col]
-          });
-          setValidatedCells(newValidatedCells);
-
-          // Check if the puzzle is complete
-          const isComplete = isPuzzleFilled();
-          if (isComplete) {
-            const allCorrect = areAllAnswersCorrect();
-            if (allCorrect) {
-              handlePuzzleCompletion();
-            } else {
-              setShowErrorToast(true);
-            }
-          }
-
-          /**
-           * NAVIGATION BEHAVIOR FOR COMPLETED WORDS:
-           * 
-           * This section handles navigation when a user types a letter that results in a complete word.
-           * There are two distinct scenarios with different desired behaviors:
-           * 
-           * 1. EDITING A FILLED CELL IN A FILLED ANSWER:
-           *    - Example: In "TEST", user replaces 'E' with 'A' to get "TAST"
-           *    - Behavior: Advance to next cell in same word ('S'), unless it's the last cell
-           *    - Only jump to next clue if editing the last cell in the word
-           * 
-           * 2. FILLING AN EMPTY CELL THAT COMPLETES THE WORD:
-           *    - Example: In "TES_", user fills the blank with 'T' to complete "TEST"
-           *    - Behavior: Jump to next clue immediately
-           */
-          if (!wasEmpty) {
-            // SCENARIO 1: Editing a filled cell in a filled answer
-            // Check if we're at the last cell in the word to determine navigation
-            const isLastCell = isLastCellInWord(
-              crosswordState.grid,
-              row,
-              col,
-              crosswordState.clueOrientation,
-              crosswordState.rows,
-              crosswordState.columns
-            );
-
-            if (isLastCell) {
-              // If editing the last cell (e.g., 'T' in "TEST"), advance to the next clue
-              handleNextClue({
-                crosswordState,
-                setCrosswordState
-              });
-              return;
-            } else {
-              // If editing a non-last cell (e.g., 'E' in "TEST"), move to the next cell in same word ('S')
-              // This prevents the annoying behavior of jumping to next clue when editing middle letters
-              const nextCell = findNextCellInWord(
-                crosswordState.grid,
-                row,
-                col,
-                crosswordState.clueOrientation,
-                crosswordState.rows,
-                crosswordState.columns
-              );
-              setCrosswordState({
-                ...crosswordState,
-                letters: newLetters,
-                activeCell: nextCell || [row, col],
-              });
-              setValidatedCells(newValidatedCells);
-              return;
-            }
-          } else {
-            // SCENARIO 2: Filling an empty cell that completed the word
-            // Always advance to the next clue when completing a word by filling an empty cell
-            handleNextClue({
-              crosswordState,
-              setCrosswordState
-            });
-            return;
-          }
-        }
-
-        /**
-         * NAVIGATION BEHAVIOR FOR INCOMPLETE WORDS:
-         * 
-         * When editing a cell in a word that is NOT yet complete (has empty cells),
-         * always move to the next cell in the same word, regardless of whether we're
-         * editing a filled or empty cell.
-         */
-        // If not complete and replacing a letter, move to the next cell in the word
-        if (!wasEmpty) {
-          const nextCell = findNextCellInWord(
-            crosswordState.grid,
-            row,
-            col,
-            crosswordState.clueOrientation,
-            crosswordState.rows,
-            crosswordState.columns
-          );
-          setCrosswordState({
-            ...crosswordState,
-            letters: newLetters,
-            activeCell: nextCell || [row, col],
-          });
-          setValidatedCells(newValidatedCells);
-          return;
-        }
-
-        /**
-         * NAVIGATION BEHAVIOR FOR FILLING EMPTY CELLS IN INCOMPLETE WORDS:
-         * 
-         * When filling an empty cell in a word that still has other empty cells,
-         * jump cyclically to the next empty cell in the same word. This allows
-         * users to efficiently fill in partial answers.
-         */
-        // If not complete and just filled an empty cell, jump cyclically to the next empty cell
-        if (nextEmptyCell) {
-          setCrosswordState({
-            ...crosswordState,
-            letters: newLetters,
-            activeCell: nextEmptyCell,
-          });
-          setValidatedCells(newValidatedCells);
-          return;
-        }
-
-        // Fallback: stay in current cell
+      // Check if the puzzle is complete after this letter
+      if (analysis.isComplete) {
+        // Update state first to check puzzle completion
         setCrosswordState({
           ...crosswordState,
           letters: newLetters,
           activeCell: [row, col]
         });
         setValidatedCells(newValidatedCells);
-      } else {
-        // If deleting (letter is empty)
-        const currentCellIsEmpty = !crosswordState.letters[row][col];
 
-        if (currentCellIsEmpty) {
-          // If the current cell was already empty, move to previous cell
-          const prevCell = findPreviousCellInWord(
-            crosswordState.grid,
-            row,
-            col,
-            crosswordState.clueOrientation
-          );
-
-          setCrosswordState({
-            ...crosswordState,
-            letters: newLetters,
-            activeCell: prevCell || [row, col],
-          });
-          setValidatedCells(newValidatedCells);
-
-          if (prevCell) {
-            const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
-            const [prevRow, prevCol] = prevCell;
-            const clueNumber = clueNumbers[prevRow][prevCol];
-
-            if (clueNumber) {
-              navigateToClueAndCell({
-                clueNumber: crosswordState.activeClueNumber || clueNumber,
-                orientation: crosswordState.clueOrientation,
-                cell: prevCell,
-                crosswordState,
-                setCrosswordState
-              });
-            }
+        const isComplete = isPuzzleFilled();
+        if (isComplete) {
+          const allCorrect = areAllAnswersCorrect();
+          if (allCorrect) {
+            handlePuzzleCompletion();
+          } else {
+            setShowErrorToast(true);
           }
-        } else {
-          // If the current cell had a letter, just clear it and stay in the current cell
-          setCrosswordState({
-            ...crosswordState,
-            letters: newLetters
-          });
-          setValidatedCells(newValidatedCells);
         }
+
+        // Determine and execute navigation for completed word
+        const decision = determineCompletedWordNavigation(
+          wasEmpty,
+          row,
+          col,
+          crosswordState.clueOrientation,
+          crosswordState.grid,
+          crosswordState.rows,
+          crosswordState.columns
+        );
+
+        executeLetterInputNavigation(decision, navParams);
+      } else {
+        // Word is not complete - determine navigation for incomplete word
+        const decision = determineIncompleteWordNavigation(wasEmpty, analysis.nextEmptyCell);
+        executeLetterInputNavigation(decision, navParams, analysis);
       }
+    } else {
+      // LETTER DELETION: Handle backspace/delete
+      const currentCellIsEmpty = !crosswordState.letters[row][col];
+      handleLetterDeletion(currentCellIsEmpty, navParams);
     }
   };
 
