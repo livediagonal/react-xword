@@ -340,3 +340,49 @@ export const findFirstValidCell = (grid: boolean[][]): [number, number] => {
   }
   return [0, 0]; // Fallback to first cell if no white cells found
 };
+
+export const findNextCellInWord = (
+  grid: boolean[][],
+  row: number,
+  col: number,
+  orientation: "across" | "down",
+  rows: number,
+  columns: number
+): [number, number] | null => {
+  if (orientation === "across") {
+    // For across clues, move to the right
+    if (col + 1 < columns && !grid[row][col + 1]) {
+      return [row, col + 1];
+    }
+  } else {
+    // For down clues, move down
+    if (row + 1 < rows && !grid[row + 1][col]) {
+      return [row + 1, col];
+    }
+  }
+
+  // If we're at the end of the word, return null
+  return null;
+};
+
+export const findPreviousCellInWord = (
+  grid: boolean[][],
+  row: number,
+  col: number,
+  orientation: "across" | "down"
+): [number, number] | null => {
+  if (orientation === "across") {
+    // For across clues, move to the left
+    if (col > 0 && !grid[row][col - 1]) {
+      return [row, col - 1];
+    }
+  } else {
+    // For down clues, move up
+    if (row > 0 && !grid[row - 1][col]) {
+      return [row - 1, col];
+    }
+  }
+
+  // If we're at the beginning of the word, return null
+  return null;
+};
