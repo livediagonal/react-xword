@@ -1,24 +1,33 @@
 import React from 'react';
 import '../styles/VirtualKeyboard.css';
+import { CrosswordState } from '../types/crossword';
+import {
+    calculateClueNumbers,
+    findNextClueNumber,
+    findPreviousClueNumber,
+    findClueStartCell,
+    findFirstEmptyCellInClue,
+    findWordStart,
+    findNextCellInWord,
+    findPreviousCellInWord,
+    navigateToClueAndCell,
+    handleNextClue
+} from '../utils';
 
 interface VirtualKeyboardProps {
-    onKeyPress: (key: string) => void;
-    onToggleDirection?: () => void;
-    onNextClue?: () => void;
-    onPrevClue?: () => void;
-    currentDirection?: 'across' | 'down';
-    activeClueNumber?: number | null;
-    activeClueText?: string | null;
+    crosswordState: CrosswordState;
+    setCrosswordState: React.Dispatch<React.SetStateAction<CrosswordState | null>>;
+    validatedCells: (boolean | undefined)[][] | null;
+    revealedCells: boolean[][];
+    onLetterChange: (row: number, col: number, letter: string) => void;
 }
 
 const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
-    onKeyPress,
-    onToggleDirection,
-    onNextClue,
-    onPrevClue,
-    currentDirection = 'across',
-    activeClueNumber,
-    activeClueText
+    crosswordState,
+    setCrosswordState,
+    validatedCells,
+    revealedCells,
+    onLetterChange
 }) => {
     // Adjusted rows for better layout
     const rows = [
@@ -27,15 +36,142 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
         ['', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫', ''],
     ];
 
+    // Function to handle virtual key presses
+    const handleVirtualKeyPress = (key: string) => {
+        if (crosswordState && crosswordState.activeCell) {
+            const [row, col] = crosswordState.activeCell;
+            onLetterChange(row, col, key);
+        }
+    };
+
+    // Function to handle navigating to the next clue
+    const handleNextClueClick = () => {
+        handleNextClue({
+            crosswordState,
+            setCrosswordState
+        });
+    };
+
+    // Function to handle navigating to the previous clue
+    const handlePrevClue = () => {
+        if (!crosswordState) return;
+
+        const currentClueNumber = crosswordState.activeClueNumber;
+        const currentOrientation = crosswordState.clueOrientation;
+        const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
+
+        // Helper function to navigate to a specific clue and cell
+        const navigate = (clueNumber: number, orientation: "across" | "down", cell: [number, number] | null) => {
+            navigateToClueAndCell({
+                clueNumber,
+                orientation,
+                cell,
+                crosswordState,
+                setCrosswordState
+            });
+        };
+
+        // Find the previous clue
+        const prevClueNumber = findPreviousClueNumber(currentClueNumber, currentOrientation, crosswordState.grid, clueNumbers, crosswordState.rows, crosswordState.columns);
+
+        if (prevClueNumber) {
+            // Find the start cell for the previous clue
+            const startCell = findClueStartCell(prevClueNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
+            // Find the first empty cell in the previous clue
+            const firstEmptyCell = findFirstEmptyCellInClue(prevClueNumber, currentOrientation, crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
+            // Navigate to the previous clue
+            navigate(prevClueNumber, currentOrientation, firstEmptyCell || startCell);
+        } else {
+            // If we're at the first clue, switch to the last clue of the other orientation
+            const newOrientation = currentOrientation === "across" ? "down" : "across";
+            const lastClueNumber = findPreviousClueNumber(null, newOrientation, crosswordState.grid, clueNumbers, crosswordState.rows, crosswordState.columns);
+
+            if (lastClueNumber) {
+                const startCell = findClueStartCell(lastClueNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
+                const firstEmptyCell = findFirstEmptyCellInClue(lastClueNumber, newOrientation, crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
+                navigate(lastClueNumber, newOrientation, firstEmptyCell || startCell);
+            }
+        }
+    };
+
+    // Function to handle toggling the direction
+    const handleToggleDirection = () => {
+        if (!crosswordState) return;
+
+        const newOrientation = crosswordState.clueOrientation === "across" ? "down" : "across";
+
+        // Create a new state with the updated orientation
+        const newState: CrosswordState = {
+            ...crosswordState,
+            clueOrientation: newOrientation,
+        };
+
+        // If we have an active cell, find the clue number for the new orientation
+        if (crosswordState.activeCell) {
+            const [row, col] = crosswordState.activeCell;
+
+            // Find the starting cells for both horizontal and vertical words
+            const [horizontalStartRow, horizontalStartCol] = findWordStart(
+                crosswordState.grid,
+                row,
+                col,
+                true,
+            );
+            const [verticalStartRow, verticalStartCol] = findWordStart(
+                crosswordState.grid,
+                row,
+                col,
+                false,
+            );
+
+            // Calculate clue numbers
+            const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
+
+            // Get the clue numbers for both starting cells
+            const horizontalClueNumber =
+                clueNumbers[horizontalStartRow][horizontalStartCol];
+            const verticalClueNumber =
+                clueNumbers[verticalStartRow][verticalStartCol];
+
+            // Always set the active clue number based on the new orientation
+            if (newOrientation === "across" && horizontalClueNumber > 0) {
+                newState.activeClueNumber = horizontalClueNumber;
+            } else if (newOrientation === "down" && verticalClueNumber > 0) {
+                newState.activeClueNumber = verticalClueNumber;
+            } else {
+                // If no clue exists for the new orientation, keep the current orientation
+                // but update the active clue number if possible
+                if (horizontalClueNumber > 0) {
+                    newState.activeClueNumber = horizontalClueNumber;
+                } else if (verticalClueNumber > 0) {
+                    newState.activeClueNumber = verticalClueNumber;
+                } else {
+                    // If no clue exists for this cell, clear the active clue
+                    newState.activeClueNumber = null;
+                }
+            }
+        }
+
+        setCrosswordState(newState);
+    };
+
+    // Function to get the active clue text
+    const getActiveClueText = (orientation: "across" | "down") => {
+        if (!crosswordState || !crosswordState.activeClueNumber) return null;
+
+        const clueNumber = crosswordState.activeClueNumber;
+        return crosswordState.clues[orientation === "across" ? "Across" : "Down"][clueNumber];
+    };
+
     const handleKeyPress = (key: string) => {
         if (key === '⌫') {
             // Handle backspace
-            onKeyPress('');
+            handleVirtualKeyPress('');
         } else if (key === '' || key === ' ') {
             // Ignore spacer keys
             return;
         } else {
-            onKeyPress(key);
+            handleVirtualKeyPress(key);
         }
     };
 
@@ -68,12 +204,14 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
         handleKeyPress(key);
     };
 
+    const activeClueText = crosswordState?.activeClueNumber ? getActiveClueText(crosswordState.clueOrientation) : null;
+
     return (
         <div className="virtual-keyboard">
             <div className="keyboard-controls">
                 <button
                     className="control-button prev-clue"
-                    onClick={onPrevClue}
+                    onClick={handlePrevClue}
                     aria-label="Previous clue"
                     title="Previous clue"
                 >
@@ -83,11 +221,11 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
                 </button>
                 <div
                     className="control-button active-clue"
-                    onClick={onToggleDirection}
+                    onClick={handleToggleDirection}
                     aria-label="Toggle direction"
-                    title={`Switch to ${currentDirection === 'across' ? 'down' : 'across'}`}
+                    title={`Switch to ${crosswordState?.clueOrientation === 'across' ? 'down' : 'across'}`}
                 >
-                    {activeClueNumber && activeClueText ? (
+                    {crosswordState?.activeClueNumber && activeClueText ? (
                         <>
                             <span className="clue-text">{activeClueText}</span>
                         </>
@@ -97,7 +235,7 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
                 </div>
                 <button
                     className="control-button next-clue"
-                    onClick={onNextClue}
+                    onClick={handleNextClueClick}
                     aria-label="Next clue"
                     title="Next clue"
                 >

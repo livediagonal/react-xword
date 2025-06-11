@@ -9,13 +9,13 @@ import Toast from "./Toast";
 import {
   calculateClueNumbers,
   findFirstValidCell,
-  findNextClueNumber,
-  findPreviousClueNumber,
   findClueStartCell,
   findFirstEmptyCellInClue,
   findWordStart,
   findNextCellInWord,
-  findPreviousCellInWord
+  findPreviousCellInWord,
+  navigateToClueAndCell,
+  handleNextClue
 } from "../utils";
 
 interface CrosswordSolverProps {
@@ -439,7 +439,10 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           }
 
           // Always advance to the next clue when the word is complete
-          handleNextClue();
+          handleNextClue({
+            crosswordState,
+            setCrosswordState
+          });
           return;
         }
 
@@ -506,7 +509,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
             const clueNumber = clueNumbers[prevRow][prevCol];
 
             if (clueNumber) {
-              navigateToClueAndCell(
+              navigate(
                 crosswordState.activeClueNumber || clueNumber,
                 crosswordState.clueOrientation,
                 prevCell
@@ -525,93 +528,24 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     }
   };
 
-  const handleClueOrientationChange = (orientation: "across" | "down") => {
-    if (crosswordState) {
-      // Create a new state with the updated orientation
-      const newState: CrosswordState = {
-        ...crosswordState,
-        clueOrientation: orientation,
-      };
-
-      // If we have an active cell, find the clue number for the new orientation
-      if (crosswordState.activeCell) {
-        const [row, col] = crosswordState.activeCell;
-
-        // Find the starting cells for both horizontal and vertical words
-        const [horizontalStartRow, horizontalStartCol] = findWordStart(
-          crosswordState.grid,
-          row,
-          col,
-          true,
-        );
-        const [verticalStartRow, verticalStartCol] = findWordStart(
-          crosswordState.grid,
-          row,
-          col,
-          false,
-        );
-
-        // Calculate clue numbers
-        const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
-
-        // Get the clue numbers for both starting cells
-        const horizontalClueNumber =
-          clueNumbers[horizontalStartRow][horizontalStartCol];
-        const verticalClueNumber =
-          clueNumbers[verticalStartRow][verticalStartCol];
-
-        // Always set the active clue number based on the new orientation
-        if (orientation === "across" && horizontalClueNumber > 0) {
-          newState.activeClueNumber = horizontalClueNumber;
-        } else if (orientation === "down" && verticalClueNumber > 0) {
-          newState.activeClueNumber = verticalClueNumber;
-        } else {
-          // If no clue exists for the new orientation, keep the current orientation
-          // but update the active clue number if possible
-          if (horizontalClueNumber > 0) {
-            newState.activeClueNumber = horizontalClueNumber;
-          } else if (verticalClueNumber > 0) {
-            newState.activeClueNumber = verticalClueNumber;
-          } else {
-            // If no clue exists for this cell, clear the active clue
-            newState.activeClueNumber = null;
-          }
-        }
-      }
-
-      setCrosswordState(newState);
-    }
-  };
-
   // Function to navigate to a specific clue and cell
-  const navigateToClueAndCell = (
+  const navigate = (
     clueNumber: number,
     orientation: "across" | "down",
     cell: [number, number] | null
   ) => {
     if (crosswordState) {
-      // Create a new state with the updated clue number, orientation, and cell
-      const newState: CrosswordState = {
-        ...crosswordState,
-        activeClueNumber: clueNumber,
-        clueOrientation: orientation,
-        activeCell: cell,
-      };
-
-      // Update the state directly
-      setCrosswordState(newState);
-
-      // Reset the automatic navigation flag after a short delay
-      setTimeout(() => {
-        setCrosswordState(prevState => {
-          if (!prevState) return prevState;
-          return {
-            ...prevState,
-          };
-        });
-      }, 100);
+      navigateToClueAndCell({
+        clueNumber,
+        orientation,
+        cell,
+        crosswordState,
+        setCrosswordState
+      });
     }
   };
+
+
 
   // Function to check a single answer
   const checkAnswer = () => {
@@ -837,157 +771,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     return true;
   };
 
-  // Function to get the active clue text
-  const getActiveClueText = (orientation: "across" | "down") => {
-    if (!crosswordState || !crosswordState.activeClueNumber) return null;
-
-    const clueNumber = crosswordState.activeClueNumber;
-    return crosswordState.clues[orientation === "across" ? "Across" : "Down"][clueNumber];
-  };
-
-  // Updated function to handle key presses from virtual keyboard
-  const handleVirtualKeyPress = (key: string) => {
-    if (crosswordState && crosswordState.activeCell) {
-      const [row, col] = crosswordState.activeCell;
-      handleLetterChange(row, col, key);
-    }
-  };
-
-  // Function to handle navigating to the next clue
-  const handleNextClue = () => {
-    if (!crosswordState) return;
-
-    const currentClueNumber = crosswordState.activeClueNumber;
-    const currentOrientation = crosswordState.clueOrientation;
-    const visitedClues = new Set<number>();
-
-    // Helper function to check if a clue has any empty cells
-    const hasEmptyCells = (clueNumber: number, orientation: "across" | "down"): boolean => {
-      const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
-      const startCell = findClueStartCell(clueNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
-      if (!startCell) return false;
-
-      const [startRow, startCol] = startCell;
-      if (orientation === "across") {
-        for (let c = startCol; c < crosswordState.columns; c++) {
-          if (crosswordState.grid[startRow][c]) break; // Stop at black cell
-          if (!crosswordState.letters[startRow][c]) return true;
-        }
-      } else {
-        for (let r = startRow; r < crosswordState.rows; r++) {
-          if (crosswordState.grid[r][startCol]) break; // Stop at black cell
-          if (!crosswordState.letters[r][startCol]) return true;
-        }
-      }
-      return false;
-    };
-
-    // Helper function to find the next clue with empty cells
-    const findNextClueWithEmptyCells = (startClueNumber: number | null, orientation: "across" | "down"): number | null => {
-      const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
-      let nextClueNumber = findNextClueNumber(startClueNumber, orientation, crosswordState.grid, clueNumbers, crosswordState.rows, crosswordState.columns);
-
-      // Keep track of visited clues to prevent infinite loops
-      while (nextClueNumber && !visitedClues.has(nextClueNumber)) {
-        visitedClues.add(nextClueNumber);
-        if (hasEmptyCells(nextClueNumber, orientation)) {
-          return nextClueNumber;
-        }
-        nextClueNumber = findNextClueNumber(nextClueNumber, orientation, crosswordState.grid, clueNumbers, crosswordState.rows, crosswordState.columns);
-      }
-      return null;
-    };
-
-    // First try to find a clue with empty cells in the current orientation
-    let nextClueNumber = findNextClueWithEmptyCells(currentClueNumber, currentOrientation);
-
-    // If no clues with empty cells in current orientation, try the other orientation
-    if (!nextClueNumber) {
-      const otherOrientation = currentOrientation === "across" ? "down" : "across";
-      nextClueNumber = findNextClueWithEmptyCells(null, otherOrientation);
-
-      if (nextClueNumber) {
-        // Found a clue with empty cells in the other orientation
-        const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
-        const startCell = findClueStartCell(nextClueNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
-        const firstEmptyCell = findFirstEmptyCellInClue(nextClueNumber, otherOrientation, crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
-        navigateToClueAndCell(nextClueNumber, otherOrientation, firstEmptyCell || startCell);
-        return;
-      }
-    }
-
-    // If we found a clue with empty cells in the current orientation
-    if (nextClueNumber) {
-      const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
-      const startCell = findClueStartCell(nextClueNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
-      const firstEmptyCell = findFirstEmptyCellInClue(nextClueNumber, currentOrientation, crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
-      navigateToClueAndCell(nextClueNumber, currentOrientation, firstEmptyCell || startCell);
-      return;
-    }
-
-    // If no clues with empty cells found in either orientation, fall back to normal cycling
-    const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
-    nextClueNumber = findNextClueNumber(currentClueNumber, currentOrientation, crosswordState.grid, clueNumbers, crosswordState.rows, crosswordState.columns);
-
-    if (nextClueNumber) {
-      // Find the start cell for the next clue
-      const startCell = findClueStartCell(nextClueNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
-      // Find the first empty cell in the next clue
-      const firstEmptyCell = findFirstEmptyCellInClue(nextClueNumber, currentOrientation, crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
-      // Navigate to the next clue
-      navigateToClueAndCell(nextClueNumber, currentOrientation, firstEmptyCell || startCell);
-    } else {
-      // If we've reached the end of the current orientation's clues, switch to the other orientation
-      const newOrientation = currentOrientation === "across" ? "down" : "across";
-      const firstClueNumber = findNextClueNumber(null, newOrientation, crosswordState.grid, clueNumbers, crosswordState.rows, crosswordState.columns);
-
-      if (firstClueNumber) {
-        const startCell = findClueStartCell(firstClueNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
-        const firstEmptyCell = findFirstEmptyCellInClue(firstClueNumber, newOrientation, crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
-        navigateToClueAndCell(firstClueNumber, newOrientation, firstEmptyCell || startCell);
-      }
-    }
-  };
-
-  // Function to handle navigating to the previous clue
-  const handlePrevClue = () => {
-    if (!crosswordState) return;
-
-    const currentClueNumber = crosswordState.activeClueNumber;
-    const currentOrientation = crosswordState.clueOrientation;
-    const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
-
-    // Find the previous clue
-    const prevClueNumber = findPreviousClueNumber(currentClueNumber, currentOrientation, crosswordState.grid, clueNumbers, crosswordState.rows, crosswordState.columns);
-
-    if (prevClueNumber) {
-      // Find the start cell for the previous clue
-      const startCell = findClueStartCell(prevClueNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
-      // Find the first empty cell in the previous clue
-      const firstEmptyCell = findFirstEmptyCellInClue(prevClueNumber, currentOrientation, crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
-      // Navigate to the previous clue
-      navigateToClueAndCell(prevClueNumber, currentOrientation, firstEmptyCell || startCell);
-    } else {
-      // If we're at the first clue, switch to the last clue of the other orientation
-      const newOrientation = currentOrientation === "across" ? "down" : "across";
-      const lastClueNumber = findPreviousClueNumber(null, newOrientation, crosswordState.grid, clueNumbers, crosswordState.rows, crosswordState.columns);
-
-      if (lastClueNumber) {
-        const startCell = findClueStartCell(lastClueNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
-        const firstEmptyCell = findFirstEmptyCellInClue(lastClueNumber, newOrientation, crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
-        navigateToClueAndCell(lastClueNumber, newOrientation, firstEmptyCell || startCell);
-      }
-    }
-  };
-
-  // Function to handle toggling the direction
-  const handleToggleDirection = () => {
-    if (crosswordState) {
-      const newOrientation = crosswordState.clueOrientation === "across" ? "down" : "across";
-      handleClueOrientationChange(newOrientation);
-    }
-  };
-
   // Function to handle puzzle completion
   const handlePuzzleCompletion = () => {
     setShowErrorToast(false);
@@ -1036,8 +819,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
       );
     }
   }, [isComplete, solution]);
-
-
 
   if (loading) {
     return (
@@ -1112,7 +893,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
                         const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
                         const startCell = findClueStartCell(cellNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
                         const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "across", crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
-                        navigateToClueAndCell(cellNumber, "across", firstEmptyCell || startCell);
+                        navigate(cellNumber, "across", firstEmptyCell || startCell);
                       }}
                     >
                       <span className="solver-clue-number">{number}.</span> {text}
@@ -1140,7 +921,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
                       const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
                       const startCell = findClueStartCell(cellNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
                       const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "down", crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
-                      navigateToClueAndCell(cellNumber, "down", firstEmptyCell || startCell);
+                      navigate(cellNumber, "down", firstEmptyCell || startCell);
                     }}
                   >
                     <span className="solver-clue-number">{number}.</span> {text}
@@ -1227,15 +1008,13 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           </div>
 
           {/* Virtual keyboard for mobile */}
-          {useMobileKeyboard && (
+          {useMobileKeyboard && crosswordState && (
             <VirtualKeyboard
-              onKeyPress={handleVirtualKeyPress}
-              onToggleDirection={handleToggleDirection}
-              onNextClue={handleNextClue}
-              onPrevClue={handlePrevClue}
-              currentDirection={crosswordState?.clueOrientation}
-              activeClueNumber={crosswordState?.activeClueNumber}
-              activeClueText={crosswordState?.activeClueNumber ? getActiveClueText(crosswordState.clueOrientation) : null}
+              crosswordState={crosswordState}
+              setCrosswordState={setCrosswordState}
+              validatedCells={validatedCells}
+              revealedCells={revealedCells}
+              onLetterChange={handleLetterChange}
             />
           )}
         </div>
