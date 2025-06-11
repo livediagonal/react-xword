@@ -566,17 +566,8 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     }
   };
 
-  // Use the centralized letter handling hook
-  const { handleLetterChange } = useCrosswordLetterHandler({
-    crosswordState,
-    setCrosswordState,
-    validatedCells,
-    setValidatedCells,
-    revealedCells,
-    solution,
-    onPuzzleComplete: handlePuzzleCompletion,
-    onShowError: () => setShowErrorToast(true)
-  });
+  // Note: The main CrosswordSolver no longer uses the letter handler hook directly
+  // Child components (CrosswordGrid, VirtualKeyboard) handle letter changes with proper solution/callbacks
 
   // Function to check if we have any metadata to show
   const hasMetadata = () => {
@@ -811,6 +802,9 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
               validatedCells={validatedCells}
               revealedCells={revealedCells}
               disabled={hasCompleted || isComplete}
+              solution={solution}
+              onShowError={() => setShowErrorToast(true)}
+              onPuzzleComplete={handlePuzzleCompletion}
             />
           </div>
 
@@ -821,6 +815,9 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
               setCrosswordState={setCrosswordState}
               validatedCells={validatedCells}
               revealedCells={revealedCells}
+              solution={solution}
+              onShowError={() => setShowErrorToast(true)}
+              onPuzzleComplete={handlePuzzleCompletion}
             />
           )}
         </div>

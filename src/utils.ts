@@ -1167,7 +1167,10 @@ export const processLetterChange = (input: LetterChangeInput): LetterChangeResul
   let newActiveCell: [number, number] | null = [row, col];
 
   if (letter) {
-    // LETTER INPUT: Analyze word and determine navigation
+    // LETTER INPUT: Always check for puzzle completion when entering a letter
+    actions.push({ type: 'CHECK_COMPLETION' });
+
+    // Analyze word and determine navigation
     const analysis = analyzeCurrentWord(
       grid,
       newLetters,
@@ -1179,9 +1182,6 @@ export const processLetterChange = (input: LetterChangeInput): LetterChangeResul
     );
 
     if (analysis.isComplete) {
-      // Add completion check action
-      actions.push({ type: 'CHECK_COMPLETION' });
-
       // Determine and execute navigation for completed word
       const decision = determineCompletedWordNavigation(
         wasEmpty,
@@ -1292,7 +1292,9 @@ export const areAllAnswersCorrect = (
     for (let col = 0; col < grid[row].length; col++) {
       // Check white cells only
       if (!grid[row][col]) {
-        if (letters[row][col] !== solution[row][col]) {
+        const userLetter = letters[row][col].toUpperCase();
+        const solutionLetter = solution[row][col].toUpperCase();
+        if (userLetter !== solutionLetter) {
           return false;
         }
       }

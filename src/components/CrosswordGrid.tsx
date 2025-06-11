@@ -21,6 +21,9 @@ export interface CrosswordGridProps {
     validatedCells?: (boolean | undefined)[][] | null;
     revealedCells?: boolean[][] | null;
     disabled?: boolean;
+    solution?: string[][] | null;
+    onShowError?: () => void;
+    onPuzzleComplete?: () => void;
 }
 
 const CrosswordGrid: React.FC<CrosswordGridProps> = ({
@@ -28,22 +31,25 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     setCrosswordState,
     validatedCells,
     revealedCells,
-    disabled = false
+    disabled = false,
+    solution = null,
+    onShowError,
+    onPuzzleComplete
 }) => {
     const gridRef = useRef<HTMLDivElement>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
     const [cellSize, setCellSize] = useState<number>(32); // default fallback
 
-    // Use the centralized letter handling hook - provide dummy values since CrosswordGrid doesn't handle completion
+    // Use the centralized letter handling hook with actual solution and callbacks
     const { handleLetterChange } = useCrosswordLetterHandler({
         crosswordState,
         setCrosswordState,
         validatedCells: validatedCells || null,
         setValidatedCells: () => { }, // CrosswordGrid doesn't manage this
         revealedCells: revealedCells || [],
-        solution: null, // CrosswordGrid doesn't handle puzzle completion
-        onPuzzleComplete: () => { }, // Dummy callback
-        onShowError: () => { } // Dummy callback
+        solution,
+        onPuzzleComplete: onPuzzleComplete || (() => { }),
+        onShowError: onShowError || (() => { })
     });
 
     // Extract values from crosswordState for easier access

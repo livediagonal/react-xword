@@ -21,24 +21,30 @@ interface VirtualKeyboardProps {
     setCrosswordState: React.Dispatch<React.SetStateAction<CrosswordState | null>>;
     validatedCells: (boolean | undefined)[][] | null;
     revealedCells: boolean[][];
+    solution?: string[][] | null;
+    onShowError?: () => void;
+    onPuzzleComplete?: () => void;
 }
 
 const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
     crosswordState,
     setCrosswordState,
     validatedCells,
-    revealedCells
+    revealedCells,
+    solution = null,
+    onShowError,
+    onPuzzleComplete
 }) => {
-    // Use the centralized letter handling hook - provide dummy values since VirtualKeyboard doesn't handle completion
+    // Use the centralized letter handling hook with actual solution and callbacks
     const { handleLetterChange } = useCrosswordLetterHandler({
         crosswordState,
         setCrosswordState,
         validatedCells,
         setValidatedCells: () => { }, // VirtualKeyboard doesn't manage this
         revealedCells,
-        solution: null, // VirtualKeyboard doesn't handle puzzle completion
-        onPuzzleComplete: () => { }, // Dummy callback
-        onShowError: () => { } // Dummy callback
+        solution,
+        onPuzzleComplete: onPuzzleComplete || (() => { }),
+        onShowError: onShowError || (() => { })
     });
     // Adjusted rows for better layout
     const rows = [
