@@ -51,6 +51,27 @@ export const findWordStart = (
 };
 
 // Navigation utilities
+/**
+ * ENHANCED ARROW NAVIGATION - JUMP THROUGH BLACK SQUARES
+ * 
+ * Finds the next white cell in the specified direction, jumping through any black squares
+ * encountered along the way. This provides fluid arrow navigation that doesn't get stuck
+ * at black squares in the middle of the grid.
+ * 
+ * Navigation behavior:
+ * 1. Start from the current position and move in the specified direction
+ * 2. If we hit a black square (not an edge), continue searching in the same direction
+ * 3. Return the first white square found before reaching the grid edge
+ * 4. Return null only if we reach the edge without finding any white squares
+ * 
+ * @param grid - The crossword grid (true = black cell, false = white cell)
+ * @param row - Starting row position
+ * @param col - Starting column position  
+ * @param direction - Direction to search ("left", "right", "up", "down")
+ * @param rows - Total number of rows in the grid
+ * @param columns - Total number of columns in the grid
+ * @returns [row, col] of next white cell, or null if none found before edge
+ */
 export const findNextWhiteCell = (
   grid: boolean[][],
   row: number,
@@ -62,31 +83,36 @@ export const findNextWhiteCell = (
   let nextRow = row;
   let nextCol = col;
 
-  switch (direction) {
-    case "left":
-      nextCol = col - 1;
-      break;
-    case "right":
-      nextCol = col + 1;
-      break;
-    case "up":
-      nextRow = row - 1;
-      break;
-    case "down":
-      nextRow = row + 1;
-      break;
-  }
+  // Continue searching in the specified direction until we find a white cell or hit the edge
+  while (true) {
+    // Move one step in the specified direction
+    switch (direction) {
+      case "left":
+        nextCol--;
+        break;
+      case "right":
+        nextCol++;
+        break;
+      case "up":
+        nextRow--;
+        break;
+      case "down":
+        nextRow++;
+        break;
+    }
 
-  // Check if the next position is within bounds and is a white cell
-  if (
-    nextRow >= 0 && nextRow < rows &&
-    nextCol >= 0 && nextCol < columns &&
-    !grid[nextRow][nextCol]
-  ) {
-    return [nextRow, nextCol];
-  }
+    // Check if we've reached the edge of the grid
+    if (nextRow < 0 || nextRow >= rows || nextCol < 0 || nextCol >= columns) {
+      return null; // Reached edge without finding a white cell
+    }
 
-  return null;
+    // If we found a white cell, return it
+    if (!grid[nextRow][nextCol]) {
+      return [nextRow, nextCol];
+    }
+
+    // If it's a black cell, continue searching (this implements the "jump through" behavior)
+  }
 };
 
 export const findClueStartCell = (
