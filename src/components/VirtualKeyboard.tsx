@@ -3,14 +3,7 @@ import '../styles/VirtualKeyboard.css';
 import { CrosswordState } from '../types/crossword';
 import {
     calculateClueNumbers,
-    findNextClueNumber,
-    findPreviousClueNumber,
-    findClueStartCell,
-    findFirstEmptyCellInClue,
     findWordStart,
-    findNextCellInWord,
-    findPreviousCellInWord,
-    navigateToClueAndCell,
     handleNextClue,
     handlePreviousClue
 } from '../utils';
