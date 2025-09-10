@@ -158,14 +158,14 @@ interface IPuzPuzzle {
 | Prop              | Type                                | Description |
 |-------------------|-------------------------------------|-------------|
 | `ipuzData`        | `IPuzPuzzle`                        | The puzzle data in IPuz format. |
-| `onComplete`      | `(completionTime: number) => void`  | Called when the puzzle is solved and the success modal is about to be shown. Receives the completion time in seconds. |
+| `onComplete`      | `(completionTime: number, grid: (string \| null)[][]) => void`  | Called when the puzzle is solved and the success modal is about to be shown. Receives the completion time in seconds and the completed grid. |
 | `leftNavElements` | `React.ReactNode`                   | Elements to display in the left side of the actions bar. |
 | `onStart`         | `() => void`                        | Called when the user starts the puzzle (dismisses the splash modal). |
 | `isComplete`      | `boolean`                           | If true, the puzzle is shown as completed and locked. |
 
 ### Completion Hooks
 
-- **onComplete**: Fires when the puzzle is solved and the success modal is about to be shown. Receives the completion time in seconds.
+- **onComplete**: Fires when the puzzle is solved and the success modal is about to be shown. Receives the completion time in seconds and the completed grid where filled cells contain letters and empty/blocked cells are `null`.
 
 ## Examples
 
@@ -178,7 +178,10 @@ interface IPuzPuzzle {
 ```tsx
 <CrosswordSolver 
   ipuzData={puzzle} 
-  onComplete={(time) => console.log(`Completed in ${time} seconds!`)}
+  onComplete={(time, grid) => {
+    console.log(`Completed in ${time} seconds!`);
+    console.log('Final grid:', grid);
+  }}
 />
 ```
 

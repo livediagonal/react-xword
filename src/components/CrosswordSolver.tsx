@@ -23,9 +23,9 @@ interface CrosswordSolverProps {
   /** 
    * Optional callback function that will be called when the puzzle is completed.
    * This fires when the puzzle is solved and the success modal is about to be shown.
-   * The callback receives the completion time in seconds.
+   * The callback receives the completion time in seconds and the completed grid.
    */
-  onComplete?: (completionTime: number) => void;
+  onComplete?: (completionTime: number, grid: (string | null)[][]) => void;
   /**
    * Optional React elements to display in the left side of the actions bar.
    * These elements will be displayed opposite the timer and actions buttons.
@@ -561,8 +561,12 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     setShowConfetti(true);
     setHasCompleted(true);
     setIsTimerRunning(false);
-    if (onComplete) {
-      onComplete(timer);
+    if (onComplete && crosswordState) {
+      // Convert letters grid to (string | null)[][] format
+      const grid: (string | null)[][] = crosswordState.letters.map(row =>
+        row.map(cell => cell === '' ? null : cell)
+      );
+      onComplete(timer, grid);
     }
   };
 
