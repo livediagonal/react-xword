@@ -16,7 +16,7 @@ interface UseCrosswordLetterHandlerProps {
     setValidatedCells: (cells: (boolean | undefined)[][]) => void;
     revealedCells: boolean[][];
     solution: string[][] | null;
-    onPuzzleComplete?: () => void;
+    onPuzzleComplete?: (completedLetters: (string | null)[][]) => void;
     onShowError?: () => void;
 }
 
@@ -102,32 +102,33 @@ export const useCrosswordLetterHandler = ({
             }
         }
 
-        // Update states
+        // Update states first
         setCrosswordState(finalState);
         setValidatedCells(newValidatedCells);
 
-        // Handle completion check
+        // Handle completion check with the updated state
         if (shouldCheckCompletion) {
-            const isComplete = isPuzzleComplete(crosswordState.grid, newLetters);
+            const isComplete = isPuzzleComplete(finalState.grid, newLetters);
             if (isComplete) {
-                const allCorrect = areAllAnswersCorrect(crosswordState.grid, newLetters, solution);
+                const allCorrect = areAllAnswersCorrect(finalState.grid, newLetters, solution);
                 if (allCorrect) {
-                    onPuzzleComplete?.();
+                    // Convert letters to (string | null)[][] format and pass to completion
+                    const completedGrid: (string | null)[][] = newLetters.map(row =>
+                        row.map(cell => cell === '' ? null : cell)
+                    );
+                    onPuzzleComplete!(completedGrid);
                 } else {
                     onShowError?.();
                 }
             }
         }
 
-        // Handle next clue navigation
+        // Handle next clue navigation with the final state
         if (shouldHandleNextClue) {
-            // Use setTimeout to ensure state update happens first
-            setTimeout(() => {
-                handleNextClue({
-                    crosswordState: finalState,
-                    setCrosswordState
-                });
-            }, 0);
+            handleNextClue({
+                crosswordState: finalState,
+                setCrosswordState
+            });
         }
     }, [
         crosswordState,

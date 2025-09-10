@@ -556,17 +556,13 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   };
 
   // Function to handle puzzle completion
-  const handlePuzzleCompletion = () => {
+  const handlePuzzleCompletion = (completedGrid: (string | null)[][]) => {
     setShowErrorToast(false);
     setShowConfetti(true);
     setHasCompleted(true);
     setIsTimerRunning(false);
-    if (onComplete && crosswordState) {
-      // Convert letters grid to (string | null)[][] format
-      const grid: (string | null)[][] = crosswordState.letters.map(row =>
-        row.map(cell => cell === '' ? null : cell)
-      );
-      onComplete(timer, grid);
+    if (onComplete) {
+      onComplete(timer, completedGrid);
     }
   };
 
