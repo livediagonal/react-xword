@@ -13,14 +13,14 @@ import {
   findFirstEmptyCellInClue,
   navigateToClueAndCell,
   handleNextClue,
-  findWordStart
+  findWordStart,
 } from "../utils";
 import { useCrosswordLetterHandler } from "../hooks/useCrosswordLetterHandler";
 
 interface CrosswordSolverProps {
   /** The puzzle data in IPuz format */
   ipuzData: IPuzPuzzle;
-  /** 
+  /**
    * Optional callback function that will be called when the puzzle is completed.
    * This fires when the puzzle is solved and the success modal is about to be shown.
    * The callback receives the completion time in seconds and the completed grid.
@@ -67,7 +67,9 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   splashDescription,
 }) => {
   const [solution, setSolution] = useState<string[][] | null>(null);
-  const [validatedCells, setValidatedCells] = useState<(boolean | undefined)[][] | null>(null);
+  const [validatedCells, setValidatedCells] = useState<
+    (boolean | undefined)[][] | null
+  >(null);
   const [revealedCells, setRevealedCells] = useState<boolean[][]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +80,9 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   const [hasCompleted, setHasCompleted] = useState(false);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const [useMobileKeyboard, setUseMobileKeyboard] = useState(false);
-  const [crosswordState, setCrosswordState] = useState<CrosswordState | null>(null);
+  const [crosswordState, setCrosswordState] = useState<CrosswordState | null>(
+    null,
+  );
   const [timer, setTimer] = useState<number>(0);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -104,9 +108,9 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -118,21 +122,27 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     // Add meta viewport tag to prevent zooming
     const existingViewport = document.querySelector('meta[name="viewport"]');
     if (existingViewport) {
-      existingViewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+      existingViewport.setAttribute(
+        "content",
+        "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no",
+      );
     } else {
-      const viewportMeta = document.createElement('meta');
-      viewportMeta.name = 'viewport';
-      viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
-      document.getElementsByTagName('head')[0].appendChild(viewportMeta);
+      const viewportMeta = document.createElement("meta");
+      viewportMeta.name = "viewport";
+      viewportMeta.content =
+        "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
+      document.getElementsByTagName("head")[0].appendChild(viewportMeta);
     }
   }, []);
 
   // Timer effect
   useEffect(() => {
     if (isTimerRunning) {
-      startTimeRef.current = Date.now() - (timer * 1000); // Account for existing time
+      startTimeRef.current = Date.now() - timer * 1000; // Account for existing time
       timerRef.current = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - (startTimeRef.current || 0)) / 1000);
+        const elapsed = Math.floor(
+          (Date.now() - (startTimeRef.current || 0)) / 1000,
+        );
         setTimer(elapsed);
       }, 100);
     } else if (timerRef.current) {
@@ -151,7 +161,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
   // Load puzzle data only once when component mounts
@@ -163,15 +173,15 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         const { width, height } = dimensions;
 
         // Convert puzzle grid to boolean array
-        const grid = puzzle.map(row =>
-          row.map(cell => {
+        const grid = puzzle.map((row) =>
+          row.map((cell) => {
             // Black squares are represented by '#'
-            if (cell === '#') {
+            if (cell === "#") {
               return true;
             }
             // Everything else (including 0, null, and cells with numbers) is a white square
             return false;
-          })
+          }),
         );
 
         // Process the solution data
@@ -258,7 +268,9 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
             const [row, col] = initialState.activeCell;
             // Add a small delay to ensure the grid is fully rendered before focusing
             setTimeout(() => {
-              const cellElement = document.querySelector(`[data-row="${row}"][data-col="${col}"]`) as HTMLElement;
+              const cellElement = document.querySelector(
+                `[data-row="${row}"][data-col="${col}"]`,
+              ) as HTMLElement;
               if (cellElement) {
                 cellElement.focus();
               }
@@ -288,9 +300,10 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
 
     if (activeClueElement) {
       // Get the appropriate clue list container
-      const clueListRef = crosswordState.clueOrientation === 'across'
-        ? acrossClueListRef.current
-        : downClueListRef.current;
+      const clueListRef =
+        crosswordState.clueOrientation === "across"
+          ? acrossClueListRef.current
+          : downClueListRef.current;
 
       if (clueListRef) {
         // Instead of using scrollIntoView which might scroll the whole page,
@@ -304,10 +317,13 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
 
         if (relativeTop < 0) {
           // Element is above the visible area of the container
-          clueListRef.scrollBy({ top: relativeTop, behavior: 'smooth' });
+          clueListRef.scrollBy({ top: relativeTop, behavior: "smooth" });
         } else if (relativeBottom > containerRect.height) {
           // Element is below the visible area of the container
-          clueListRef.scrollBy({ top: relativeBottom - containerRect.height, behavior: 'smooth' });
+          clueListRef.scrollBy({
+            top: relativeBottom - containerRect.height,
+            behavior: "smooth",
+          });
         }
       }
     }
@@ -317,15 +333,15 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   useEffect(() => {
     if (!crosswordState) return;
 
-    const activeClueEl = document.querySelector('.solver-active-clue');
+    const activeClueEl = document.querySelector(".solver-active-clue");
     if (!activeClueEl) return;
 
     // Add clue-changed class
-    activeClueEl.classList.add('clue-changed');
+    activeClueEl.classList.add("clue-changed");
 
     // Remove the class after animation completes
     const timeout = setTimeout(() => {
-      activeClueEl.classList.remove('clue-changed');
+      activeClueEl.classList.remove("clue-changed");
     }, 1000);
 
     return () => clearTimeout(timeout);
@@ -333,37 +349,49 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
 
   // Function to check a single answer
   const checkAnswer = () => {
-    console.log('checkAnswer called');
+    console.log("checkAnswer called");
     if (!crosswordState || !solution) {
-      console.log('Missing state or solution:', { crosswordState, solution });
+      console.log("Missing state or solution:", { crosswordState, solution });
       return;
     }
 
-    const newValidatedCells = validatedCells ? validatedCells.map(row => [...row]) : Array(crosswordState.rows).fill(0).map(() => Array(crosswordState.columns).fill(undefined));
+    const newValidatedCells = validatedCells
+      ? validatedCells.map((row) => [...row])
+      : Array(crosswordState.rows)
+          .fill(0)
+          .map(() => Array(crosswordState.columns).fill(undefined));
     const newLetters = [...crosswordState.letters];
 
     // Check the current word
     if (crosswordState.activeClueNumber && crosswordState.activeCell) {
       const [row, col] = crosswordState.activeCell;
       const orientation = crosswordState.clueOrientation;
-      console.log('Checking word:', { row, col, orientation });
+      console.log("Checking word:", { row, col, orientation });
 
       // Find the start of the current word
       const [startRow, startCol] = findWordStart(
         crosswordState.grid,
         row,
         col,
-        orientation === "across"
+        orientation === "across",
       );
-      console.log('Word start:', { startRow, startCol });
+      console.log("Word start:", { startRow, startCol });
 
       // Check each cell in the word
       if (orientation === "across") {
         for (let c = startCol; c < crosswordState.columns; c++) {
           if (crosswordState.grid[startRow][c]) break; // Stop at black cell
 
-          const isCorrect = newLetters[startRow][c].toUpperCase() === solution[startRow][c].toUpperCase();
-          console.log('Checking cell:', { row: startRow, col: c, letter: newLetters[startRow][c], solution: solution[startRow][c], isCorrect });
+          const isCorrect =
+            newLetters[startRow][c].toUpperCase() ===
+            solution[startRow][c].toUpperCase();
+          console.log("Checking cell:", {
+            row: startRow,
+            col: c,
+            letter: newLetters[startRow][c],
+            solution: solution[startRow][c],
+            isCorrect,
+          });
           // Mark the cell as validated (true if correct, false if incorrect)
           newValidatedCells[startRow][c] = isCorrect;
         }
@@ -371,15 +399,23 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         for (let r = startRow; r < crosswordState.rows; r++) {
           if (crosswordState.grid[r][startCol]) break; // Stop at black cell
 
-          const isCorrect = newLetters[r][startCol].toUpperCase() === solution[r][startCol].toUpperCase();
-          console.log('Checking cell:', { row: r, col: startCol, letter: newLetters[r][startCol], solution: solution[r][startCol], isCorrect });
+          const isCorrect =
+            newLetters[r][startCol].toUpperCase() ===
+            solution[r][startCol].toUpperCase();
+          console.log("Checking cell:", {
+            row: r,
+            col: startCol,
+            letter: newLetters[r][startCol],
+            solution: solution[r][startCol],
+            isCorrect,
+          });
           // Mark the cell as validated (true if correct, false if incorrect)
           newValidatedCells[r][startCol] = isCorrect;
         }
       }
     }
 
-    console.log('Setting validated cells:', newValidatedCells);
+    console.log("Setting validated cells:", newValidatedCells);
     setValidatedCells(newValidatedCells);
     setIsActionsMenuOpen(false); // Close the actions menu
   };
@@ -388,14 +424,20 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   const checkPuzzle = () => {
     if (!crosswordState || !solution) return;
 
-    const newValidatedCells = validatedCells ? validatedCells.map(row => [...row]) : Array(crosswordState.rows).fill(0).map(() => Array(crosswordState.columns).fill(undefined));
+    const newValidatedCells = validatedCells
+      ? validatedCells.map((row) => [...row])
+      : Array(crosswordState.rows)
+          .fill(0)
+          .map(() => Array(crosswordState.columns).fill(undefined));
     const newLetters = [...crosswordState.letters];
 
     // Check all cells in the puzzle
     for (let row = 0; row < crosswordState.rows; row++) {
       for (let col = 0; col < crosswordState.columns; col++) {
         if (!crosswordState.grid[row][col] && newLetters[row][col]) {
-          const isCorrect = newLetters[row][col].toUpperCase() === solution[row][col].toUpperCase();
+          const isCorrect =
+            newLetters[row][col].toUpperCase() ===
+            solution[row][col].toUpperCase();
           // Mark the cell as validated (true if correct, false if incorrect)
           newValidatedCells[row][col] = isCorrect;
         }
@@ -408,30 +450,34 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
 
   // Function to reveal a single answer
   const revealAnswer = () => {
-    console.log('revealAnswer called');
+    console.log("revealAnswer called");
     if (!crosswordState || !solution) {
-      console.log('Missing state or solution:', { crosswordState, solution });
+      console.log("Missing state or solution:", { crosswordState, solution });
       return;
     }
 
-    const newRevealedCells = revealedCells.map(row => [...row]);
-    const newValidatedCells = validatedCells ? validatedCells.map(row => [...row]) : Array(crosswordState.rows).fill(0).map(() => Array(crosswordState.columns).fill(undefined));
-    const newLetters = crosswordState.letters.map(row => [...row]);
+    const newRevealedCells = revealedCells.map((row) => [...row]);
+    const newValidatedCells = validatedCells
+      ? validatedCells.map((row) => [...row])
+      : Array(crosswordState.rows)
+          .fill(0)
+          .map(() => Array(crosswordState.columns).fill(undefined));
+    const newLetters = crosswordState.letters.map((row) => [...row]);
 
     // Reveal the current word
     if (crosswordState.activeClueNumber && crosswordState.activeCell) {
       const [row, col] = crosswordState.activeCell;
       const orientation = crosswordState.clueOrientation;
-      console.log('Revealing word:', { row, col, orientation });
+      console.log("Revealing word:", { row, col, orientation });
 
       // Find the start of the current word
       const [startRow, startCol] = findWordStart(
         crosswordState.grid,
         row,
         col,
-        orientation === "across"
+        orientation === "across",
       );
-      console.log('Word start:', { startRow, startCol });
+      console.log("Word start:", { startRow, startCol });
 
       // Reveal each cell in the word
       if (orientation === "across") {
@@ -439,8 +485,10 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           if (crosswordState.grid[startRow][c]) break; // Stop at black cell
 
           // Check if the cell already had the correct letter
-          const wasCorrect = crosswordState.letters[startRow][c] &&
-            crosswordState.letters[startRow][c].toUpperCase() === solution[startRow][c].toUpperCase();
+          const wasCorrect =
+            crosswordState.letters[startRow][c] &&
+            crosswordState.letters[startRow][c].toUpperCase() ===
+              solution[startRow][c].toUpperCase();
 
           // Always set the letter to the solution letter
           newLetters[startRow][c] = solution[startRow][c];
@@ -451,15 +499,22 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           if (wasCorrect) {
             newValidatedCells[startRow][c] = true;
           }
-          console.log('Revealing cell:', { row: startRow, col: c, letter: newLetters[startRow][c], wasCorrect });
+          console.log("Revealing cell:", {
+            row: startRow,
+            col: c,
+            letter: newLetters[startRow][c],
+            wasCorrect,
+          });
         }
       } else {
         for (let r = startRow; r < crosswordState.rows; r++) {
           if (crosswordState.grid[r][startCol]) break; // Stop at black cell
 
           // Check if the cell already had the correct letter
-          const wasCorrect = crosswordState.letters[r][startCol] &&
-            crosswordState.letters[r][startCol].toUpperCase() === solution[r][startCol].toUpperCase();
+          const wasCorrect =
+            crosswordState.letters[r][startCol] &&
+            crosswordState.letters[r][startCol].toUpperCase() ===
+              solution[r][startCol].toUpperCase();
 
           // Always set the letter to the solution letter
           newLetters[r][startCol] = solution[r][startCol];
@@ -470,14 +525,19 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           if (wasCorrect) {
             newValidatedCells[r][startCol] = true;
           }
-          console.log('Revealing cell:', { row: r, col: startCol, letter: newLetters[r][startCol], wasCorrect });
+          console.log("Revealing cell:", {
+            row: r,
+            col: startCol,
+            letter: newLetters[r][startCol],
+            wasCorrect,
+          });
         }
       }
     }
 
-    console.log('Setting revealed cells:', newRevealedCells);
-    console.log('Setting validated cells:', newValidatedCells);
-    console.log('Setting letters:', newLetters);
+    console.log("Setting revealed cells:", newRevealedCells);
+    console.log("Setting validated cells:", newValidatedCells);
+    console.log("Setting letters:", newLetters);
     setRevealedCells(newRevealedCells);
     setValidatedCells(newValidatedCells);
     setCrosswordState({
@@ -490,17 +550,23 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   const revealPuzzle = () => {
     if (!crosswordState || !solution) return;
 
-    const newRevealedCells = revealedCells.map(row => [...row]);
-    const newValidatedCells = validatedCells ? validatedCells.map(row => [...row]) : Array(crosswordState.rows).fill(0).map(() => Array(crosswordState.columns).fill(undefined));
-    const newLetters = crosswordState.letters.map(row => [...row]);
+    const newRevealedCells = revealedCells.map((row) => [...row]);
+    const newValidatedCells = validatedCells
+      ? validatedCells.map((row) => [...row])
+      : Array(crosswordState.rows)
+          .fill(0)
+          .map(() => Array(crosswordState.columns).fill(undefined));
+    const newLetters = crosswordState.letters.map((row) => [...row]);
 
     // Reveal all cells in the puzzle
     for (let row = 0; row < crosswordState.rows; row++) {
       for (let col = 0; col < crosswordState.columns; col++) {
         if (!crosswordState.grid[row][col]) {
           // Check if the cell already had the correct letter
-          const wasCorrect = crosswordState.letters[row][col] &&
-            crosswordState.letters[row][col].toUpperCase() === solution[row][col].toUpperCase();
+          const wasCorrect =
+            crosswordState.letters[row][col] &&
+            crosswordState.letters[row][col].toUpperCase() ===
+              solution[row][col].toUpperCase();
 
           // Always set the letter to the solution letter
           newLetters[row][col] = solution[row][col];
@@ -529,7 +595,10 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
 
     for (let row = 0; row < crosswordState.rows; row++) {
       for (let col = 0; col < crosswordState.columns; col++) {
-        if (!crosswordState.grid[row][col] && !crosswordState.letters[row][col]) {
+        if (
+          !crosswordState.grid[row][col] &&
+          !crosswordState.letters[row][col]
+        ) {
           return false;
         }
       }
@@ -572,10 +641,11 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   // Function to check if we have any metadata to show
   const hasMetadata = () => {
     const metadata = ipuzData.metadata;
-    return metadata && (
-      (metadata.title && metadata.title.trim() !== '') ||
-      (metadata.author && metadata.author.trim() !== '') ||
-      (metadata.notes && metadata.notes.trim() !== '')
+    return (
+      metadata &&
+      ((metadata.title && metadata.title.trim() !== "") ||
+        (metadata.author && metadata.author.trim() !== "") ||
+        (metadata.notes && metadata.notes.trim() !== ""))
     );
   };
 
@@ -586,49 +656,39 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
       setHasCompleted(true);
       setShowSplashModal(false); // Hide splash modal if isComplete
       // Do NOT show success modal or confetti, and do NOT call onComplete here
-      setCrosswordState(prevState => {
+      setCrosswordState((prevState) => {
         if (!prevState) return prevState;
-        const newLetters = solution.map(row => [...row]);
+        const newLetters = solution.map((row) => [...row]);
         return {
           ...prevState,
           letters: newLetters,
         };
       });
-      setRevealedCells(prev =>
+      setRevealedCells((prev) =>
         prev && crosswordState
-          ? crosswordState.grid.map(row => row.map(cell => !cell))
-          : prev
+          ? crosswordState.grid.map((row) => row.map((cell) => !cell))
+          : prev,
       );
-      setValidatedCells(prev =>
+      setValidatedCells((prev) =>
         prev && crosswordState
-          ? crosswordState.grid.map(row => row.map(cell => !cell ? true : undefined))
-          : prev
+          ? crosswordState.grid.map((row) =>
+              row.map((cell) => (!cell ? true : undefined)),
+            )
+          : prev,
       );
     }
   }, [isComplete, solution]);
 
   if (loading) {
-    return (
-      <div className="solver-loading">
-        Loading puzzle...
-      </div>
-    );
+    return <div className="solver-loading">Loading puzzle...</div>;
   }
 
   if (error) {
-    return (
-      <div className="solver-error">
-        Error: {error}
-      </div>
-    );
+    return <div className="solver-error">Error: {error}</div>;
   }
 
   if (!crosswordState) {
-    return (
-      <div className="solver-no-data">
-        No puzzle data available
-      </div>
-    );
+    return <div className="solver-no-data">No puzzle data available</div>;
   }
 
   return (
@@ -669,27 +729,46 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
                     <div
                       key={`across-${number}`}
                       id={`across-${number}`}
-                      className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
+                      className={`solver-clue-item ${
+                        crosswordState.activeClueNumber === parseInt(number) &&
                         crosswordState.clueOrientation === "across"
-                        ? "active"
-                        : ""
-                        }`}
+                          ? "active"
+                          : ""
+                      }`}
                       onClick={(e) => {
                         e.preventDefault();
                         const cellNumber = parseInt(number);
-                        const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
-                        const startCell = findClueStartCell(cellNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
-                        const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "across", crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
+                        const clueNumbers = calculateClueNumbers(
+                          crosswordState.grid,
+                          crosswordState.rows,
+                          crosswordState.columns,
+                        );
+                        const startCell = findClueStartCell(
+                          cellNumber,
+                          clueNumbers,
+                          crosswordState.rows,
+                          crosswordState.columns,
+                        );
+                        const firstEmptyCell = findFirstEmptyCellInClue(
+                          cellNumber,
+                          "across",
+                          crosswordState.grid,
+                          crosswordState.letters,
+                          clueNumbers,
+                          crosswordState.rows,
+                          crosswordState.columns,
+                        );
                         navigateToClueAndCell({
                           clueNumber: cellNumber,
                           orientation: "across",
                           cell: firstEmptyCell || startCell,
                           crosswordState,
-                          setCrosswordState
+                          setCrosswordState,
                         });
                       }}
                     >
-                      <span className="solver-clue-number">{number}.</span> {text}
+                      <span className="solver-clue-number">{number}.</span>{" "}
+                      {text}
                     </div>
                   ),
                 )}
@@ -699,33 +778,54 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
             <div className="solver-clue-section">
               <h3>Down</h3>
               <div className="solver-clue-list" ref={downClueListRef}>
-                {Object.entries(crosswordState.clues.Down).map(([number, text]) => (
-                  <div
-                    key={`down-${number}`}
-                    id={`down-${number}`}
-                    className={`solver-clue-item ${crosswordState.activeClueNumber === parseInt(number) &&
-                      crosswordState.clueOrientation === "down"
-                      ? "active"
-                      : ""
+                {Object.entries(crosswordState.clues.Down).map(
+                  ([number, text]) => (
+                    <div
+                      key={`down-${number}`}
+                      id={`down-${number}`}
+                      className={`solver-clue-item ${
+                        crosswordState.activeClueNumber === parseInt(number) &&
+                        crosswordState.clueOrientation === "down"
+                          ? "active"
+                          : ""
                       }`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      const cellNumber = parseInt(number);
-                      const clueNumbers = calculateClueNumbers(crosswordState.grid, crosswordState.rows, crosswordState.columns);
-                      const startCell = findClueStartCell(cellNumber, clueNumbers, crosswordState.rows, crosswordState.columns);
-                      const firstEmptyCell = findFirstEmptyCellInClue(cellNumber, "down", crosswordState.grid, crosswordState.letters, clueNumbers, crosswordState.rows, crosswordState.columns);
-                      navigateToClueAndCell({
-                        clueNumber: cellNumber,
-                        orientation: "down",
-                        cell: firstEmptyCell || startCell,
-                        crosswordState,
-                        setCrosswordState
-                      });
-                    }}
-                  >
-                    <span className="solver-clue-number">{number}.</span> {text}
-                  </div>
-                ))}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const cellNumber = parseInt(number);
+                        const clueNumbers = calculateClueNumbers(
+                          crosswordState.grid,
+                          crosswordState.rows,
+                          crosswordState.columns,
+                        );
+                        const startCell = findClueStartCell(
+                          cellNumber,
+                          clueNumbers,
+                          crosswordState.rows,
+                          crosswordState.columns,
+                        );
+                        const firstEmptyCell = findFirstEmptyCellInClue(
+                          cellNumber,
+                          "down",
+                          crosswordState.grid,
+                          crosswordState.letters,
+                          clueNumbers,
+                          crosswordState.rows,
+                          crosswordState.columns,
+                        );
+                        navigateToClueAndCell({
+                          clueNumber: cellNumber,
+                          orientation: "down",
+                          cell: firstEmptyCell || startCell,
+                          crosswordState,
+                          setCrosswordState,
+                        });
+                      }}
+                    >
+                      <span className="solver-clue-number">{number}.</span>{" "}
+                      {text}
+                    </div>
+                  ),
+                )}
               </div>
             </div>
           </div>
@@ -733,9 +833,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         {/* Main area: actions, grid, keyboard */}
         <div className="solver-main-area">
           <div className="solver-actions">
-            <div className="solver-actions-left">
-              {leftNavElements}
-            </div>
+            <div className="solver-actions-left">{leftNavElements}</div>
             <div className="solver-actions-group">
               <div className="solver-timer">{formatTime(timer)}</div>
               {hasMetadata() && (
@@ -744,7 +842,17 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
                   onClick={() => setShowInfoModal(true)}
                   aria-label="Show puzzle information"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="12" y1="16" x2="12" y2="12"></line>
                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
@@ -757,16 +865,33 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
                 onClick={() => setIsActionsMenuOpen(!isActionsMenuOpen)}
                 aria-label="Toggle actions menu"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
                 </svg>
               </button>
             </div>
-            <div ref={actionsMenuRef} className={`solver-actions-menu ${isActionsMenuOpen ? 'open' : ''}`}>
+            <div
+              ref={actionsMenuRef}
+              className={`solver-actions-menu ${isActionsMenuOpen ? "open" : ""}`}
+            >
               <button
                 className="solver-action-button"
                 onClick={checkAnswer}
-                disabled={!crosswordState?.activeClueNumber || hasCompleted || isComplete}
+                disabled={
+                  !crosswordState?.activeClueNumber ||
+                  hasCompleted ||
+                  isComplete
+                }
               >
                 Check Answer
               </button>
@@ -777,20 +902,28 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
               >
                 Check Puzzle
               </button>
-              {!hideRevealButtons && (<><button
-                className="solver-action-button"
-                onClick={revealAnswer}
-                disabled={!crosswordState?.activeClueNumber || hasCompleted || isComplete}
-              >
-                Reveal Answer
-              </button>
-                <button
-                  className="solver-action-button"
-                  onClick={revealPuzzle}
-                  disabled={hasCompleted || isComplete}
-                >
-                  Reveal Puzzle
-                </button></>)}
+              {!hideRevealButtons && (
+                <>
+                  <button
+                    className="solver-action-button"
+                    onClick={revealAnswer}
+                    disabled={
+                      !crosswordState?.activeClueNumber ||
+                      hasCompleted ||
+                      isComplete
+                    }
+                  >
+                    Reveal Answer
+                  </button>
+                  <button
+                    className="solver-action-button"
+                    onClick={revealPuzzle}
+                    disabled={hasCompleted || isComplete}
+                  >
+                    Reveal Puzzle
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -833,7 +966,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
       />
 
       {/* Splash modal: only show if not isComplete */}
-      {(!isComplete) && (
+      {!isComplete && (
         <Modal
           isOpen={showSplashModal}
           onClose={() => {
@@ -849,7 +982,9 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
               if (crosswordState?.activeCell) {
                 const [row, col] = crosswordState.activeCell;
                 setTimeout(() => {
-                  const cellElement = document.querySelector(`[data-row="${row}"][data-col="${col}"]`) as HTMLElement;
+                  const cellElement = document.querySelector(
+                    `[data-row="${row}"][data-col="${col}"]`,
+                  ) as HTMLElement;
                   if (cellElement) {
                     cellElement.focus();
                   }
@@ -858,7 +993,10 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
             });
           }}
           title={splashTitle || "Ready to Solve?"}
-          message={splashDescription || "The timer will start when you begin solving the puzzle."}
+          message={
+            splashDescription ||
+            "The timer will start when you begin solving the puzzle."
+          }
           type="start"
         />
       )}
