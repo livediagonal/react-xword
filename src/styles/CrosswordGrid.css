@@ -25,7 +25,7 @@ body {
 }
 
 .crossword-grid {
-    font-family: "Franklin Gothic Medium", "ITC Franklin Gothic", Arial, sans-serif;
+    font-family: "Georgia", "Times New Roman", "Noto Serif", serif;
     position: relative;
     width: 100%;
     height: 100%;
@@ -43,7 +43,7 @@ body {
     display: grid;
     width: 100%;
     height: 100%;
-    border: 2px solid #000;
+    border: 3px solid #000;
     gap: 1px;
     padding: 1px;
     background-color: #000;
@@ -65,7 +65,7 @@ body {
     justify-content: center;
     align-items: center;
     font-size: min(4vw, 1.5rem);
-    font-weight: bold;
+    font-weight: 600;
     text-transform: uppercase;
     touch-action: none;
     box-sizing: border-box;
@@ -78,22 +78,23 @@ body {
 
 .cell-number {
     position: absolute;
-    top: 2px;
-    left: 2px;
-    font-size: min(2vw, 0.7rem);
-    font-weight: normal;
+    top: 1px;
+    left: 3px;
+    font-size: min(1.8vw, 0.65rem);
+    font-weight: 600;
     color: #000;
     pointer-events: none;
+    line-height: 1;
 }
 
 .active-cell {
-    background-color: #ffe066;
-    /* Bright yellow highlight for active cell */
+    background-color: #ffda6a;
+    /* Softer golden yellow highlight for active cell */
 }
 
 .part-of-active-clue {
-    background-color: #b3d6f7;
-    /* Lighter blue highlight for rest of clue, matches clue bar */
+    background-color: #cce5ff;
+    /* Softer, lighter blue highlight for rest of clue */
 }
 
 .validated-cell {
@@ -133,8 +134,8 @@ body {
     }
 
     .crossword-cell {
-        font-size: min(7vw, 4rem);
-        font-weight: bold;
+        font-size: min(6.5vw, 3.5rem);
+        font-weight: 600;
         box-sizing: border-box;
     }
 
@@ -147,7 +148,8 @@ body {
     }
 
     .cell-number {
-        font-size: min(2vw, 0.6rem);
+        font-size: min(1.8vw, 0.55rem);
+        font-weight: 600;
     }
 }
 

@@ -1,6 +1,6 @@
-/* Add Franklin Gothic font family */
+/* Add Georgia serif font family for NYT-style appearance */
 .solver-container {
-    font-family: "Franklin Gothic Medium", "ITC Franklin Gothic", Arial, sans-serif;
+    font-family: "Georgia", "Times New Roman", "Noto Serif", serif;
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -329,7 +329,7 @@
 
 /* Additional classes and animations */
 .solver-clue-item.active {
-    background-color: #f0f7ff;
+    background-color: #cce5ff;
     border-left: 3px solid #4a90e2;
 }
 
@@ -348,11 +348,11 @@
 
     0%,
     100% {
-        background-color: #f0f7ff;
+        background-color: #cce5ff;
     }
 
     50% {
-        background-color: #d0e7ff;
+        background-color: #b3d6f7;
     }
 }
 
@@ -535,7 +535,7 @@
 }
 
 .solver-clue-item:hover {
-    background-color: #f0f7ff;
+    background-color: #e6f2ff;
 }
 
 /* Only show clues container on larger screens */
