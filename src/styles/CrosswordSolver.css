@@ -820,8 +820,7 @@
 }
 
 .crossword-grid.disabled {
-    opacity: 0.8;
-    pointer-events: none;
+    /* Allow clicking to navigate and view answers */
 }
 
 .crossword-cell.disabled {

@@ -118,7 +118,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
 
   // Internal implementation of handleCellClick
   const handleCellClick = (row: number, col: number) => {
-    if (disabled) return;
+    // Allow clicking to navigate even when disabled (just no editing)
 
     // Skip if the clicked cell is a black cell
     if (crosswordState.grid[row][col]) {
