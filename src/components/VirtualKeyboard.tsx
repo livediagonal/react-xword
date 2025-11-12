@@ -18,7 +18,7 @@ interface VirtualKeyboardProps {
   revealedCells: boolean[][];
   solution?: string[][] | null;
   onShowError?: () => void;
-  onPuzzleComplete?: () => void;
+  onPuzzleComplete?: (completedGrid: (string | null)[][]) => void;
 }
 
 const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({

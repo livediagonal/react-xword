@@ -22,7 +22,7 @@ export interface CrosswordGridProps {
   disabled?: boolean;
   solution?: string[][] | null;
   onShowError?: () => void;
-  onPuzzleComplete?: () => void;
+  onPuzzleComplete?: (completedGrid: (string | null)[][]) => void;
 }
 
 const CrosswordGrid: React.FC<CrosswordGridProps> = ({
