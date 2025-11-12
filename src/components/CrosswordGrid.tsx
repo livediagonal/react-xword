@@ -4,9 +4,6 @@ import "../styles/CrosswordGrid.css";
 import {
   calculateClueNumbers,
   findNextWhiteCell,
-  findNextClueNumber,
-  findPreviousClueNumber,
-  findFirstEmptyCellInClue,
   findClueNumberForCell,
   isPartOfActiveClue,
   findFirstValidCell,
@@ -292,8 +289,6 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
             "across",
             grid,
             clueNumbers,
-            rows,
-            columns,
           );
 
           if (clueNumber) {
@@ -334,8 +329,6 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
             "down",
             grid,
             clueNumbers,
-            rows,
-            columns,
           );
 
           if (clueNumber) {

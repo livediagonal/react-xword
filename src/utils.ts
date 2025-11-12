@@ -294,8 +294,6 @@ export const findClueNumberForCell = (
   orientation: "across" | "down",
   grid: boolean[][],
   clueNumbers: number[][],
-  rows: number,
-  columns: number,
 ): number | null => {
   // Find the start of the word in the given orientation
   let startRow = row;
@@ -467,7 +465,7 @@ export const navigateToClueAndCell = ({
   cell,
   crosswordState,
   setCrosswordState,
-}: NavigateToClueAndCellParams) => {
+}: NavigateToClueAndCellParams): void => {
   const newState = {
     ...crosswordState,
     activeClueNumber: clueNumber,
@@ -498,7 +496,7 @@ export interface HandleNextClueParams {
 export const handleNextClue = ({
   crosswordState,
   setCrosswordState,
-}: HandleNextClueParams) => {
+}: HandleNextClueParams): void => {
   if (!crosswordState) return;
 
   const currentClueNumber = crosswordState.activeClueNumber;
@@ -753,7 +751,7 @@ export interface HandlePreviousClueParams {
 export const handlePreviousClue = ({
   crosswordState,
   setCrosswordState,
-}: HandlePreviousClueParams) => {
+}: HandlePreviousClueParams): void => {
   if (!crosswordState) return;
 
   const currentClueNumber = crosswordState.activeClueNumber;
@@ -995,7 +993,7 @@ export const handlePreviousClue = ({
  *
  * @param params - Navigation parameters including crossword state and setter
  */
-export const handleTabNavigation = (params: HandleNextClueParams) => {
+export const handleTabNavigation = (params: HandleNextClueParams): void => {
   handleNextClue(params);
 };
 
@@ -1007,7 +1005,9 @@ export const handleTabNavigation = (params: HandleNextClueParams) => {
  *
  * @param params - Navigation parameters including crossword state and setter
  */
-export const handleShiftTabNavigation = (params: HandlePreviousClueParams) => {
+export const handleShiftTabNavigation = (
+  params: HandlePreviousClueParams,
+): void => {
   handlePreviousClue(params);
 };
 
@@ -1057,7 +1057,7 @@ export const analyzeCurrentWord = (
   let nextEmptyCell: [number, number] | null = null;
   let foundCurrentCell = false;
   let emptyCellCount = 0;
-  let wordCells: [number, number][] = [];
+  const wordCells: [number, number][] = [];
 
   if (orientation === "across") {
     for (let c = startCol; c < columns; c++) {
@@ -1218,7 +1218,7 @@ export const executeLetterInputNavigation = (
   decision: "next-clue" | "next-cell" | "next-empty" | "stay",
   params: NavigationParams,
   analysis?: WordAnalysis,
-) => {
+): void => {
   const {
     crosswordState,
     setCrosswordState,
@@ -1245,7 +1245,7 @@ export const executeLetterInputNavigation = (
       });
       break;
 
-    case "next-cell":
+    case "next-cell": {
       const nextCell = findNextCellInWord(
         crosswordState.grid,
         row,
@@ -1261,6 +1261,7 @@ export const executeLetterInputNavigation = (
       });
       setValidatedCells(validatedCells);
       break;
+    }
 
     case "next-empty":
       if (analysis?.nextEmptyCell) {
@@ -1407,7 +1408,7 @@ export const processLetterChange = (
         case "next-clue":
           actions.push({ type: "HANDLE_NEXT_CLUE" });
           break;
-        case "next-cell":
+        case "next-cell": {
           const nextCell = findNextCellInWord(
             grid,
             row,
@@ -1418,6 +1419,7 @@ export const processLetterChange = (
           );
           newActiveCell = nextCell || [row, col];
           break;
+        }
         case "stay":
         default:
           newActiveCell = [row, col];
@@ -1431,7 +1433,7 @@ export const processLetterChange = (
       );
 
       switch (decision) {
-        case "next-cell":
+        case "next-cell": {
           const nextCell = findNextCellInWord(
             grid,
             row,
@@ -1442,6 +1444,7 @@ export const processLetterChange = (
           );
           newActiveCell = nextCell || [row, col];
           break;
+        }
         case "next-empty":
           newActiveCell = analysis.nextEmptyCell || [row, col];
           break;
@@ -1488,8 +1491,6 @@ export const processLetterChange = (
             clueOrientation,
             grid,
             clueNumbers,
-            rows,
-            columns,
           );
 
           if (targetClueNumber) {

@@ -12,10 +12,8 @@ import {
   findClueStartCell,
   findFirstEmptyCellInClue,
   navigateToClueAndCell,
-  handleNextClue,
   findWordStart,
 } from "../utils";
-import { useCrosswordLetterHandler } from "../hooks/useCrosswordLetterHandler";
 
 interface CrosswordSolverProps {
   /** The puzzle data in IPuz format */
@@ -587,41 +585,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
       ...crosswordState,
       letters: newLetters,
     });
-  };
-
-  // Function to check if the puzzle is completely filled
-  const isPuzzleFilled = () => {
-    if (!crosswordState) return false;
-
-    for (let row = 0; row < crosswordState.rows; row++) {
-      for (let col = 0; col < crosswordState.columns; col++) {
-        if (
-          !crosswordState.grid[row][col] &&
-          !crosswordState.letters[row][col]
-        ) {
-          return false;
-        }
-      }
-    }
-    return true;
-  };
-
-  // Function to check if all answers are correct
-  const areAllAnswersCorrect = () => {
-    if (!crosswordState || !solution) return false;
-
-    for (let row = 0; row < crosswordState.rows; row++) {
-      for (let col = 0; col < crosswordState.columns; col++) {
-        if (!crosswordState.grid[row][col]) {
-          const currentLetter = crosswordState.letters[row][col].toUpperCase();
-          const solutionLetter = solution[row][col].toUpperCase();
-          if (currentLetter !== solutionLetter) {
-            return false;
-          }
-        }
-      }
-    }
-    return true;
   };
 
   // Function to handle puzzle completion

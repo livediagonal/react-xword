@@ -4,7 +4,6 @@ import {
   processLetterChange,
   LetterChangeInput,
   handleNextClue,
-  navigateToClueAndCell,
   isPuzzleComplete,
   areAllAnswersCorrect,
 } from "../utils";
@@ -44,7 +43,9 @@ export const useCrosswordLetterHandler = ({
   solution,
   onPuzzleComplete,
   onShowError,
-}: UseCrosswordLetterHandlerProps) => {
+}: UseCrosswordLetterHandlerProps): {
+  handleLetterChange: (row: number, col: number, letter: string) => void;
+} => {
   const handleLetterChange = useCallback(
     (row: number, col: number, letter: string) => {
       if (!crosswordState) return;
