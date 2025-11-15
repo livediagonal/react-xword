@@ -394,7 +394,6 @@
     .solver-grid-container {
         width: 100%;
         max-width: 600px;
-        aspect-ratio: 1 / 1;
         margin: 0;
         padding: 0;
         justify-self: end;

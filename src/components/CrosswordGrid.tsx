@@ -490,62 +490,59 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     };
   }, []);
 
+  // Simplified resize logic - let CSS handle aspect ratio, just read the result
   useEffect(() => {
     function updateSize() {
-      if (!wrapperRef.current) return;
-      const rect = wrapperRef.current.getBoundingClientRect();
+      if (!gridRef.current) return;
+      const rect = gridRef.current.getBoundingClientRect();
       const gap = 1; // px, must match CSS .grid-container gap
       const padding = 1; // px, must match CSS .grid-container padding
-      const totalGapWidth = (columns - 1) * gap;
-      const totalGapHeight = (rows - 1) * gap;
-      const maxCellWidth = Math.floor(
-        (rect.width - totalGapWidth - 2 * padding) / columns,
-      );
-      const maxCellHeight = Math.floor(
-        (rect.height - totalGapHeight - 2 * padding) / rows,
-      );
-      const n = Math.max(16, Math.floor(Math.min(maxCellWidth, maxCellHeight)));
+
+      // Calculate cell size from the rendered grid dimensions
+      // CSS will have already constrained the grid to the correct aspect ratio
+      const availableWidth = rect.width - (columns - 1) * gap - 2 * padding;
+      const availableHeight = rect.height - (rows - 1) * gap - 2 * padding;
+
+      // Take the smaller dimension to ensure cells fit
+      const cellWidth = availableWidth / columns;
+      const cellHeight = availableHeight / rows;
+      const calculatedSize = Math.min(cellWidth, cellHeight);
+
+      // Floor to get whole pixels, with a minimum size
+      const n = Math.max(16, Math.floor(calculatedSize));
       setCellSize(n);
     }
+
+    // Use ResizeObserver for more accurate updates than window resize
+    const resizeObserver = new ResizeObserver(updateSize);
+    if (gridRef.current) {
+      resizeObserver.observe(gridRef.current);
+    }
+
+    // Initial size
     updateSize();
-    window.addEventListener("resize", updateSize);
-    return () => window.removeEventListener("resize", updateSize);
+
+    return () => resizeObserver.disconnect();
   }, [rows, columns]);
 
   // Function to handle cell click is now defined earlier in the component
 
-  // Calculate grid container size to prevent squishing
-  const gap = 1; // px, must match CSS .grid-container gap
-  const padding = 1; // px, must match CSS .grid-container padding
-  const gridWidth = cellSize * columns + (columns - 1) * gap + 2 * padding;
-  const gridHeight = cellSize * rows + (rows - 1) * gap + 2 * padding;
-
   return (
-    <div
-      className="crossword-wrapper"
-      ref={wrapperRef}
-      style={{ width: "100%", height: "100%" }}
-    >
+    <div className="crossword-wrapper" ref={wrapperRef}>
       <div
         ref={gridRef}
         className={`crossword-grid ${disabled ? "disabled completed-puzzle" : ""}`}
         style={{
-          width: gridWidth,
-          height: gridHeight,
-          minWidth: gridWidth,
-          minHeight: gridHeight,
-          maxWidth: gridWidth,
-          maxHeight: gridHeight,
+          // Set CSS custom properties for aspect ratio
+          ["--grid-columns" as string]: columns,
+          ["--grid-rows" as string]: rows,
         }}
       >
         <div
           className="grid-container"
-          ref={gridRef}
           style={{
             gridTemplateColumns: `repeat(${columns}, ${cellSize}px)`,
             gridTemplateRows: `repeat(${rows}, ${cellSize}px)`,
-            width: "100%",
-            height: "100%",
           }}
         >
           {Array.from({ length: rows }, (_, row) =>
