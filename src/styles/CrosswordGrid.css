@@ -125,6 +125,23 @@ body {
     color: #000;
 }
 
+/* Desktop styles - override mobile-first approach */
+@media (min-width: 768px) {
+    .crossword-wrapper {
+        container-type: normal;
+        /* Allow wrapper to grow in both dimensions */
+        width: 100%;
+        height: 100%;
+    }
+
+    .crossword-grid {
+        /* Grow to fill available space, aspect-ratio will constrain appropriately */
+        width: auto;
+        height: 100%;
+        max-width: 100%;
+    }
+}
+
 /* Better touch handling for mobile */
 @media (max-width: 767px) {
     .crossword-wrapper {
