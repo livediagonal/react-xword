@@ -160,7 +160,7 @@ interface IPuzPuzzle {
 | `ipuzData`        | `IPuzPuzzle`                        | The puzzle data in IPuz format. |
 | `onComplete`      | `(completionTime: number, grid: (string \| null)[][]) => void`  | Called when the puzzle is solved and the success modal is about to be shown. Receives the completion time in seconds and the completed grid. |
 | `leftNavElements` | `React.ReactNode`                   | Elements to display in the left side of the actions bar. |
-| `onStart`         | `() => void`                        | Called when the user starts the puzzle (dismisses the splash modal). |
+| `onStart`         | `() => void \| string \| Promise<void \| string>` | Called when the user starts the puzzle (dismisses the splash modal). Can optionally return a timestamp string (e.g., from SQLite's CURRENT_TIMESTAMP) to use as the timer start time. If no timestamp is returned, the timer starts from when the callback completes. |
 | `isComplete`      | `boolean`                           | If true, the puzzle is shown as completed and locked. |
 
 ### Completion Hooks

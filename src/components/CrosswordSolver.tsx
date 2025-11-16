@@ -31,8 +31,10 @@ interface CrosswordSolverProps {
   leftNavElements?: React.ReactNode;
   /**
    * Optional callback function that will be called when the user starts the puzzle (dismisses the splash modal).
+   * Can optionally return a timestamp string (e.g., from SQLite's CURRENT_TIMESTAMP) to be used as the timer start time.
+   * If no timestamp is returned, the timer will start from when the callback completes.
    */
-  onStart?: () => void;
+  onStart?: () => void | string | Promise<void | string>;
   /**
    * If true, the puzzle is shown as completed and locked (no further editing, timer stopped, and success modal shown).
    */
@@ -74,10 +76,10 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   const [crosswordState, setCrosswordState] = useState<CrosswordState | null>(
     null,
   );
-  const [timer, setTimer] = useState<number>(0);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number | null>(null);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [, setTimerTick] = useState(0); // Just to force re-renders
 
   // Refs for clue list containers
   const acrossClueListRef = useRef<HTMLDivElement>(null);
@@ -126,27 +128,29 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     }
   }, []);
 
-  // Timer effect
+  // Timer effect - just triggers re-renders when running
   useEffect(() => {
     if (isTimerRunning) {
-      startTimeRef.current = Date.now() - timer * 1000; // Account for existing time
-      timerRef.current = setInterval(() => {
-        const elapsed = Math.floor(
-          (Date.now() - (startTimeRef.current || 0)) / 1000,
-        );
-        setTimer(elapsed);
+      timerIntervalRef.current = setInterval(() => {
+        setTimerTick((tick) => tick + 1);
       }, 100);
-    } else if (timerRef.current) {
-      clearInterval(timerRef.current);
-      startTimeRef.current = null;
+    } else if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
     }
 
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
       }
     };
-  }, [isTimerRunning, timer]);
+  }, [isTimerRunning]);
+
+  // Calculate current timer value based on start time
+  const getElapsedSeconds = (): number => {
+    if (!startTimeRef.current) return 0;
+    return Math.floor((Date.now() - startTimeRef.current) / 1000);
+  };
 
   // Format time as M:SS
   const formatTime = (seconds: number): string => {
@@ -441,7 +445,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     setHasCompleted(true);
     setIsTimerRunning(false);
     if (onComplete) {
-      onComplete(timer, completedGrid);
+      onComplete(getElapsedSeconds(), completedGrid);
     }
   };
 
@@ -640,7 +644,9 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           <div className="solver-actions">
             <div className="solver-actions-left">{leftNavElements}</div>
             <div className="solver-actions-group">
-              <div className="solver-timer">{formatTime(timer)}</div>
+              <div className="solver-timer">
+                {formatTime(getElapsedSeconds())}
+              </div>
               {hasMetadata() && (
                 <button
                   className="solver-actions-toggle"
@@ -752,14 +758,23 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
       {!isComplete && (
         <Modal
           isOpen={showSplashModal}
-          onClose={() => {
+          onClose={async () => {
             setShowSplashModal(false);
-            if (!isComplete) {
-              setIsTimerRunning(true);
-            }
+
+            let timestampStr: string | void | undefined;
             if (onStart) {
-              onStart();
+              timestampStr = await onStart();
             }
+
+            if (timestampStr) {
+              // Use the returned timestamp as the start time
+              startTimeRef.current = new Date(timestampStr).getTime();
+            } else {
+              // Initialize timer to start from now
+              startTimeRef.current = Date.now();
+            }
+            setIsTimerRunning(true);
+
             // Focus on the first valid cell after modal is dismissed
             requestAnimationFrame(() => {
               if (crosswordState?.activeCell) {
