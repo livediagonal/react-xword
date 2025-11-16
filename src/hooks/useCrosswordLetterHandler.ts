@@ -15,7 +15,6 @@ interface UseCrosswordLetterHandlerProps {
   >;
   validatedCells: (boolean | undefined)[][] | null;
   setValidatedCells: (cells: (boolean | undefined)[][]) => void;
-  revealedCells: boolean[][];
   solution: string[][] | null;
   onPuzzleComplete?: (completedLetters: (string | null)[][]) => void;
   onShowError?: () => void;
@@ -39,7 +38,6 @@ export const useCrosswordLetterHandler = ({
   setCrosswordState,
   validatedCells,
   setValidatedCells,
-  revealedCells,
   solution,
   onPuzzleComplete,
   onShowError,
@@ -55,7 +53,6 @@ export const useCrosswordLetterHandler = ({
         grid: crosswordState.grid,
         letters: crosswordState.letters,
         validatedCells,
-        revealedCells,
         activeClueNumber: crosswordState.activeClueNumber,
         clueOrientation: crosswordState.clueOrientation,
         rows: crosswordState.rows,
@@ -67,7 +64,7 @@ export const useCrosswordLetterHandler = ({
 
       // Process the letter change using the pure function
       const result = processLetterChange(input);
-      if (!result) return; // Change was blocked (e.g., revealed cell)
+      if (!result) return; // Change was blocked
 
       const { newLetters, newValidatedCells, newActiveCell, actions } = result;
 
@@ -143,7 +140,6 @@ export const useCrosswordLetterHandler = ({
       setCrosswordState,
       validatedCells,
       setValidatedCells,
-      revealedCells,
       solution,
       onPuzzleComplete,
       onShowError,

@@ -116,11 +116,6 @@ body {
     color: #f44336;
 }
 
-.revealed-cell {
-    color: #f44336;
-}
-
-.completed-puzzle .revealed-cell,
 .completed-puzzle .validated-cell.incorrect {
     color: #000;
 }

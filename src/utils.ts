@@ -1313,7 +1313,6 @@ export interface LetterChangeInput {
   grid: boolean[][];
   letters: string[][];
   validatedCells: (boolean | undefined)[][] | null;
-  revealedCells: boolean[][];
   activeClueNumber: number | null;
   clueOrientation: "across" | "down";
   rows: number;
@@ -1344,7 +1343,6 @@ export const processLetterChange = (
     grid,
     letters,
     validatedCells,
-    revealedCells,
     activeClueNumber,
     clueOrientation,
     rows,
@@ -1353,14 +1351,6 @@ export const processLetterChange = (
     col,
     letter,
   } = input;
-
-  // Don't allow changes to revealed cells or cells that were validated as correct
-  if (
-    (revealedCells && revealedCells[row] && revealedCells[row][col]) ||
-    (validatedCells && validatedCells[row] && validatedCells[row][col] === true)
-  ) {
-    return null;
-  }
 
   const newLetters = letters.map((row) => [...row]);
   const wasEmpty = !letters[row][col];

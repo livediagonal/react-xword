@@ -34,14 +34,9 @@ interface CrosswordSolverProps {
    */
   onStart?: () => void;
   /**
-   * If true, the puzzle is shown as completed and locked (no further editing, all answers revealed, timer stopped, and success modal shown).
+   * If true, the puzzle is shown as completed and locked (no further editing, timer stopped, and success modal shown).
    */
   isComplete?: boolean;
-
-  /**
-   * If true, the reveal buttons will not be shown.
-   */
-  hideRevealButtons?: boolean;
 
   /**
    * The title to display in the splash modal.
@@ -60,7 +55,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   leftNavElements,
   onStart,
   isComplete,
-  hideRevealButtons,
   splashTitle,
   splashDescription,
 }) => {
@@ -68,7 +62,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   const [validatedCells, setValidatedCells] = useState<
     (boolean | undefined)[][] | null
   >(null);
-  const [revealedCells, setRevealedCells] = useState<boolean[][]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showErrorToast, setShowErrorToast] = useState(false);
@@ -208,16 +201,11 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
         // Set the solution
         setSolution(solutionArray);
 
-        // Initialize validated and revealed cells arrays
+        // Initialize validated cells array
         const validatedCellsArray = Array(height)
           .fill(0)
           .map(() => Array(width).fill(undefined));
         setValidatedCells(validatedCellsArray);
-
-        const revealedCellsArray = Array(height)
-          .fill(0)
-          .map(() => Array(width).fill(false));
-        setRevealedCells(revealedCellsArray);
 
         // Find the first valid cell (used for initializing crosswordState)
         const firstCell = findFirstValidCell(grid);
@@ -446,147 +434,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
     setIsActionsMenuOpen(false); // Close the actions menu
   };
 
-  // Function to reveal a single answer
-  const revealAnswer = () => {
-    console.log("revealAnswer called");
-    if (!crosswordState || !solution) {
-      console.log("Missing state or solution:", { crosswordState, solution });
-      return;
-    }
-
-    const newRevealedCells = revealedCells.map((row) => [...row]);
-    const newValidatedCells = validatedCells
-      ? validatedCells.map((row) => [...row])
-      : Array(crosswordState.rows)
-          .fill(0)
-          .map(() => Array(crosswordState.columns).fill(undefined));
-    const newLetters = crosswordState.letters.map((row) => [...row]);
-
-    // Reveal the current word
-    if (crosswordState.activeClueNumber && crosswordState.activeCell) {
-      const [row, col] = crosswordState.activeCell;
-      const orientation = crosswordState.clueOrientation;
-      console.log("Revealing word:", { row, col, orientation });
-
-      // Find the start of the current word
-      const [startRow, startCol] = findWordStart(
-        crosswordState.grid,
-        row,
-        col,
-        orientation === "across",
-      );
-      console.log("Word start:", { startRow, startCol });
-
-      // Reveal each cell in the word
-      if (orientation === "across") {
-        for (let c = startCol; c < crosswordState.columns; c++) {
-          if (crosswordState.grid[startRow][c]) break; // Stop at black cell
-
-          // Check if the cell already had the correct letter
-          const wasCorrect =
-            crosswordState.letters[startRow][c] &&
-            crosswordState.letters[startRow][c].toUpperCase() ===
-              solution[startRow][c].toUpperCase();
-
-          // Always set the letter to the solution letter
-          newLetters[startRow][c] = solution[startRow][c];
-          // Always mark as revealed
-          newRevealedCells[startRow][c] = true;
-
-          // Only mark as validated if it was already correct
-          if (wasCorrect) {
-            newValidatedCells[startRow][c] = true;
-          }
-          console.log("Revealing cell:", {
-            row: startRow,
-            col: c,
-            letter: newLetters[startRow][c],
-            wasCorrect,
-          });
-        }
-      } else {
-        for (let r = startRow; r < crosswordState.rows; r++) {
-          if (crosswordState.grid[r][startCol]) break; // Stop at black cell
-
-          // Check if the cell already had the correct letter
-          const wasCorrect =
-            crosswordState.letters[r][startCol] &&
-            crosswordState.letters[r][startCol].toUpperCase() ===
-              solution[r][startCol].toUpperCase();
-
-          // Always set the letter to the solution letter
-          newLetters[r][startCol] = solution[r][startCol];
-          // Always mark as revealed
-          newRevealedCells[r][startCol] = true;
-
-          // Only mark as validated if it was already correct
-          if (wasCorrect) {
-            newValidatedCells[r][startCol] = true;
-          }
-          console.log("Revealing cell:", {
-            row: r,
-            col: startCol,
-            letter: newLetters[r][startCol],
-            wasCorrect,
-          });
-        }
-      }
-    }
-
-    console.log("Setting revealed cells:", newRevealedCells);
-    console.log("Setting validated cells:", newValidatedCells);
-    console.log("Setting letters:", newLetters);
-    setRevealedCells(newRevealedCells);
-    setValidatedCells(newValidatedCells);
-    setCrosswordState({
-      ...crosswordState,
-      letters: newLetters,
-    });
-  };
-
-  // Function to reveal the entire puzzle
-  const revealPuzzle = () => {
-    if (!crosswordState || !solution) return;
-
-    const newRevealedCells = revealedCells.map((row) => [...row]);
-    const newValidatedCells = validatedCells
-      ? validatedCells.map((row) => [...row])
-      : Array(crosswordState.rows)
-          .fill(0)
-          .map(() => Array(crosswordState.columns).fill(undefined));
-    const newLetters = crosswordState.letters.map((row) => [...row]);
-
-    // Reveal all cells in the puzzle
-    for (let row = 0; row < crosswordState.rows; row++) {
-      for (let col = 0; col < crosswordState.columns; col++) {
-        if (!crosswordState.grid[row][col]) {
-          // Check if the cell already had the correct letter
-          const wasCorrect =
-            crosswordState.letters[row][col] &&
-            crosswordState.letters[row][col].toUpperCase() ===
-              solution[row][col].toUpperCase();
-
-          // Always set the letter to the solution letter
-          newLetters[row][col] = solution[row][col];
-          // Always mark as revealed
-          newRevealedCells[row][col] = true;
-
-          // Only mark as validated if it was already correct
-          if (wasCorrect) {
-            newValidatedCells[row][col] = true;
-          }
-        }
-      }
-    }
-
-    setRevealedCells(newRevealedCells);
-    setValidatedCells(newValidatedCells);
-    setCrosswordState({
-      ...crosswordState,
-      letters: newLetters,
-    });
-  };
-
   // Function to handle puzzle completion
   const handlePuzzleCompletion = (completedGrid: (string | null)[][]) => {
     setShowErrorToast(false);
@@ -627,11 +474,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
           letters: newLetters,
         };
       });
-      setRevealedCells((prev) =>
-        prev && crosswordState
-          ? crosswordState.grid.map((row) => row.map((cell) => !cell))
-          : prev,
-      );
       setValidatedCells((prev) =>
         prev && crosswordState
           ? crosswordState.grid.map((row) =>
@@ -865,28 +707,6 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
               >
                 Check Puzzle
               </button>
-              {!hideRevealButtons && (
-                <>
-                  <button
-                    className="solver-action-button"
-                    onClick={revealAnswer}
-                    disabled={
-                      !crosswordState?.activeClueNumber ||
-                      hasCompleted ||
-                      isComplete
-                    }
-                  >
-                    Reveal Answer
-                  </button>
-                  <button
-                    className="solver-action-button"
-                    onClick={revealPuzzle}
-                    disabled={hasCompleted || isComplete}
-                  >
-                    Reveal Puzzle
-                  </button>
-                </>
-              )}
             </div>
           </div>
 
@@ -896,7 +716,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
               crosswordState={crosswordState}
               setCrosswordState={setCrosswordState}
               validatedCells={validatedCells}
-              revealedCells={revealedCells}
+              setValidatedCells={setValidatedCells}
               disabled={hasCompleted || isComplete}
               solution={solution}
               onShowError={() => setShowErrorToast(true)}
@@ -910,7 +730,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
               crosswordState={crosswordState}
               setCrosswordState={setCrosswordState}
               validatedCells={validatedCells}
-              revealedCells={revealedCells}
+              setValidatedCells={setValidatedCells}
               solution={solution}
               onShowError={() => setShowErrorToast(true)}
               onPuzzleComplete={handlePuzzleCompletion}

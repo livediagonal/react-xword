@@ -18,7 +18,9 @@ export interface CrosswordGridProps {
     React.SetStateAction<CrosswordState | null>
   >;
   validatedCells?: (boolean | undefined)[][] | null;
-  revealedCells?: boolean[][] | null;
+  setValidatedCells?: React.Dispatch<
+    React.SetStateAction<(boolean | undefined)[][] | null>
+  >;
   disabled?: boolean;
   solution?: string[][] | null;
   onShowError?: () => void;
@@ -29,7 +31,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
   crosswordState,
   setCrosswordState,
   validatedCells,
-  revealedCells,
+  setValidatedCells,
   disabled = false,
   solution = null,
   onShowError,
@@ -44,8 +46,7 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
     crosswordState,
     setCrosswordState,
     validatedCells: validatedCells || null,
-    setValidatedCells: () => {}, // CrosswordGrid doesn't manage this
-    revealedCells: revealedCells || [],
+    setValidatedCells: setValidatedCells || (() => {}),
     solution,
     onPuzzleComplete: onPuzzleComplete || (() => {}),
     onShowError: onShowError || (() => {}),
@@ -436,11 +437,6 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
       if (!validatedCells[row][col]) {
         className += " incorrect";
       }
-    }
-
-    // Add revealed class if this cell has been revealed
-    if (revealedCells && revealedCells[row] && revealedCells[row][col]) {
-      className += " revealed-cell";
     }
 
     return className;

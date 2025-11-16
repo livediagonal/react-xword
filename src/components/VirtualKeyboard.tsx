@@ -15,7 +15,9 @@ interface VirtualKeyboardProps {
     React.SetStateAction<CrosswordState | null>
   >;
   validatedCells: (boolean | undefined)[][] | null;
-  revealedCells: boolean[][];
+  setValidatedCells?: React.Dispatch<
+    React.SetStateAction<(boolean | undefined)[][] | null>
+  >;
   solution?: string[][] | null;
   onShowError?: () => void;
   onPuzzleComplete?: (completedGrid: (string | null)[][]) => void;
@@ -25,7 +27,7 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
   crosswordState,
   setCrosswordState,
   validatedCells,
-  revealedCells,
+  setValidatedCells,
   solution = null,
   onShowError,
   onPuzzleComplete,
@@ -35,8 +37,7 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
     crosswordState,
     setCrosswordState,
     validatedCells,
-    setValidatedCells: () => {}, // VirtualKeyboard doesn't manage this
-    revealedCells,
+    setValidatedCells: setValidatedCells || (() => {}),
     solution,
     onPuzzleComplete: onPuzzleComplete || (() => {}),
     onShowError: onShowError || (() => {}),
