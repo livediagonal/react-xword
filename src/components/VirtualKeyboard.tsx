@@ -289,7 +289,7 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
               key={`${key}-${keyIndex}`}
               className="keyboard-key"
               onClick={() => handleKeyPress(key)}
-              onTouchStart={(e) => handleTouchStart(e, key)}
+              onTouchStart={handleTouchStart}
               onTouchEnd={(e) => handleTouchEnd(e, key)}
               onTouchCancel={(e) =>
                 e.currentTarget.classList.remove("key-active")

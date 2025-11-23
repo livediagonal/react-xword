@@ -51,7 +51,7 @@ interface CrosswordSolverProps {
   splashDescription?: string | React.ReactNode;
 
   /**
-   * If true, enables dark mode styling for the crossword solver.
+   * If true, enables dark mode styling for the crossword solver. Defaults to true.
    */
   darkMode?: boolean;
 }
@@ -64,8 +64,17 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   isComplete,
   splashTitle,
   splashDescription,
-  darkMode = false,
+  darkMode: initialDarkMode = true,
 }) => {
+  // Initialize dark mode from localStorage or prop
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    const stored = localStorage.getItem("xword-dark-mode");
+    if (stored !== null) {
+      return stored === "true";
+    }
+    return initialDarkMode;
+  });
+
   const [solution, setSolution] = useState<string[][] | null>(null);
   const [validatedCells, setValidatedCells] = useState<
     (boolean | undefined)[][] | null
@@ -75,6 +84,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   const [showErrorToast, setShowErrorToast] = useState(false);
   const [showSplashModal, setShowSplashModal] = useState(true);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [hasCompleted, setHasCompleted] = useState(false);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
@@ -93,6 +103,16 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   const actionsMenuRef = useRef<HTMLDivElement>(null);
   const actionsToggleRef = useRef<HTMLButtonElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Persist dark mode preference to localStorage
+  useEffect(() => {
+    localStorage.setItem("xword-dark-mode", String(isDarkMode));
+  }, [isDarkMode]);
+
+  // Toggle dark mode handler
+  const toggleDarkMode = () => {
+    setIsDarkMode((prev) => !prev);
+  };
 
   // Add click outside handler
   useEffect(() => {
@@ -508,7 +528,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
 
   return (
     <div
-      className={`solver-container ${darkMode ? "dark-mode" : ""}`}
+      className={`solver-container ${isDarkMode ? "dark-mode" : ""}`}
       ref={containerRef}
     >
       {showConfetti && (
@@ -680,6 +700,26 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
                 </button>
               )}
               <button
+                className="solver-actions-toggle"
+                onClick={() => setShowSettingsModal(true)}
+                aria-label="Settings"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+              <button
                 ref={actionsToggleRef}
                 className="solver-actions-toggle"
                 onClick={() => setIsActionsMenuOpen(!isActionsMenuOpen)}
@@ -829,6 +869,28 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
                 <strong>Notes:</strong> {ipuzData.metadata.notes}
               </div>
             )}
+          </div>
+        }
+        type="info"
+      />
+
+      <Modal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        title="Settings"
+        message={
+          <div className="settings-content">
+            <div className="setting-item">
+              <label className="setting-label">
+                <span>Dark Mode</span>
+                <input
+                  type="checkbox"
+                  checked={isDarkMode}
+                  onChange={toggleDarkMode}
+                  className="dark-mode-toggle"
+                />
+              </label>
+            </div>
           </div>
         }
         type="info"
