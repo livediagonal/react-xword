@@ -300,7 +300,11 @@ export const findNextNumericClue = (
   clueNumbers: number[][],
   rows: number,
   columns: number,
-): { clueNumber: number; orientation: "across" | "down"; cell: [number, number] } | null => {
+): {
+  clueNumber: number;
+  orientation: "across" | "down";
+  cell: [number, number];
+} | null => {
   // Try to find next clue in current orientation
   const nextInSameOrientation = findNextClueNumber(
     currentClueNumber,
@@ -377,7 +381,11 @@ export const findPreviousNumericClue = (
   clueNumbers: number[][],
   rows: number,
   columns: number,
-): { clueNumber: number; orientation: "across" | "down"; cell: [number, number] } | null => {
+): {
+  clueNumber: number;
+  orientation: "across" | "down";
+  cell: [number, number];
+} | null => {
   // Try to find previous clue in current orientation
   const prevInSameOrientation = findPreviousClueNumber(
     currentClueNumber,
@@ -390,7 +398,12 @@ export const findPreviousNumericClue = (
 
   if (prevInSameOrientation !== null) {
     // Found previous clue in same orientation - find its last cell
-    const startCell = findClueStartCell(prevInSameOrientation, clueNumbers, rows, columns);
+    const startCell = findClueStartCell(
+      prevInSameOrientation,
+      clueNumbers,
+      rows,
+      columns,
+    );
     if (startCell) {
       const [startRow, startCol] = startCell;
       let lastRow = startRow;
@@ -430,7 +443,12 @@ export const findPreviousNumericClue = (
   );
 
   if (lastInNewOrientation !== null) {
-    const startCell = findClueStartCell(lastInNewOrientation, clueNumbers, rows, columns);
+    const startCell = findClueStartCell(
+      lastInNewOrientation,
+      clueNumbers,
+      rows,
+      columns,
+    );
     if (startCell) {
       const [startRow, startCol] = startCell;
       let lastRow = startRow;
@@ -1297,38 +1315,6 @@ export const analyzeCurrentWord = (
 };
 
 /**
- * Determines where to navigate after typing a letter in a completed word.
- *
- * @param wasEmpty - Whether the cell was empty before typing
- * @param row - Current cell row
- * @param col - Current cell column
- * @param orientation - Current orientation
- * @param grid - The crossword grid
- * @param rows - Grid height
- * @param columns - Grid width
- * @returns Navigation target: "next-clue", "next-cell", or "stay"
- */
-export const determineCompletedWordNavigation = (
-  wasEmpty: boolean,
-  row: number,
-  col: number,
-  orientation: "across" | "down",
-  grid: boolean[][],
-  rows: number,
-  columns: number,
-): "next-clue" | "next-cell" | "stay" => {
-  if (wasEmpty) {
-    // Filling the last empty cell - word just became complete
-    // Always jump to next numeric clue
-    return "next-clue";
-  } else {
-    // Editing an already-filled cell - word was already complete
-    // Just move to next cell in the current word
-    return "next-cell";
-  }
-};
-
-/**
  * Handles letter input navigation for incomplete words.
  *
  * @param wasEmpty - Whether the cell was empty before typing
@@ -1544,15 +1530,9 @@ export const processLetterChange = (
 
     if (analysis.isComplete) {
       // Determine and execute navigation for completed word
-      const decision = determineCompletedWordNavigation(
-        wasEmpty,
-        row,
-        col,
-        clueOrientation,
-        grid,
-        rows,
-        columns,
-      );
+      // If cell was empty, word just became complete -> jump to next clue
+      // If cell was filled, word was already complete -> just move to next cell
+      const decision = wasEmpty ? "next-clue" : "next-cell";
 
       switch (decision) {
         case "next-clue": {
@@ -1594,10 +1574,6 @@ export const processLetterChange = (
           newActiveCell = nextCell || [row, col];
           break;
         }
-        case "stay":
-        default:
-          newActiveCell = [row, col];
-          break;
       }
     } else {
       // Word is not complete - determine navigation for incomplete word
@@ -1779,4 +1755,3 @@ export const isStartOfWord = (
     return row === 0 || grid[row - 1][col];
   }
 };
-

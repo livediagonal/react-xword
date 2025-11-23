@@ -173,9 +173,6 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    // Prevent default to avoid any unwanted behavior
-    e.preventDefault();
-
     // Get the element
     const el = e.currentTarget;
     // Add active class
@@ -183,9 +180,6 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
   };
 
   const handleTouchEnd = (e: React.TouchEvent, key: string) => {
-    // Prevent default
-    e.preventDefault();
-
     // Get the element
     const el = e.currentTarget;
     // Remove active class
@@ -267,11 +261,9 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
                 )
               }
               onTouchStart={(e) => {
-                e.preventDefault();
                 e.currentTarget.classList.add("key-active");
               }}
               onTouchEnd={(e) => {
-                e.preventDefault();
                 e.currentTarget.classList.remove("key-active");
                 setKeyboardMode(
                   keyboardMode === "letters" ? "numbers" : "letters",
@@ -303,11 +295,9 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
               className="keyboard-key backspace-key"
               onClick={() => handleKeyPress("⌫")}
               onTouchStart={(e) => {
-                e.preventDefault();
                 e.currentTarget.classList.add("key-active");
               }}
               onTouchEnd={(e) => {
-                e.preventDefault();
                 e.currentTarget.classList.remove("key-active");
                 handleKeyPress("⌫");
               }}
