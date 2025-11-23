@@ -49,11 +49,6 @@ interface CrosswordSolverProps {
    * The description to display in the splash modal.
    */
   splashDescription?: string | React.ReactNode;
-
-  /**
-   * If true, enables dark mode styling for the crossword solver. Defaults to true.
-   */
-  darkMode?: boolean;
 }
 
 const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
@@ -64,15 +59,14 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   isComplete,
   splashTitle,
   splashDescription,
-  darkMode: initialDarkMode = true,
 }) => {
-  // Initialize dark mode from localStorage or prop
+  // Initialize dark mode from localStorage (defaults to true)
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const stored = localStorage.getItem("xword-dark-mode");
     if (stored !== null) {
       return stored === "true";
     }
-    return initialDarkMode;
+    return true; // Default to dark mode
   });
 
   const [solution, setSolution] = useState<string[][] | null>(null);
