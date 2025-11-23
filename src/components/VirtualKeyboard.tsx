@@ -172,7 +172,7 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
     }
   };
 
-  const handleTouchStart = (e: React.TouchEvent, key: string) => {
+  const handleTouchStart = (e: React.TouchEvent) => {
     // Prevent default to avoid any unwanted behavior
     e.preventDefault();
 

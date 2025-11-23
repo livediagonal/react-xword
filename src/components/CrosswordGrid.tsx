@@ -233,8 +233,8 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent, row: number, col: number) => {
     if (disabled) return;
 
-    // Handle letter input
-    if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key)) {
+    // Handle letter, number, and symbol input
+    if (e.key.length === 1 && /^[a-zA-Z0-9\-/:;()$&@".,?!']$/.test(e.key)) {
       e.preventDefault();
       handleLetterChange(row, col, e.key.toUpperCase());
     } else if (e.key === "Backspace" || e.key === "Delete") {
