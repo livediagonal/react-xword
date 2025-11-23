@@ -284,8 +284,8 @@ export const findFirstEmptyCellInClue = (
     }
   }
 
-  // If no empty cell found, return the start cell
-  return startCell;
+  // If no empty cell found, return null (clue is completely filled)
+  return null;
 };
 
 /**
@@ -305,8 +305,8 @@ export const findNextNumericClue = (
   orientation: "across" | "down";
   cell: [number, number];
 } | null => {
-  // Try to find next clue in current orientation
-  const nextInSameOrientation = findNextClueNumber(
+  // Try to find next clue with empty cells in current orientation
+  let nextInSameOrientation = findNextClueNumber(
     currentClueNumber,
     currentOrientation,
     grid,
@@ -315,8 +315,13 @@ export const findNextNumericClue = (
     columns,
   );
 
-  if (nextInSameOrientation !== null) {
-    // Found next clue in same orientation
+  // Keep searching for a clue with empty cells in the current orientation
+  const visitedClues = new Set<number>();
+  while (
+    nextInSameOrientation !== null &&
+    !visitedClues.has(nextInSameOrientation)
+  ) {
+    visitedClues.add(nextInSameOrientation);
     const cell = findFirstEmptyCellInClue(
       nextInSameOrientation,
       currentOrientation,
@@ -333,13 +338,22 @@ export const findNextNumericClue = (
         cell,
       };
     }
+    // This clue is full, try the next one
+    nextInSameOrientation = findNextClueNumber(
+      nextInSameOrientation,
+      currentOrientation,
+      grid,
+      clueNumbers,
+      rows,
+      columns,
+    );
   }
 
-  // We're at the end of current orientation, switch to the other
+  // No clues with empty cells in current orientation, switch to the other
   const newOrientation = currentOrientation === "across" ? "down" : "across";
 
-  // Get the first clue in the new orientation
-  const firstInNewOrientation = findNextClueNumber(
+  // Get the first clue in the new orientation and search for empty cells
+  let firstInNewOrientation = findNextClueNumber(
     null, // null means get first clue
     newOrientation,
     grid,
@@ -348,7 +362,12 @@ export const findNextNumericClue = (
     columns,
   );
 
-  if (firstInNewOrientation !== null) {
+  visitedClues.clear();
+  while (
+    firstInNewOrientation !== null &&
+    !visitedClues.has(firstInNewOrientation)
+  ) {
+    visitedClues.add(firstInNewOrientation);
     const cell = findFirstEmptyCellInClue(
       firstInNewOrientation,
       newOrientation,
@@ -365,6 +384,15 @@ export const findNextNumericClue = (
         cell,
       };
     }
+    // This clue is full, try the next one
+    firstInNewOrientation = findNextClueNumber(
+      firstInNewOrientation,
+      newOrientation,
+      grid,
+      clueNumbers,
+      rows,
+      columns,
+    );
   }
 
   return null;
