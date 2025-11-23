@@ -288,6 +288,177 @@ export const findFirstEmptyCellInClue = (
   return startCell;
 };
 
+/**
+ * Find the next clue in numeric order, with wrapping and orientation switching.
+ * Returns the clue number, orientation, and first empty cell of the target clue.
+ */
+export const findNextNumericClue = (
+  currentClueNumber: number,
+  currentOrientation: "across" | "down",
+  grid: boolean[][],
+  letters: string[][],
+  clueNumbers: number[][],
+  rows: number,
+  columns: number,
+): { clueNumber: number; orientation: "across" | "down"; cell: [number, number] } | null => {
+  // Try to find next clue in current orientation
+  const nextInSameOrientation = findNextClueNumber(
+    currentClueNumber,
+    currentOrientation,
+    grid,
+    clueNumbers,
+    rows,
+    columns,
+  );
+
+  if (nextInSameOrientation !== null) {
+    // Found next clue in same orientation
+    const cell = findFirstEmptyCellInClue(
+      nextInSameOrientation,
+      currentOrientation,
+      grid,
+      letters,
+      clueNumbers,
+      rows,
+      columns,
+    );
+    if (cell) {
+      return {
+        clueNumber: nextInSameOrientation,
+        orientation: currentOrientation,
+        cell,
+      };
+    }
+  }
+
+  // We're at the end of current orientation, switch to the other
+  const newOrientation = currentOrientation === "across" ? "down" : "across";
+
+  // Get the first clue in the new orientation
+  const firstInNewOrientation = findNextClueNumber(
+    null, // null means get first clue
+    newOrientation,
+    grid,
+    clueNumbers,
+    rows,
+    columns,
+  );
+
+  if (firstInNewOrientation !== null) {
+    const cell = findFirstEmptyCellInClue(
+      firstInNewOrientation,
+      newOrientation,
+      grid,
+      letters,
+      clueNumbers,
+      rows,
+      columns,
+    );
+    if (cell) {
+      return {
+        clueNumber: firstInNewOrientation,
+        orientation: newOrientation,
+        cell,
+      };
+    }
+  }
+
+  return null;
+};
+
+/**
+ * Find the previous clue in numeric order, with wrapping and orientation switching.
+ * Returns the clue number, orientation, and last cell of the target clue.
+ */
+export const findPreviousNumericClue = (
+  currentClueNumber: number,
+  currentOrientation: "across" | "down",
+  grid: boolean[][],
+  clueNumbers: number[][],
+  rows: number,
+  columns: number,
+): { clueNumber: number; orientation: "across" | "down"; cell: [number, number] } | null => {
+  // Try to find previous clue in current orientation
+  const prevInSameOrientation = findPreviousClueNumber(
+    currentClueNumber,
+    currentOrientation,
+    grid,
+    clueNumbers,
+    rows,
+    columns,
+  );
+
+  if (prevInSameOrientation !== null) {
+    // Found previous clue in same orientation - find its last cell
+    const startCell = findClueStartCell(prevInSameOrientation, clueNumbers, rows, columns);
+    if (startCell) {
+      const [startRow, startCol] = startCell;
+      let lastRow = startRow;
+      let lastCol = startCol;
+
+      if (currentOrientation === "across") {
+        // Move to the last cell of the across clue
+        while (lastCol + 1 < columns && !grid[lastRow][lastCol + 1]) {
+          lastCol++;
+        }
+      } else {
+        // Move to the last cell of the down clue
+        while (lastRow + 1 < rows && !grid[lastRow + 1][lastCol]) {
+          lastRow++;
+        }
+      }
+
+      return {
+        clueNumber: prevInSameOrientation,
+        orientation: currentOrientation,
+        cell: [lastRow, lastCol],
+      };
+    }
+  }
+
+  // We're at the start of current orientation, switch to the other
+  const newOrientation = currentOrientation === "across" ? "down" : "across";
+
+  // Get the last clue in the new orientation
+  const lastInNewOrientation = findPreviousClueNumber(
+    null, // null means get last clue
+    newOrientation,
+    grid,
+    clueNumbers,
+    rows,
+    columns,
+  );
+
+  if (lastInNewOrientation !== null) {
+    const startCell = findClueStartCell(lastInNewOrientation, clueNumbers, rows, columns);
+    if (startCell) {
+      const [startRow, startCol] = startCell;
+      let lastRow = startRow;
+      let lastCol = startCol;
+
+      if (newOrientation === "across") {
+        // Move to the last cell of the across clue
+        while (lastCol + 1 < columns && !grid[lastRow][lastCol + 1]) {
+          lastCol++;
+        }
+      } else {
+        // Move to the last cell of the down clue
+        while (lastRow + 1 < rows && !grid[lastRow + 1][lastCol]) {
+          lastRow++;
+        }
+      }
+
+      return {
+        clueNumber: lastInNewOrientation,
+        orientation: newOrientation,
+        cell: [lastRow, lastCol],
+      };
+    }
+  }
+
+  return null;
+};
+
 export const findClueNumberForCell = (
   row: number,
   col: number,
@@ -1146,25 +1317,14 @@ export const determineCompletedWordNavigation = (
   rows: number,
   columns: number,
 ): "next-clue" | "next-cell" | "stay" => {
-  if (!wasEmpty) {
-    // SCENARIO 1: Editing a filled cell in a filled answer
-    const isLastCell = isLastCellInWord(
-      grid,
-      row,
-      col,
-      orientation,
-      rows,
-      columns,
-    );
-
-    if (isLastCell) {
-      return "next-clue"; // Jump to next clue from last cell
-    } else {
-      return "next-cell"; // Move to next cell in same word
-    }
+  if (wasEmpty) {
+    // Filling the last empty cell - word just became complete
+    // Always jump to next numeric clue
+    return "next-clue";
   } else {
-    // SCENARIO 2: Filling an empty cell that completed the word
-    return "next-clue"; // Always jump to next clue
+    // Editing an already-filled cell - word was already complete
+    // Just move to next cell in the current word
+    return "next-cell";
   }
 };
 
@@ -1395,9 +1555,33 @@ export const processLetterChange = (
       );
 
       switch (decision) {
-        case "next-clue":
-          actions.push({ type: "HANDLE_NEXT_CLUE" });
+        case "next-clue": {
+          // Jump to next numeric clue with wrapping and orientation switching
+          if (activeClueNumber) {
+            const clueNumbers = calculateClueNumbers(grid, rows, columns);
+            const nextClueInfo = findNextNumericClue(
+              activeClueNumber,
+              clueOrientation,
+              grid,
+              newLetters,
+              clueNumbers,
+              rows,
+              columns,
+            );
+
+            if (nextClueInfo) {
+              newActiveCell = nextClueInfo.cell;
+              actions.push({
+                type: "SET_STATE",
+                payload: {
+                  activeClueNumber: nextClueInfo.clueNumber,
+                  clueOrientation: nextClueInfo.orientation,
+                },
+              });
+            }
+          }
           break;
+        }
         case "next-cell": {
           const nextCell = findNextCellInWord(
             grid,
@@ -1455,46 +1639,38 @@ export const processLetterChange = (
 
       if (isAtStartOfWord) {
         // SCENARIO 1a: At start of answer + empty cell + delete
-        // Move to the final cell of the previous answer and clear it
-        const lastCellOfPrevAnswer = findLastCellOfPreviousAnswer(
-          grid,
-          letters,
-          clueNumbers,
-          activeClueNumber,
-          clueOrientation,
-          rows,
-          columns,
-          true, // Skip completed answers
-        );
-
-        if (lastCellOfPrevAnswer) {
-          const [targetRow, targetCol] = lastCellOfPrevAnswer;
-          // Clear the target cell
-          newLetters[targetRow][targetCol] = "";
-          newValidatedCells[targetRow][targetCol] = undefined;
-          newActiveCell = lastCellOfPrevAnswer;
-
-          // Find the clue number for the target cell
-          const targetClueNumber = findClueNumberForCell(
-            targetRow,
-            targetCol,
+        // Jump to previous numeric clue's last cell and clear it
+        if (activeClueNumber) {
+          const prevClueInfo = findPreviousNumericClue(
+            activeClueNumber,
             clueOrientation,
             grid,
             clueNumbers,
+            rows,
+            columns,
           );
 
-          if (targetClueNumber) {
+          if (prevClueInfo) {
+            const [targetRow, targetCol] = prevClueInfo.cell;
+            // Clear the target cell
+            newLetters[targetRow][targetCol] = "";
+            newValidatedCells[targetRow][targetCol] = undefined;
+            newActiveCell = prevClueInfo.cell;
+
             actions.push({
               type: "SET_STATE",
               payload: {
-                activeClueNumber: targetClueNumber,
-                clueOrientation,
-                activeCell: lastCellOfPrevAnswer,
+                activeClueNumber: prevClueInfo.clueNumber,
+                clueOrientation: prevClueInfo.orientation,
+                activeCell: prevClueInfo.cell,
               },
             });
+          } else {
+            // No previous clue found, stay in current cell
+            newActiveCell = [row, col];
           }
         } else {
-          // No previous answer found, stay in current cell
+          // No active clue number, stay in current cell
           newActiveCell = [row, col];
         }
       } else {
@@ -1604,180 +1780,3 @@ export const isStartOfWord = (
   }
 };
 
-/**
- * Finds the last cell of the previous answer, skipping completed answers if specified
- */
-export const findLastCellOfPreviousAnswer = (
-  grid: boolean[][],
-  letters: string[][],
-  clueNumbers: number[][],
-  activeClueNumber: number | null,
-  orientation: "across" | "down",
-  rows: number,
-  columns: number,
-  skipCompleted: boolean = true,
-): [number, number] | null => {
-  if (!activeClueNumber) return null;
-
-  // Find the previous clue number
-  let prevClueNumber = findPreviousClueNumber(
-    activeClueNumber,
-    orientation,
-    grid,
-    clueNumbers,
-    rows,
-    columns,
-  );
-
-  // If no previous clue in current orientation, try the other orientation
-  if (!prevClueNumber) {
-    const otherOrientation = orientation === "across" ? "down" : "across";
-    prevClueNumber = findPreviousClueNumber(
-      null, // Get the last clue in the other orientation
-      otherOrientation,
-      grid,
-      clueNumbers,
-      rows,
-      columns,
-    );
-
-    if (prevClueNumber) {
-      // Find the last cell of this clue in the other orientation
-      const startCell = findClueStartCell(
-        prevClueNumber,
-        clueNumbers,
-        rows,
-        columns,
-      );
-      if (!startCell) return null;
-
-      const [startRow, startCol] = startCell;
-      let lastCell: [number, number] = startCell;
-
-      if (otherOrientation === "across") {
-        for (let c = startCol; c < columns; c++) {
-          if (grid[startRow][c]) break;
-          lastCell = [startRow, c];
-        }
-      } else {
-        for (let r = startRow; r < rows; r++) {
-          if (grid[r][startCol]) break;
-          lastCell = [r, startCol];
-        }
-      }
-
-      // If skipCompleted is true, check if this answer is complete
-      if (skipCompleted) {
-        const isComplete = isAnswerComplete(
-          grid,
-          letters,
-          prevClueNumber,
-          otherOrientation,
-          clueNumbers,
-          rows,
-          columns,
-        );
-        if (isComplete) {
-          // Recursively find the previous incomplete answer
-          return findLastCellOfPreviousAnswer(
-            grid,
-            letters,
-            clueNumbers,
-            prevClueNumber,
-            otherOrientation,
-            rows,
-            columns,
-            skipCompleted,
-          );
-        }
-      }
-
-      return lastCell;
-    }
-    return null;
-  }
-
-  // Find the last cell of the previous clue in the current orientation
-  const startCell = findClueStartCell(
-    prevClueNumber,
-    clueNumbers,
-    rows,
-    columns,
-  );
-  if (!startCell) return null;
-
-  const [startRow, startCol] = startCell;
-  let lastCell: [number, number] = startCell;
-
-  if (orientation === "across") {
-    for (let c = startCol; c < columns; c++) {
-      if (grid[startRow][c]) break;
-      lastCell = [startRow, c];
-    }
-  } else {
-    for (let r = startRow; r < rows; r++) {
-      if (grid[r][startCol]) break;
-      lastCell = [r, startCol];
-    }
-  }
-
-  // If skipCompleted is true, check if this answer is complete
-  if (skipCompleted) {
-    const isComplete = isAnswerComplete(
-      grid,
-      letters,
-      prevClueNumber,
-      orientation,
-      clueNumbers,
-      rows,
-      columns,
-    );
-    if (isComplete) {
-      // Recursively find the previous incomplete answer
-      return findLastCellOfPreviousAnswer(
-        grid,
-        letters,
-        clueNumbers,
-        prevClueNumber,
-        orientation,
-        rows,
-        columns,
-        skipCompleted,
-      );
-    }
-  }
-
-  return lastCell;
-};
-
-/**
- * Checks if an answer is completely filled
- */
-export const isAnswerComplete = (
-  grid: boolean[][],
-  letters: string[][],
-  clueNumber: number,
-  orientation: "across" | "down",
-  clueNumbers: number[][],
-  rows: number,
-  columns: number,
-): boolean => {
-  const startCell = findClueStartCell(clueNumber, clueNumbers, rows, columns);
-  if (!startCell) return false;
-
-  const [startRow, startCol] = startCell;
-
-  if (orientation === "across") {
-    for (let c = startCol; c < columns; c++) {
-      if (grid[startRow][c]) break;
-      if (!letters[startRow][c]) return false;
-    }
-  } else {
-    for (let r = startRow; r < rows; r++) {
-      if (grid[r][startCol]) break;
-      if (!letters[r][startCol]) return false;
-    }
-  }
-
-  return true;
-};
