@@ -106,9 +106,10 @@
 .keyboard-row {
     display: flex;
     justify-content: center;
-    margin-bottom: 6px;
-    padding: 0 15px;
-    width: calc(100% - 4px);
+    gap: 6px;
+    margin-bottom: 10px;
+    padding: 0 3px;
+    width: 100%;
     max-width: 500px;
     box-sizing: border-box;
 }
@@ -119,46 +120,51 @@
 }
 
 .keyboard-key {
-    flex: 1;
-    height: 40px;
-    margin: 0 1px;
+    flex: 0 0 auto;
+    width: 34px;
+    height: 46px;
+    margin: 0;
     border-radius: 5px;
-    background-color: white;
-    border: 1px solid #ddd;
-    font-size: 16px;
-    font-weight: 500;
+    background-color: #fff;
+    border: none;
+    font-size: 22px;
+    font-weight: 400;
     cursor: pointer;
-    color: #333;
+    color: #000;
     display: flex;
     justify-content: center;
     align-items: center;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
     transition: background-color 0.1s;
-    min-width: 30px;
-    max-width: none;
     box-sizing: border-box;
+    text-transform: uppercase;
 }
 
 .keyboard-key:active,
 .keyboard-key.key-active {
-    background-color: #eaeaea;
-    transform: translateY(1px);
+    background-color: #d1d5db;
+}
+
+.mode-switch-key,
+.backspace-key {
+    flex: 0 0 auto;
+    width: 52px;
+    font-size: 16px;
+    background-color: #a8adb5;
+    color: #000;
+    text-transform: none;
+    font-weight: 400;
+}
+
+.mode-switch-key:active,
+.mode-switch-key.key-active,
+.backspace-key:active,
+.backspace-key.key-active {
+    background-color: #8e9299;
 }
 
 .backspace-key {
-    flex: 1.5;
-    max-width: none;
-    font-size: 20px;
-}
-
-.spacer-key {
-    background-color: transparent;
-    border: none;
-    box-shadow: none;
-    pointer-events: none;
-    width: 4px;
-    min-width: 0;
-    flex: 0.3;
+    font-size: 22px;
 }
 
 /* Make sure the keyboard is only visible on mobile devices */
@@ -181,4 +187,51 @@
 /* Update active state for the clue button */
 .control-button.active-clue:active {
     background-color: #B0D7FF;
+}
+
+/* Dark mode styles */
+.solver-container.dark-mode .virtual-keyboard {
+    background-color: #1a1a1a;
+    border-top-color: #444;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.solver-container.dark-mode .keyboard-controls {
+    background-color: #2d3b6f;
+}
+
+.solver-container.dark-mode .control-button.active-clue {
+    color: #e0e0e0;
+}
+
+.solver-container.dark-mode .control-button.active-clue .no-clue {
+    color: #999;
+}
+
+.solver-container.dark-mode .keyboard-key {
+    background-color: #505050;
+    color: #ffffff;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.solver-container.dark-mode .keyboard-key:active,
+.solver-container.dark-mode .keyboard-key.key-active {
+    background-color: #686868;
+}
+
+.solver-container.dark-mode .mode-switch-key,
+.solver-container.dark-mode .backspace-key {
+    background-color: #3a3a3a;
+    color: #ffffff;
+}
+
+.solver-container.dark-mode .mode-switch-key:active,
+.solver-container.dark-mode .mode-switch-key.key-active,
+.solver-container.dark-mode .backspace-key:active,
+.solver-container.dark-mode .backspace-key.key-active {
+    background-color: #2a2a2a;
+}
+
+.solver-container.dark-mode .control-button.active-clue:active {
+    background-color: #3d4b7f;
 }

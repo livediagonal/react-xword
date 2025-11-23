@@ -49,6 +49,11 @@ interface CrosswordSolverProps {
    * The description to display in the splash modal.
    */
   splashDescription?: string | React.ReactNode;
+
+  /**
+   * If true, enables dark mode styling for the crossword solver.
+   */
+  darkMode?: boolean;
 }
 
 const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
@@ -59,6 +64,7 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   isComplete,
   splashTitle,
   splashDescription,
+  darkMode = false,
 }) => {
   const [solution, setSolution] = useState<string[][] | null>(null);
   const [validatedCells, setValidatedCells] = useState<
@@ -501,7 +507,10 @@ const CrosswordSolver: React.FC<CrosswordSolverProps> = ({
   }
 
   return (
-    <div className={`solver-container`} ref={containerRef}>
+    <div
+      className={`solver-container ${darkMode ? "dark-mode" : ""}`}
+      ref={containerRef}
+    >
       {showConfetti && (
         <div className="confetti-container">
           <div className="confetti"></div>

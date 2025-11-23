@@ -162,6 +162,7 @@ interface IPuzPuzzle {
 | `leftNavElements` | `React.ReactNode`                   | Elements to display in the left side of the actions bar. |
 | `onStart`         | `() => void \| string \| Promise<void \| string>` | Called when the user starts the puzzle (dismisses the splash modal). Can optionally return a timestamp string (e.g., from SQLite's CURRENT_TIMESTAMP) to use as the timer start time. If no timestamp is returned, the timer starts from when the callback completes. |
 | `isComplete`      | `boolean`                           | If true, the puzzle is shown as completed and locked. |
+| `darkMode`        | `boolean`                           | If true, enables dark mode styling for the crossword solver. Defaults to `false`. |
 
 ### Completion Hooks
 
@@ -210,9 +211,17 @@ interface IPuzPuzzle {
 
 ### With Complete/Locked State
 ```tsx
-<CrosswordSolver 
+<CrosswordSolver
   ipuzData={puzzle}
   isComplete={true}
+/>
+```
+
+### With Dark Mode
+```tsx
+<CrosswordSolver
+  ipuzData={puzzle}
+  darkMode={true}
 />
 ```
 

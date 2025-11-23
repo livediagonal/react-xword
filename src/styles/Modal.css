@@ -82,3 +82,22 @@
   color: #1f2937;
   margin-right: 0.5rem;
 }
+
+/* Dark mode styles */
+.solver-container.dark-mode .modal-content {
+  background: #2a2a2a;
+  color: #e0e0e0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.solver-container.dark-mode .modal-title {
+  color: #e0e0e0;
+}
+
+.solver-container.dark-mode .modal-message {
+  color: #c0c0c0;
+}
+
+.solver-container.dark-mode .puzzle-info-item strong {
+  color: #e0e0e0;
+}

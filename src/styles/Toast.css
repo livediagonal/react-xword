@@ -39,3 +39,19 @@
     align-items: center;
     justify-content: center;
 }
+
+/* Dark mode styles */
+.solver-container.dark-mode .toast-error {
+    background-color: #d32f2f;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.solver-container.dark-mode .toast-success {
+    background-color: #388e3c;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.solver-container.dark-mode .toast-info {
+    background-color: #1976d2;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}

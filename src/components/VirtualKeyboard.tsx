@@ -32,6 +32,10 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
   onShowError,
   onPuzzleComplete,
 }) => {
+  const [keyboardMode, setKeyboardMode] = React.useState<"letters" | "numbers">(
+    "letters",
+  );
+
   // Use the centralized letter handling hook with actual solution and callbacks
   const { handleLetterChange } = useCrosswordLetterHandler({
     crosswordState,
@@ -42,12 +46,21 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
     onPuzzleComplete: onPuzzleComplete || (() => {}),
     onShowError: onShowError || (() => {}),
   });
-  // Adjusted rows for better layout
-  const rows = [
+
+  // Keyboard layouts
+  const letterRows = [
     ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
-    ["", "A", "S", "D", "F", "G", "H", "J", "K", "L", ""],
-    ["", "Z", "X", "C", "V", "B", "N", "M", "⌫", ""],
+    ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
+    ["Z", "X", "C", "V", "B", "N", "M"],
   ];
+
+  const numberRows = [
+    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+    ["-", "/", ":", ";", "(", ")", "$", "&", "@", '"'],
+    [".", ",", "?", "!", "'"],
+  ];
+
+  const rows = keyboardMode === "letters" ? letterRows : numberRows;
 
   // Function to handle virtual key presses
   const handleVirtualKeyPress = (key: string) => {
@@ -154,9 +167,6 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
     if (key === "⌫") {
       // Handle backspace
       handleVirtualKeyPress("");
-    } else if (key === "" || key === " ") {
-      // Ignore spacer keys
-      return;
     } else {
       handleVirtualKeyPress(key);
     }
@@ -165,9 +175,6 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
   const handleTouchStart = (e: React.TouchEvent, key: string) => {
     // Prevent default to avoid any unwanted behavior
     e.preventDefault();
-
-    // Skip for spacer keys
-    if (key === "" || key === " ") return;
 
     // Get the element
     const el = e.currentTarget;
@@ -178,9 +185,6 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
   const handleTouchEnd = (e: React.TouchEvent, key: string) => {
     // Prevent default
     e.preventDefault();
-
-    // Skip for spacer keys
-    if (key === "" || key === " ") return;
 
     // Get the element
     const el = e.currentTarget;
@@ -254,22 +258,66 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
 
       {rows.map((row, rowIndex) => (
         <div key={rowIndex} className="keyboard-row">
+          {rowIndex === 2 && (
+            <button
+              className="keyboard-key mode-switch-key"
+              onClick={() =>
+                setKeyboardMode(
+                  keyboardMode === "letters" ? "numbers" : "letters",
+                )
+              }
+              onTouchStart={(e) => {
+                e.preventDefault();
+                e.currentTarget.classList.add("key-active");
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.currentTarget.classList.remove("key-active");
+                setKeyboardMode(
+                  keyboardMode === "letters" ? "numbers" : "letters",
+                );
+              }}
+              onTouchCancel={(e) =>
+                e.currentTarget.classList.remove("key-active")
+              }
+            >
+              {keyboardMode === "letters" ? "123" : "ABC"}
+            </button>
+          )}
           {row.map((key, keyIndex) => (
             <button
               key={`${key}-${keyIndex}`}
-              className={`keyboard-key ${key === "⌫" ? "backspace-key" : ""} ${key === "" || key === " " ? "spacer-key" : ""}`}
+              className="keyboard-key"
               onClick={() => handleKeyPress(key)}
               onTouchStart={(e) => handleTouchStart(e, key)}
               onTouchEnd={(e) => handleTouchEnd(e, key)}
               onTouchCancel={(e) =>
                 e.currentTarget.classList.remove("key-active")
               }
-              disabled={key === "" || key === " "}
-              aria-hidden={key === "" || key === " "}
             >
               {key}
             </button>
           ))}
+          {rowIndex === 2 && (
+            <button
+              className="keyboard-key backspace-key"
+              onClick={() => handleKeyPress("⌫")}
+              onTouchStart={(e) => {
+                e.preventDefault();
+                e.currentTarget.classList.add("key-active");
+              }}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                e.currentTarget.classList.remove("key-active");
+                handleKeyPress("⌫");
+              }}
+              onTouchCancel={(e) =>
+                e.currentTarget.classList.remove("key-active")
+              }
+            >
+              ⌫
+            </button>
+          )}
         </div>
       ))}
     </div>

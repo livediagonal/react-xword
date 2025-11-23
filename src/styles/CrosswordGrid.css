@@ -188,3 +188,46 @@ body {
         -webkit-user-select: none;
     }
 }
+
+/* Dark mode styles */
+.solver-container.dark-mode .grid-container {
+    border-color: #444;
+    background-color: #444;
+}
+
+.solver-container.dark-mode .crossword-cell {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+}
+
+.solver-container.dark-mode .black-cell {
+    background-color: #000;
+}
+
+.solver-container.dark-mode .cell-number {
+    color: #999;
+}
+
+.solver-container.dark-mode .active-cell {
+    background-color: #8b7a3d;
+}
+
+.solver-container.dark-mode .part-of-active-clue {
+    background-color: #2d3b6f;
+}
+
+.solver-container.dark-mode .validated-cell {
+    color: #66bb6a;
+}
+
+.solver-container.dark-mode .validated-cell.incorrect {
+    color: #ef5350;
+}
+
+.solver-container.dark-mode .completed-puzzle .validated-cell.incorrect {
+    color: #e0e0e0;
+}
+
+.solver-container.dark-mode .crossword-cell.disabled {
+    background-color: #1a1a1a;
+}
