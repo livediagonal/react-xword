@@ -120,8 +120,8 @@
 }
 
 .keyboard-key {
-    flex: 0 0 auto;
-    width: 34px;
+    flex: 0 1 34px;
+    min-width: 0;
     height: 46px;
     margin: 0;
     border-radius: 5px;
@@ -147,8 +147,8 @@
 
 .mode-switch-key,
 .backspace-key {
-    flex: 0 0 auto;
-    width: 52px;
+    flex: 0 1 52px;
+    min-width: 0;
     font-size: 16px;
     background-color: #a8adb5;
     color: #000;
